@@ -1,0 +1,3823 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeanView 5´S</title>
+    <!-- Importar Chart.js desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <style>
+        /* --- DISEÑO DE UI/UX - PALETA DE COLORES Y TIPOGRAFÍA --- */
+        :root {
+            --color-primary: #009ADD;
+            --color-primary-hover: #007bb3;
+            --color-secondary: #005486;
+            --color-bg-light: #F2F2F2;
+            --color-bg-white: #FFFFFF;
+            --color-text: #262626;
+            --color-text-muted: #737373;
+            --color-border: #E0E0E0;
+            
+            /* Colores de Estado */
+            --color-success: #52BE80;
+            --color-success-bg: rgba(82, 190, 128, 0.15);
+            --color-warning: #F5B041;
+            --color-warning-bg: rgba(245, 176, 65, 0.15);
+            --color-danger: #EC7063;
+            --color-danger-bg: rgba(236, 112, 99, 0.15);
+            
+            --font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--color-bg-light);
+            color: var(--color-text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* --- LAYOUT PRINCIPAL (SIDEBAR + CONTENT) --- */
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 260px;
+            background-color: var(--color-secondary); /* Fondo oscuro */
+            color: var(--color-bg-white);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 0;
+            flex-shrink: 0;
+            transition: width 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .sidebar.collapsed {
+            width: 70px;
+        }
+        
+        .sidebar-header {
+            padding: 0 24px 24px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-align: center;
+            position: relative;
+        }
+
+        .sidebar.collapsed .sidebar-title,
+        .sidebar.collapsed .nav-item span:not(.nav-icon) {
+            display: none;
+        }
+
+        .sidebar.collapsed .nav-item {
+            justify-content: center;
+            padding: 12px 0;
+        }
+        
+        .sidebar.collapsed .nav-item.active {
+            padding-left: 0;
+            border-radius: 0;
+        }
+
+        .sidebar-logo {
+            width: 32px;
+            height: 32px;
+            fill: var(--color-bg-white);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 0 16px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 15px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--color-bg-white);
+        }
+        
+        .nav-item.active {
+            font-weight: bold;
+            border-left: 4px solid var(--color-primary);
+            border-radius: 0 8px 8px 0;
+            padding-left: 12px;
+        }
+
+        .nav-icon {
+            font-size: 18px;
+        }
+
+        /* --- CONTENIDO PRINCIPAL --- */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            background-color: var(--color-bg-light);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        /* --- CONTENEDOR INTERNO --- */
+        .dashboard-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* --- ENCABEZADO --- */
+        .header {
+            background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary) 100%);
+            color: var(--color-bg-white);
+            padding: 24px 32px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-title-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-logo {
+            width: 48px;
+            height: 48px;
+            fill: var(--color-bg-white);
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .header-title p {
+            font-size: 13px;
+            opacity: 0.85;
+            margin-top: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* --- BOTONES --- */
+        .btn {
+            font-family: var(--font-family);
+            font-size: 13px;
+            font-weight: bold;
+            padding: 10px 18px;
+            border-radius: var(--border-radius);
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background-color: var(--color-bg-white);
+            color: var(--color-secondary);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: var(--color-bg-white);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .btn-danger {
+            background-color: var(--color-danger);
+            color: var(--color-bg-white);
+        }
+
+        .btn-danger:hover {
+            background-color: #d9534f;
+            transform: translateY(-1px);
+        }
+
+        /* --- SECCIÓN DE CARGA (DRAG & DROP) --- */
+        .upload-section {
+            background-color: var(--color-bg-white);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .upload-dropzone {
+            border: 2px dashed var(--color-primary);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background-color: rgba(0, 154, 221, 0.02);
+            position: relative;
+        }
+
+        .upload-dropzone:hover, .upload-dropzone.dragover {
+            background-color: rgba(0, 154, 221, 0.06);
+            border-color: var(--color-secondary);
+        }
+
+        .upload-dropzone input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            fill: var(--color-primary);
+            margin: 0 auto 12px;
+        }
+
+        .upload-text h3 {
+            font-size: 16px;
+            color: var(--color-secondary);
+            margin-bottom: 4px;
+        }
+
+        .upload-text p {
+            font-size: 13px;
+            color: var(--color-text-muted);
+        }
+
+        .alert-info {
+            background-color: rgba(0, 154, 221, 0.08);
+            border-left: 4px solid var(--color-primary);
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: var(--color-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* --- CARDS DE KPIs --- */
+        .kpis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .kpi-card {
+            background-color: var(--color-bg-white);
+            border-radius: var(--border-radius);
+            padding: 16px 20px;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            border-top: 4px solid var(--color-primary);
+            transition: transform 0.2s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .kpi-card.overdue {
+            border-top-color: var(--color-danger);
+        }
+
+        .kpi-card.closed {
+            border-top-color: var(--color-success);
+        }
+
+        .kpi-card.score {
+            border-top-color: var(--color-secondary);
+        }
+
+        .kpi-title {
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: var(--color-text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--color-text);
+            margin: 8px 0 4px;
+        }
+
+        .kpi-subtitle {
+            font-size: 10px;
+            color: var(--color-text-muted);
+        }
+
+        /* --- DASHBOARD CHARTS --- */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .charts-three-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 1100px) {
+            .charts-grid, .charts-three-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        .chart-card {
+            background-color: var(--color-bg-white);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 12px;
+        }
+
+        .chart-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--color-secondary);
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            min-height: 350px;
+        }
+
+        /* --- BOTONES DE CONTROL DE GRÁFICA --- */
+        .btn-toggle {
+            font-size: 11px;
+            padding: 4px 10px;
+            background-color: var(--color-bg-light);
+            color: var(--color-text-muted);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            font-family: var(--font-family);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: fit-content;
+            white-space: nowrap;
+        }
+
+        .btn-toggle.active-toggle {
+            background-color: var(--color-primary);
+            color: var(--color-bg-white);
+            border-color: var(--color-primary);
+        }
+
+        .btn-toggle:hover:not(.active-toggle) {
+            background-color: #e6e6e6;
+        }
+
+        /* --- DATA TABLE --- */
+        .table-card {
+            background-color: var(--color-bg-white);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .table-header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .table-filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            width: 100%;
+        }
+
+        .search-box {
+            position: relative;
+            flex-grow: 1;
+            max-width: 350px;
+            min-width: 200px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 16px 10px 36px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--color-border);
+            font-family: var(--font-family);
+            font-size: 13px;
+            transition: var(--transition);
+        }
+
+        .search-box input:focus {
+            border-color: var(--color-primary);
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 154, 221, 0.2);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            fill: var(--color-text-muted);
+        }
+
+        .filter-select {
+            padding: 10px 16px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--color-border);
+            font-family: var(--font-family);
+            font-size: 13px;
+            background-color: var(--color-bg-white);
+            cursor: pointer;
+            min-width: 180px;
+            transition: var(--transition);
+        }
+
+        .filter-select:focus {
+            border-color: var(--color-primary);
+            outline: none;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        th {
+            background-color: #F8F9FA;
+            color: var(--color-secondary);
+            font-weight: bold;
+            padding: 14px 16px;
+            border-bottom: 2px solid var(--color-border);
+            user-select: none;
+            cursor: pointer;
+        }
+
+        th.sort-asc::after {
+            content: " ▲";
+            font-size: 10px;
+        }
+
+        th.sort-desc::after {
+            content: " ▼";
+            font-size: 10px;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--color-border);
+            color: var(--color-text);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(0, 154, 221, 0.02);
+        }
+
+        /* --- BADGES --- */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background-color: var(--color-success-bg);
+            color: var(--color-success);
+        }
+
+        .badge-warning {
+            background-color: var(--color-warning-bg);
+            color: #d68910;
+        }
+
+        .badge-danger {
+            background-color: var(--color-danger-bg);
+            color: var(--color-danger);
+        }
+
+        .badge-score {
+            font-weight: bold;
+            font-size: 12px;
+            background-color: #EBF5FB;
+            color: var(--color-secondary);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        /* --- PAGINACIÓN --- */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 13px;
+        }
+
+        .pagination-info {
+            color: var(--color-text-muted);
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-page {
+            padding: 6px 12px;
+            background-color: var(--color-bg-white);
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: var(--font-family);
+            font-size: 12px;
+        }
+
+        .btn-page:hover:not(:disabled) {
+            background-color: var(--color-primary);
+            color: var(--color-bg-white);
+            border-color: var(--color-primary);
+        }
+
+        .btn-page:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-page.active {
+            background-color: var(--color-secondary);
+            color: var(--color-bg-white);
+            border-color: var(--color-secondary);
+        }
+
+        /* --- EMPTY STATE --- */
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            background-color: var(--color-bg-white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .empty-state-icon {
+            width: 80px;
+            height: 80px;
+            fill: var(--color-border);
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            color: var(--color-secondary);
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            color: var(--color-text-muted);
+            max-width: 450px;
+        }
+
+        /* --- MODAL DE EDICIÓN --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(2px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-container {
+            background-color: var(--color-bg-white);
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 400px;
+            max-width: 90%;
+            padding: 24px;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-container {
+            transform: translateY(0);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 10px;
+        }
+        .modal-header h3 {
+            color: var(--color-secondary);
+            font-size: 18px;
+        }
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--color-text-muted);
+            transition: color 0.2s;
+        }
+        .btn-close:hover {
+            color: var(--color-secondary);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            font-family: var(--font-family);
+            font-size: 14px;
+            color: var(--color-text-main);
+            background-color: var(--color-bg-white);
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+        .form-control:focus {
+            border-color: var(--color-primary);
+            outline: none;
+        }
+        .form-control:disabled {
+            background-color: var(--color-bg-light);
+            color: var(--color-text-muted);
+            cursor: not-allowed;
+            border-color: transparent;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        /* Botón Lápiz */
+        .btn-icon {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--color-primary);
+            padding: 4px;
+            border-radius: 4px;
+            transition: background-color 0.2s, color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-icon:hover {
+            background-color: rgba(0, 154, 221, 0.1);
+        }
+        .btn-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* --- MÓDULO LAYOUT INTERACTIVO --- */
+        .layout-header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--color-bg-white);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 20px;
+        }
+        .layout-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            height: 80vh;
+            background-color: var(--color-bg-white);
+            background-size: contain;
+            background-position: center top;
+            background-repeat: no-repeat;
+            border: 2px solid var(--color-border);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+        .layout-box {
+            position: absolute;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease-in-out;
+        }
+        .layout-box.edit-mode {
+            background-color: rgba(0, 154, 221, 0.2);
+            border: 2px dashed var(--color-primary);
+            cursor: move;
+        }
+        .layout-box-label {
+            font-size: clamp(8px, 0.8vw, 12px);
+            color: var(--color-primary);
+            font-weight: bold;
+            text-align: center;
+            pointer-events: none;
+            background: rgba(255,255,255,0.9);
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 90%;
+        }
+        .layout-box.prod-mode {
+            border: none;
+            opacity: 0; /* Totalmente transparente por defecto */
+            cursor: pointer;
+        }
+        .layout-box.prod-mode .layout-box-label {
+            display: none; /* No mostrar texto en prod mode */
+        }
+        .layout-box.prod-mode:hover,
+        .layout-box.prod-mode.hover-active {
+            opacity: 1 !important; /* Muestra el color asignado en JS al hacer hover */
+        }
+        .layout-box .resize-handle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--color-secondary);
+            right: -6px;
+            bottom: -6px;
+            cursor: se-resize;
+            display: none;
+            border-radius: 50%;
+            z-index: 10;
+        }
+        .layout-box.edit-mode .resize-handle {
+            display: block;
+        }
+        .layout-tooltip {
+            position: fixed;
+            background: rgba(25, 33, 44, 0.7);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            pointer-events: none;
+            z-index: 10000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: none;
+            min-width: 220px;
+            backdrop-filter: blur(3px);
+        }
+        .layout-tooltip h4 {
+            margin: 0 0 10px 0;
+            color: var(--color-bg-light);
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            padding-bottom: 5px;
+            font-size: 15px;
+        }
+        .layout-tooltip p {
+            margin: 6px 0;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 500;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-layout">
+        
+        <!-- SIDEBAR DE NAVEGACIÓN -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <button class="btn-toggle-sidebar" onclick="toggleSidebar()" style="background:none; border:none; color:white; cursor:pointer; position: absolute; top: 0; right: 15px;" title="Minimizar Menú">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+                </button>
+                <img src="./flex_logo.png" class="sidebar-logo" alt="Flex Logo" style="width: 80px; height: auto; margin-top: 25px;" />
+                <div class="sidebar-title" style="margin-top: 5px;">
+                    LeanView 5´S
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a class="nav-item active" id="nav-data" onclick="switchTab('data')">
+                    <span class="nav-icon">📁</span>
+                    <span>Data</span>
+                </a>
+                <a class="nav-item" id="nav-dashboard" onclick="switchTab('dashboard')">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <!-- ACTIONS EDITOR -->
+                <a class="nav-item" id="nav-actions" onclick="switchTab('actions')">
+                    <span class="nav-icon">✏️</span>
+                    <span>Actions Editor</span>
+                </a>
+                <!-- NUEVAS SECCIONES EN DESARROLLO -->
+                <a class="nav-item" id="nav-layout" onclick="switchTab('layout')">
+                    <span class="nav-icon">🗺️</span>
+                    <span>Layout</span>
+                </a>
+                <a class="nav-item" id="nav-audits" onclick="switchTab('audits')">
+                    <span class="nav-icon">📋</span>
+                    <span>Audits</span>
+                </a>
+                <a class="nav-item" id="nav-calendar" onclick="switchTab('calendar')">
+                    <span class="nav-icon">📅</span>
+                    <span>Calendar</span>
+                </a>
+                <a class="nav-item" id="nav-areas" onclick="switchTab('areas')">
+                    <span class="nav-icon">🏭</span>
+                    <span>Areas</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="main-content">
+            <div class="dashboard-container">
+                
+                <!-- ENCABEZADO SUPERIOR -->
+                <header class="header" id="main-header">
+                    <div class="header-title-container">
+                        <div class="header-title">
+                            <h1>Auditorías 5S Analytics</h1>
+                            <p>Dashboard de Seguimiento de Acciones Correctivas y Calificación - V6</p>
+                        </div>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="downloadSampleCSV()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-right:4px;">
+                                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+                            </svg>
+                            Descargar Plantilla CSV
+                        </button>
+                        <button class="btn btn-primary" onclick="loadDemoData()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-right:4px;">
+                                <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
+                            </svg>
+                            Cargar Datos Demo
+                        </button>
+                        <button id="btn-reset" class="btn btn-danger hidden" onclick="resetDatabase()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-right:4px;">
+                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                            </svg>
+                            Borrar Datos
+                        </button>
+                    </div>
+                </header>
+
+                <!-- VISTA DATA: CARGA DE ARCHIVO Y TABLA DE ACCIONES -->
+                <div id="view-data" style="display: flex; flex-direction: column; gap: 20px;">
+                    <!-- SECCIÓN DE CARGA CSV (DRAG & DROP) -->
+                    <section class="upload-section">
+                        <div class="upload-dropzone" id="dropzone">
+                            <svg class="upload-icon" viewBox="0 0 24 24">
+                                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                            </svg>
+                            <div class="upload-text">
+                                <h3>Arrastra y suelta tu archivo CSV de Auditoría 5S aquí</h3>
+                                <p>O haz clic para examinar los archivos de tu ordenador (Soporta comas y saltos de línea complejos)</p>
+                            </div>
+                            <input type="file" id="file-uploader" accept=".csv">
+                        </div>
+                        
+                        <div id="upload-status" class="alert-info hidden">
+                            <span id="status-text">Datos cargados correctamente. Sincronizados con localStorage.</span>
+                        </div>
+                    </section>
+                    
+                    <!-- TABLA DE ACCIONES (Movida a view-data) -->
+                    <section class="table-card hidden" id="data-table-section">
+                        <div class="chart-header" style="border-bottom: none; padding-bottom: 0;">
+                            <span class="chart-title">Listado de Acciones en Proceso y Vencidas</span>
+                            <button class="btn btn-secondary" style="color:var(--color-secondary); border-color:var(--color-border); padding: 6px 14px;" onclick="exportTableToCSV()">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-right:4px;">
+                                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 12H15V8h-6v4H5l7 7 7-7z"/>
+                                </svg>
+                                Exportar Listado
+                            </button>
+                        </div>
+                        
+                        <div class="table-header-controls">
+                            <div class="table-filters">
+                                <div class="search-box">
+                                    <svg class="search-icon" viewBox="0 0 24 24">
+                                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 5 9.5 7.01 14 9.5 14zm0-9C11.99 5 14 7.01 14 9.5S11.99 14 9.5 14 5 11.99 5 9.5 7.01 5 9.5 5z"/>
+                                    </svg>
+                                    <input type="text" id="table-search" placeholder="Buscar por ID, propietario, área, estado..." oninput="onFilterChange()">
+                                </div>
+                                <select id="filter-dept" class="filter-select" onchange="onFilterChange()">
+                                    <option value="">Todos los Departamentos</option>
+                                </select>
+                                <select id="filter-owner" class="filter-select" onchange="onFilterChange()">
+                                    <option value="">Todos los Propietarios</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table id="actions-table">
+                                <thead>
+                                    <tr>
+                                        <th onclick="sortTable('auditId')" id="th-auditId">ID Auditoría</th>
+                                        <th onclick="sortTable('actionId')" id="th-actionId">ID Acción</th>
+                                        <th onclick="sortTable('cleanLocation')" id="th-cleanLocation">Área (Limpia)</th>
+                                        <th onclick="sortTable('responseScore')" id="th-responseScore">Calificación</th>
+                                        <th onclick="sortTable('department')" id="th-department">Departamento</th>
+                                        <th onclick="sortTable('owner')" id="th-owner">Responsable</th>
+                                        <th onclick="sortTable('dueDate')" id="th-dueDate">Fecha Vence</th>
+                                        <th onclick="sortTable('status')" id="th-status">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-body">
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="pagination-container">
+                            <div class="pagination-info" id="pagination-info">
+                                Mostrando 0 - 0 de 0 resultados
+                            </div>
+                            <div class="pagination-buttons" id="pagination-buttons">
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- VISTA SECCIÓN EN DESARROLLO -->
+                <div id="view-under-construction" class="hidden" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 70vh; text-align: center; color: var(--color-text-muted);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width: 80px; height: 80px; margin-bottom: 20px; color: var(--color-primary);">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.492-3.053 5.084 1.695-1.354-2.709 2.709-1.354-1.695-5.084-3.053 2.492M11.42 15.17l-4.939 4.939c-.58.58-1.52.58-2.1 0-.58-.58-.58-1.52 0-2.1l4.939-4.939m0 0L6.75 9.75 3 10.5l2.25-2.25L4.5 6l2.25.75L9.75 4.5l-.75 3.75 2.42 2.57" />
+                    </svg>
+                    <h2 id="uc-title" style="color: var(--color-text-main); font-size: 24px; margin-bottom: 10px;">Sección en Desarrollo</h2>
+                    <p style="max-width: 400px; line-height: 1.6;">Estamos construyendo esta funcionalidad para la próxima versión de LeanView 5'S. ¡Vuelve pronto!</p>
+                </div>
+                
+                <!-- EMPTY STATE (GLOBAL) -->
+                <div id="dashboard-empty-state" class="empty-state">
+                    <svg class="empty-state-icon" viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2z"/>
+                    </svg>
+                    <h3>No hay datos para mostrar</h3>
+                    <p>Sube un archivo de auditoría CSV en la pestaña "Data", o presiona el botón <strong>"Cargar Datos Demo"</strong> en el encabezado.</p>
+                </div>
+
+                <!-- CONTENIDO DEL DASHBOARD (SOLO GRÁFICAS) -->
+                <div id="view-dashboard" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
+                    <main id="dashboard-content" style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
+            
+                        <!-- FILTRO GLOBAL DE FECHAS PARA DASHBOARD -->
+                        <section class="chart-card" style="padding: 15px 24px; flex-direction: row; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                            <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                                <strong style="color: var(--color-text); font-size: 14px;">Filtrar Dashboard por Fecha de Auditoría:</strong>
+                                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                    <label for="global-date-start" style="font-size: 13px; color: var(--color-text-light);">Desde:</label>
+                                    <input type="date" id="global-date-start" class="filter-select" style="width: auto; padding: 6px;" onchange="updateDashboard()">
+                                    <label for="global-date-end" style="font-size: 13px; color: var(--color-text-light);">Hasta:</label>
+                                    <input type="date" id="global-date-end" class="filter-select" style="width: auto; padding: 6px;" onchange="updateDashboard()">
+                                    <button class="btn btn-secondary" onclick="clearGlobalDateFilter()" style="padding: 6px 12px; font-size: 13px;">Limpiar</button>
+                                </div>
+                            </div>
+                        </section>
+
+            <!-- CARDS DE KPIs SUPERIORES -->
+            <section class="kpis-grid">
+                <!-- Porcentaje Calificación General -->
+                <div class="kpi-card score">
+                    <span class="kpi-title">Calificación General 5S</span>
+                    <span class="kpi-value" id="kpi-avg-score">0.0%</span>
+                </div>
+                <!-- Acciones Válidas -->
+                <div class="kpi-card">
+                    <span class="kpi-title">Acciones Válidas</span>
+                    <span class="kpi-value" id="kpi-total-actions">0</span>
+                </div>
+                <!-- Acciones en Proceso -->
+                <div class="kpi-card warning">
+                    <span class="kpi-title">Acciones en Proceso</span>
+                    <span class="kpi-value" id="kpi-open-actions">0</span>
+                </div>
+                <!-- Acciones Cerradas -->
+                <div class="kpi-card closed">
+                    <span class="kpi-title">Acciones Cerradas</span>
+                    <span class="kpi-value" id="kpi-closed-actions">0</span>
+                </div>
+                <!-- Acciones Vencidas -->
+                <div class="kpi-card overdue">
+                    <span class="kpi-title">Acciones Vencidas</span>
+                    <span class="kpi-value" id="kpi-overdue-actions">0</span>
+                </div>
+                <!-- Porcentaje de Cierre -->
+                <div class="kpi-card closed">
+                    <span class="kpi-title">% de Cierre</span>
+                    <span class="kpi-value" id="kpi-closed-percent">0.0%</span>
+                </div>
+            </section>
+
+            <!-- SECCIÓN DE GRÁFICAS FILA 1 -->
+            <section class="charts-grid">
+                <!-- Gráfica 1 (Mixta): Calificación Promedio por Área con línea de meta 95% -->
+                <div class="chart-card" style="cursor: pointer; transition: transform 0.2s; position: relative;" onclick="openHistoryView()" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
+                    <div class="chart-header">
+                        <span class="chart-title">Calificación Promedio por Área (Top 10)</span>
+                        <div class="chart-controls" onclick="event.stopPropagation()">
+                            <button id="btn-toggle-sort" class="btn-toggle active-toggle" onclick="toggleAreaTop10('worst')">Top 10 Peores</button>
+                            <button id="btn-toggle-sort-best" class="btn-toggle" onclick="toggleAreaTop10('best')">Top 10 Mejores</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chartAreaScores"></canvas>
+                    </div>
+                </div>
+
+                <!-- Gráfica 2 (Barras Apiladas): Acciones Activas (En Proceso + Vencidas) por Depto/Responsable con Toggle -->
+                <div class="chart-card" style="cursor: pointer; transition: transform 0.2s; position: relative;" onclick="openDetailView('active')" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
+                    <div class="chart-header">
+                        <span class="chart-title" id="actions-chart-title">Acciones Activas por Departamento</span>
+                        <div class="chart-controls" onclick="event.stopPropagation()">
+                            <button id="btn-toggle-dept" class="btn-toggle active-toggle" onclick="setActionsGroupBy('dept')">Depto</button>
+                            <button id="btn-toggle-owner" class="btn-toggle" onclick="setActionsGroupBy('owner')">Responsable</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chartDeptActions"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECCIÓN DE GRÁFICAS FILA 2 -->
+            <section class="charts-three-grid">
+                <!-- Gráfica 3 (Barras): Acciones Overdue por Departamento/Responsable con Toggle -->
+                <div class="chart-card" style="cursor: pointer; transition: transform 0.2s; position: relative;" onclick="openDetailView('overdue')" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
+                    <div class="chart-header">
+                        <span class="chart-title" id="overdue-chart-title">Acciones Vencidas por Departamento</span>
+                        <div class="chart-controls" onclick="event.stopPropagation()">
+                            <button id="btn-toggle-overdue-dept" class="btn-toggle active-toggle" onclick="setOverdueGroupBy('dept')">Depto</button>
+                            <button id="btn-toggle-overdue-owner" class="btn-toggle" onclick="setOverdueGroupBy('owner')">Responsable</button>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="min-height: 250px;">
+                        <canvas id="chartDeptOverdue"></canvas>
+                    </div>
+                </div>
+
+                <!-- Gráfica 4 (Barras Apiladas): Aging de Acciones en Proceso por Buckets (Toggle Depto/Owner) -->
+                <div class="chart-card" style="cursor: pointer; transition: transform 0.2s; position: relative;" onclick="openDetailView('aging_open')" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
+                    <div class="chart-header">
+                        <span class="chart-title" id="aging-open-chart-title">Antigüedad Acciones en Proceso</span>
+                        <div class="chart-controls" onclick="event.stopPropagation()">
+                            <button id="btn-toggle-aging-open-dept" class="btn-toggle active-toggle" onclick="setAgingOpenGroupBy('dept')">Depto</button>
+                            <button id="btn-toggle-aging-open-owner" class="btn-toggle" onclick="setAgingOpenGroupBy('owner')">Responsable</button>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="min-height: 250px;">
+                        <canvas id="chartAgingOpen"></canvas>
+                    </div>
+                </div>
+
+                <!-- Gráfica 5 (Barras Apiladas): Aging de Acciones Vencidas por Buckets (Toggle Depto/Owner) -->
+                <div class="chart-card" style="cursor: pointer; transition: transform 0.2s; position: relative;" onclick="openDetailView('aging_overdue')" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
+                    <div class="chart-header">
+                        <span class="chart-title" id="aging-overdue-chart-title">Antigüedad Acciones Vencidas</span>
+                        <div class="chart-controls" onclick="event.stopPropagation()">
+                            <button id="btn-toggle-aging-overdue-dept" class="btn-toggle active-toggle" onclick="setAgingOverdueGroupBy('dept')">Depto</button>
+                            <button id="btn-toggle-aging-overdue-owner" class="btn-toggle" onclick="setAgingOverdueGroupBy('owner')">Responsable</button>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="min-height: 250px;">
+                        <canvas id="chartAgingOverdue"></canvas>
+                    </div>
+                </div>
+            </section>
+        </main> <!-- END CONTENIDO DASHBOARD -->
+
+            <!-- VISTA ACTIONS EDITOR -->
+            <div id="view-actions-editor" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="chart-header" style="justify-content: flex-start; gap: 15px; border-bottom: 1px solid var(--color-border); padding-bottom: 10px; margin-bottom: 0;">
+                    <h2 style="margin: 0; font-size: 20px; color: var(--color-text);">Editor Manual de Acciones</h2>
+                </div>
+
+                <div style="display: flex; gap: 15px; padding: 15px; background: var(--color-bg-white); border-radius: var(--border-radius); box-shadow: var(--box-shadow); flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label style="font-size: 13px; color: var(--color-text-light);">Buscar:</label>
+                        <input type="text" id="editor-search" class="filter-select" placeholder="Buscar..." oninput="applyEditorFilters()">
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label style="font-size: 13px; color: var(--color-text-light);">Responsable:</label>
+                        <select id="editor-filter-owner" class="filter-select" onchange="applyEditorFilters()">
+                            <option value="All">Todos</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label style="font-size: 13px; color: var(--color-text-light);">Estado:</label>
+                        <select id="editor-filter-status" class="filter-select" onchange="applyEditorFilters()">
+                            <option value="All">Todos</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-secondary" onclick="clearEditorFilters()" style="margin-left: auto;">Limpiar Filtros</button>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table id="editor-table">
+                            <thead>
+                                <tr>
+                                    <th>ID Auditoría</th>
+                                    <th>ID Acción</th>
+                                    <th>Comentarios</th>
+                                    <th>Responsable</th>
+                                    <th>Fecha Vence</th>
+                                    <th>Estado</th>
+                                    <th style="width: 50px; text-align: center;">Editar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="editor-table-body">
+                                <!-- Filas dinámicas -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination-container" style="padding: 15px; border-top: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
+                        <div class="pagination-info" id="editor-pagination-info">Mostrando 0 - 0 de 0</div>
+                        <div class="pagination-buttons" id="editor-pagination-buttons"></div>
+                    </div>
+                </div>
+            </div> <!-- END ACTIONS EDITOR -->
+
+            <!-- VISTA LAYOUT INTERACTIVO -->
+            <div id="view-layout-wrapper" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
+                
+                <!-- VISTA PRINCIPAL DEL MAPA -->
+                <div id="view-layout-main">
+                    <div class="layout-header-controls" style="display: flex; flex-direction: column; align-items: flex-start; gap: 15px;">
+                        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%;">
+                            <h2 style="margin: 0; font-size: 20px; color: var(--color-text);">Layout Interactivo 5S</h2>
+                            <select id="layout-selector" class="filter-select" onchange="changeLayoutMap()">
+                                <option value="b27.png">Planta - Edificio B27</option>
+                                <option value="b29.png">Planta - Edificio B29</option>
+                            </select>
+                            <select id="layout-view-mode" class="filter-select" onchange="changeLayoutMap()">
+                                <option value="areas">Modo: Áreas</option>
+                                <option value="sectors">Modo: Sectores</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px; width: 100%; border-top: 1px solid #eee; padding-top: 10px;">
+                            <button id="btn-layout-edit" class="btn" style="background-color: #6c757d; color: white;" onclick="toggleLayoutEditMode()">Activar Modo Edición</button>
+                            <button id="btn-layout-add" class="btn hidden" style="background-color: #009ADD; color: white;" onclick="addLayoutBox()">+ Añadir Recuadro</button>
+                            <button id="btn-layout-save" class="btn hidden" style="background-color: #6c757d; color: white;" onclick="saveLayoutCoordinates()">Guardar (Consola)</button>
+                        </div>
+                    </div>
+
+                    <div class="layout-container" id="layout-map-container">
+                        <!-- Las cajas dinámicas se renderizan aquí -->
+                    </div>
+                </div>
+
+                <!-- VISTA DE DEEP DIVE (DETALLE DE ÁREA) -->
+                <div id="view-layout-detail" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
+                    <div class="chart-header" style="justify-content: flex-start; gap: 15px; border-bottom: 1px solid var(--color-border); padding-bottom: 10px; margin-bottom: 0;">
+                        <button class="btn btn-primary" onclick="closeLayoutDetail()">
+                            ◀ Volver al Mapa
+                        </button>
+                        <h2 id="layout-detail-title" style="margin: 0; font-size: 20px; color: var(--color-text);">Detalle de Área</h2>
+                    </div>
+
+                    <section class="kpis-grid">
+                        <div class="kpi-card score">
+                            <span class="kpi-title">Última Calificación Promedio</span>
+                            <span class="kpi-value" id="layout-detail-score">0.0</span>
+                        </div>
+                        <div class="kpi-card warning">
+                            <span class="kpi-title">Acciones Abiertas (En Proceso)</span>
+                            <span class="kpi-value" id="layout-detail-wip">0</span>
+                        </div>
+                        <div class="kpi-card overdue">
+                            <span class="kpi-title">Acciones Vencidas (Overdue)</span>
+                            <span class="kpi-value" id="layout-detail-overdue">0</span>
+                        </div>
+                    </section>
+
+                    <section class="charts-grid" style="grid-template-columns: 1fr;">
+                        <div class="table-card">
+                            <div class="chart-header"><span class="chart-title">Acciones Activas del Área</span></div>
+                            <div class="table-responsive">
+                                <table id="layout-detail-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID Acción</th>
+                                            <th>Comentarios</th>
+                                            <th>Responsable</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="layout-detail-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div> <!-- END LAYOUT MODULE -->
+
+            <!-- VISTA DE HISTORIAL Y GRÁFICA COMPLETA (SPA) -->
+            <div id="history-view" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
+                        <div class="chart-header" style="justify-content: flex-start; gap: 15px; border-bottom: 1px solid var(--color-border); padding-bottom: 10px;">
+                            <button class="btn btn-primary" onclick="closeHistoryView()">
+                                ◀ Volver al Dashboard
+                            </button>
+                            <h2 style="font-size: 1.2rem; color: var(--color-secondary); margin-left: 10px;">Historial Completo de Calificaciones por Área</h2>
+                        </div>
+                        
+                        <section class="table-card" style="padding: 15px;">
+                            <div class="table-filters" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                                <label style="font-weight: bold; font-family: var(--font-family);">Filtrar por Fecha (Auditoría):</label>
+                                <input type="date" id="history-date-start" class="filter-select" onchange="renderHistoryView()">
+                                <span style="color: var(--color-text-muted);">hasta</span>
+                                <input type="date" id="history-date-end" class="filter-select" onchange="renderHistoryView()">
+                                <button class="btn btn-secondary" onclick="document.getElementById('history-date-start').value=''; document.getElementById('history-date-end').value=''; renderHistoryView();">Limpiar Filtro</button>
+                            </div>
+                        </section>
+
+                        <section class="chart-card">
+                            <div class="chart-header">
+                                <span class="chart-title">Todas las Áreas (Filtradas por Fecha)</span>
+                            </div>
+                            <div class="chart-container" style="min-height: 400px;">
+                                <canvas id="chartHistoryAreaScores"></canvas>
+                            </div>
+                        </section>
+
+                        <section class="table-card">
+                            <div class="chart-header">
+                                <span class="chart-title">Detalle de Historial</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table id="history-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Área (Limpia)</th>
+                                            <th>Calificación (1-4)</th>
+                                            <th>Fecha Auditoría (Apertura)</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="history-table-body">
+                                        <!-- Filas dinámicas -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </div> <!-- END VISTA HISTORIAL -->
+
+            <!-- VISTA DE DETALLE DE ACCIONES (DRILL-DOWN) -->
+            <div id="detail-view" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="chart-header" style="justify-content: flex-start; gap: 15px; border-bottom: 1px solid var(--color-border); padding-bottom: 10px; margin-bottom: 0;">
+                    <button class="btn btn-primary" onclick="closeDetailView()">
+                        ◀ Volver al Dashboard
+                    </button>
+                    <h2 id="detail-view-title" style="margin: 0; font-size: 20px; color: var(--color-text);">Detalle de Acciones</h2>
+                </div>
+
+                <div style="display: flex; gap: 15px; padding: 15px; background: var(--color-bg-white); border-radius: var(--border-radius); box-shadow: var(--box-shadow); flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label style="font-size: 13px; color: var(--color-text-light);">Responsable:</label>
+                        <select id="detail-filter-owner" class="filter-select" onchange="applyDetailFilters()">
+                            <option value="All">Todos</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label style="font-size: 13px; color: var(--color-text-light);">Estado:</label>
+                        <select id="detail-filter-status" class="filter-select" onchange="applyDetailFilters()">
+                            <option value="All">Todos</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label style="font-size: 13px; color: var(--color-text-light);">Fecha Compromiso:</label>
+                        <input type="date" id="detail-filter-date" class="filter-select" onchange="applyDetailFilters()">
+                    </div>
+                    <button class="btn btn-secondary" onclick="clearDetailFilters()" style="padding: 6px 12px; font-size: 13px;">Limpiar</button>
+                </div>
+
+                <section class="chart-card" style="padding: 0; overflow: hidden;">
+                    <div style="overflow-x: auto;">
+                        <table class="data-table" id="detail-table" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background-color: #f8f9fa;">
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">ID Acción</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Acción / Comentarios</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Responsable</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Fecha Compromiso</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Estado Original</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detail-table-body">
+                                <!-- Datos inyectados por JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div> <!-- END VISTA DETALLE -->
+
+                </div> <!-- END CONTENIDO DASHBOARD -->
+            </div> <!-- END DASHBOARD CONTAINER -->
+        </div> <!-- END MAIN CONTENT -->
+    </div> <!-- END APP LAYOUT -->
+
+    <!-- --- CÓDIGO JAVASCRIPT --- -->
+    <script>
+        // Registrar plugin de etiquetas de datos
+        Chart.register(ChartDataLabels);
+
+        // --- VARIABLES GLOBALES DE ESTADO ---
+        const STORAGE_KEY = 'flex_5s_audits_v6';
+        let allAuditData = [];
+        
+        let arrClosed = [];
+        let arrOverdue = [];
+        let arrWIP = [];
+
+        // Modo Top 10 para la gráfica 1 (worst / best)
+        let areaTopMode = 'worst';
+
+        // Toggles
+        let actionsGroupBy = 'dept';
+        let overdueGroupBy = 'dept';
+        let agingOpenGroupBy = 'dept';
+        let agingOverdueGroupBy = 'dept';
+
+        // Instancias de Chart.js
+        let chartInstanceHistory = null;
+        let chartInstanceArea = null;
+        let chartInstanceDept = null;
+        let chartInstanceOverdue = null;
+        let chartInstanceAgingOpen = null;
+        let chartInstanceAgingOverdue = null;
+
+        // NAVEGACIÓN SIDEBAR
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('collapsed');
+        }
+
+        function switchTab(tabId) {
+            // Quitar clase activa de nav items
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('nav-' + tabId).classList.add('active');
+
+            // Ocultar todas las vistas
+            document.getElementById('view-data').classList.add('hidden');
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('history-view').classList.add('hidden');
+            document.getElementById('detail-view').classList.add('hidden');
+            document.getElementById('view-under-construction').classList.add('hidden');
+            document.getElementById('view-layout-wrapper').classList.add('hidden');
+
+            if (tabId === 'data') {
+                document.getElementById('view-data').classList.remove('hidden');
+                document.getElementById('main-header').classList.remove('hidden');
+            } else if (tabId === 'dashboard') {
+                document.getElementById('view-dashboard').classList.remove('hidden');
+                document.getElementById('main-header').classList.add('hidden');
+                document.getElementById('dashboard-content').classList.remove('hidden');
+                document.getElementById('view-actions-editor').classList.add('hidden');
+            } else if (tabId === 'actions') {
+                document.getElementById('view-dashboard').classList.remove('hidden');
+                document.getElementById('dashboard-content').classList.add('hidden');
+                document.getElementById('view-actions-editor').classList.remove('hidden');
+                document.getElementById('main-header').classList.add('hidden');
+                initActionsEditor();
+            } else if (tabId === 'layout') {
+                document.getElementById('view-dashboard').classList.remove('hidden');
+                document.getElementById('dashboard-content').classList.add('hidden');
+                document.getElementById('view-actions-editor').classList.add('hidden');
+                document.getElementById('view-layout-wrapper').classList.remove('hidden');
+                document.getElementById('main-header').classList.add('hidden');
+                initLayoutModule();
+            } else {
+                // Cualquier otra pestaña (audits, calendar, areas)
+                document.getElementById('view-under-construction').classList.remove('hidden');
+                document.getElementById('main-header').classList.remove('hidden');
+                
+                // Actualizar el texto según la sección
+                const titles = {
+                    'layout': 'Layout de Planta',
+                    'audits': 'Gestión de Auditorías',
+                    'calendar': 'Calendario 5S',
+                    'areas': 'Control de Áreas'
+                };
+                document.getElementById('uc-title').textContent = titles[tabId] || 'Sección en Desarrollo';
+            }
+            
+            // Re-renderizar si es dashboard
+            if (tabId === 'dashboard' && allAuditData.length > 0) {
+                updateDashboard();
+            }
+        }
+
+        // Inicializar Aplicación al cargar
+        window.addEventListener('DOMContentLoaded', () => {
+            initDropzone();
+            loadFromLocalStorage();
+        });
+
+        // 1. CARGA DESDE LOCALSTORAGE
+        function loadFromLocalStorage() {
+            const dataStr = localStorage.getItem(STORAGE_KEY);
+            if (dataStr) {
+                allAuditData = JSON.parse(dataStr);
+                document.getElementById('btn-reset').classList.remove('hidden');
+                updateDashboard();
+            } else {
+                document.getElementById('dashboard-content').classList.add('hidden');
+                document.getElementById('dashboard-empty-state').classList.remove('hidden');
+                document.getElementById('btn-reset').classList.add('hidden');
+                document.getElementById('upload-status').classList.add('hidden');
+            }
+        }
+
+        // 2. CONFIGURACIÓN DEL DRAG & DROP DEL CARGADOR CSV
+        function initDropzone() {
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('file-uploader');
+
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+
+            dropzone.addEventListener('dragleave', () => {
+                dropzone.classList.remove('dragover');
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) {
+                    processFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    processFile(e.target.files[0]);
+                }
+            });
+        }
+
+        // 3. PROCESAMIENTO DEL ARCHIVO CSV Y PARSE (MÁQUINA DE ESTADOS RFC-4180 COMPLIANT)
+        function processFile(file) {
+            if (!file.name.endsWith('.csv')) {
+                alert('Por favor, selecciona únicamente archivos con extensión .csv.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const parsedRows = parseCSV(text);
+                
+                if (parsedRows.length <= 1) {
+                    alert('El archivo CSV parece estar vacío o no contener filas de datos.');
+                    return;
+                }
+
+                const headers = parsedRows[0];
+                const headerMap = mapHeaders(headers);
+
+                // Convertir filas crudas en objetos mapeados con normalización de campos
+                const newItems = parsedRows.slice(1).map((row, index) => {
+                    if (row.length === 0 || (row.length === 1 && row[0].trim() === '')) return null;
+
+                    const getValue = (idx, defaultVal = '') => {
+                        return (idx !== undefined && row[idx] !== undefined) ? row[idx].trim() : defaultVal;
+                    };
+
+                    const auditId = getValue(headerMap.audit, `AUD-${Date.now()}`);
+                    const actionId = getValue(headerMap.action, `ACT-NEW-${index}-${Date.now().toString().slice(-4)}`);
+                    const rawLocation = getValue(headerMap.location, 'Flex -> Desconocido');
+                    const cleanLoc = cleanLocation(rawLocation);
+                    
+                    const rawScore = getValue(headerMap.score, '-1');
+                    const scoreVal = parseInt(rawScore);
+                    const score = isNaN(scoreVal) ? -1 : scoreVal;
+
+                    const dept = getValue(headerMap.dept, 'Sin Departamento');
+                    const owner = getValue(headerMap.owner, 'Sin Asignar');
+                    
+                    // Normalización de estados
+                    const rawStatus = getValue(headerMap.status).trim();
+                    const statusLower = rawStatus.toLowerCase();
+                    let status = rawStatus;
+                    if (rawStatus === '' || statusLower === 'null' || statusLower === 'undefined') {
+                        status = 'Open';
+                    }
+
+                    const dueDate = getValue(headerMap.date, 'Sin Fecha');
+                    const rawOpenDate = getValue(headerMap.openDate, formatDate(new Date()));
+                    // Cortar la hora para evitar "Invalid Date" en Chart.js y cálculos de días
+                    const openDate = rawOpenDate.includes(' ') ? rawOpenDate.split(' ')[0] : rawOpenDate;
+
+                    const comments = getValue(headerMap.comments, 'Sin comentarios / Acción no descrita');
+
+                    return {
+                        auditId,
+                        actionId,
+                        location: rawLocation,
+                        cleanLocation: cleanLoc,
+                        responseScore: score,
+                        department: dept,
+                        owner: owner,
+                        status: status,
+                        dueDate: dueDate,
+                        openDate: openDate,
+                        comments: comments
+                    };
+                }).filter(item => item !== null);
+
+                if (newItems.length === 0) {
+                    alert('No se pudieron extraer registros del archivo.');
+                    return;
+                }
+
+                const upsertResults = runUpsert(newItems);
+                
+                const validNew = newItems.filter(item => item.responseScore !== 5 && item.responseScore !== -1).length;
+                const statusDiv = document.getElementById('upload-status');
+                const statusText = document.getElementById('status-text');
+                statusText.innerHTML = `<strong>Sincronización exitosa:</strong> Se agregaron <strong>${upsertResults.inserted}</strong> registros y se actualizaron <strong>${upsertResults.updated}</strong>. (Se detectaron ${validNew} acciones correctivas válidas en esta carga).`;
+                statusDiv.classList.remove('hidden');
+
+                loadFromLocalStorage();
+            };
+            reader.readAsText(file);
+        }
+
+        // PARSER DE CSV COMPLETO (RFC-4180 Compliant)
+        function parseCSV(text) {
+            const result = [];
+            let row = [];
+            let entry = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const nextChar = text[i + 1];
+                
+                if (inQuotes) {
+                    if (char === '"') {
+                        if (nextChar === '"') {
+                            entry += '"';
+                            i++; 
+                        } else {
+                            inQuotes = false;
+                        }
+                    } else {
+                        entry += char;
+                    }
+                } else {
+                    if (char === '"') {
+                        inQuotes = true;
+                    } else if (char === ',') {
+                        row.push(entry);
+                        entry = '';
+                    } else if (char === '\n' || char === '\r') {
+                        row.push(entry);
+                        entry = '';
+                        if (row.length > 0 && (row.length > 1 || row[0] !== '')) {
+                            result.push(row);
+                        }
+                        row = [];
+                        if (char === '\r' && nextChar === '\n') {
+                            i++; 
+                        }
+                    } else {
+                        entry += char;
+                    }
+                }
+            }
+            
+            if (entry !== '' || row.length > 0) {
+                row.push(entry);
+                if (row.length > 0 && (row.length > 1 || row[0] !== '')) {
+                    result.push(row);
+                }
+            }
+            
+            return result;
+        }
+
+        // MAPEO FLEXIBLE DE ENCABEZADOS DEL CSV
+        function mapHeaders(headers) {
+            const map = {};
+            const norm = headers.map(h => h.trim().toLowerCase().replace(/[\s_]/g, ''));
+            
+            const findIndex = (keys) => {
+                return norm.findIndex(h => keys.some(k => h.includes(k) || h === k));
+            };
+
+            map.audit = findIndex(['auditid', 'auditoriano', 'audit']);
+            map.action = findIndex(['actionlogid', 'actionid', 'idaccion', 'action', 'id']);
+            map.location = findIndex(['location', 'ubicacion', 'area', 'linea']);
+            map.score = findIndex(['responsescore', 'score', 'calificacion', 'scorepuntos']);
+            map.dept = findIndex(['actionlogdepartament', 'actionlogdepartment', 'department', 'departamento', 'dept']);
+            map.owner = findIndex(['actionlogowner', 'owner', 'responsable', 'propietario']);
+            map.status = findIndex(['actionlogstatus', 'status', 'estado', 'estatus']);
+            map.date = findIndex(['actionlogduedate', 'duedate', 'fechavence', 'due', 'fecha']);
+            let respIndex = findIndex(['responsedatetime', 'responsedate']);
+            if (respIndex !== -1) {
+                map.openDate = respIndex;
+            } else {
+                map.openDate = findIndex(['actionlogopendate', 'opendate', 'fechaapertura', 'apertura', 'open']);
+            }
+            map.comments = findIndex(['comments', 'comentarios', 'accion', 'actionlogcomments']);
+
+            if (map.audit === -1) map.audit = 0;
+            if (map.action === -1) map.action = 1;
+            if (map.location === -1) map.location = 2;
+            if (map.score === -1) map.score = 3;
+            if (map.dept === -1) map.dept = 4;
+            if (map.owner === -1) map.owner = 5;
+            if (map.status === -1) map.status = 6;
+            if (map.date === -1) map.date = 7;
+            if (map.openDate === -1) map.openDate = headers.length - 1 > 7 ? headers.length - 1 : 8;
+            if (map.comments === -1) map.comments = headers.length - 1;
+
+            return map;
+        }
+
+        // LIMPIEZA DE UBICACIÓN (Conserva el último valor tras '->')
+        function cleanLocation(locStr) {
+            if (!locStr) return 'N/A';
+            if (locStr.includes('->')) {
+                const parts = locStr.split('->');
+                return parts[parts.length - 1].trim();
+            }
+            return locStr.trim();
+        }
+
+        // LÓGICA DE UPSERT / SINCRONIZACIÓN EN LOCALSTORAGE
+        function runUpsert(newItems) {
+            const existing = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            const map = new Map();
+            
+            const getItemKey = (item) => `${item.auditId.trim()}_${item.actionId.trim()}`;
+
+            existing.forEach(item => {
+                map.set(getItemKey(item), item);
+            });
+
+            let inserted = 0;
+            let updated = 0;
+
+            newItems.forEach(item => {
+                const key = getItemKey(item);
+                if (map.has(key)) {
+                    const oldItem = map.get(key);
+                    map.set(key, { ...oldItem, ...item });
+                    updated++;
+                } else {
+                    map.set(key, item);
+                    inserted++;
+                }
+            });
+
+            const combined = Array.from(map.values());
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(combined));
+
+            return {
+                inserted,
+                updated,
+                total: combined.length
+            };
+        }
+
+        // 4. ACTUALIZACIÓN DEL DASHBOARD Y PROCESAMIENTO MATEMÁTICO (SEPARACIÓN ESTRICTA V6)
+        function clearGlobalDateFilter() {
+            document.getElementById('global-date-start').value = '';
+            document.getElementById('global-date-end').value = '';
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            if (allAuditData.length === 0) return;
+
+            document.getElementById('dashboard-empty-state').classList.add('hidden');
+            document.getElementById('dashboard-content').classList.remove('hidden');
+
+            // FILTRO GLOBAL DE FECHAS
+            globalFilteredData = allAuditData;
+            const startVal = document.getElementById('global-date-start').value;
+            const endVal = document.getElementById('global-date-end').value;
+            
+            if (startVal || endVal) {
+                const startDate = startVal ? new Date(startVal + 'T00:00:00') : null;
+                const endDate = endVal ? new Date(endVal + 'T23:59:59') : null;
+
+                globalFilteredData = allAuditData.filter(item => {
+                    if (!item.openDate || item.openDate === 'Sin Fecha') return true;
+                    let cleanStr = item.openDate.replace(/-/g, '/').split(' ')[0];
+                    let d = new Date(cleanStr);
+                    if (isNaN(d.getTime())) {
+                        const parts = cleanStr.split('/');
+                        if (parts.length === 3) d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                    }
+                    if (isNaN(d.getTime())) return true;
+                    
+                    if (startDate && d < startDate) return false;
+                    if (endDate && d > endDate) return false;
+                    return true;
+                });
+            }
+
+            // Filtrar descartes (Excluir -1 y 5 porque 5 no genera accion correctiva real)
+            const validActions = globalFilteredData.filter(item => {
+                const s = item.responseScore;
+                return s !== 5 && s !== -1;
+            });
+
+            // Generar y poblar tres arrays independientes
+            arrClosed = [];
+            arrOverdue = [];
+            arrWIP = [];
+            
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            validActions.forEach(item => {
+                const s = item.status ? item.status.toLowerCase().trim() : '';
+                if (s === 'closed' || s === 'close' || s === 'cerrada' || s === 'cerrado') {
+                    arrClosed.push(item);
+                } else {
+                    let isOverdue = false;
+                    if (s === 'overdue' || s === 'vencida') {
+                        isOverdue = true;
+                    } else if (item.dueDate && item.dueDate !== 'Sin Fecha') {
+                        let cleanStr = item.dueDate.replace(/-/g, '/').split(' ')[0];
+                        let d = new Date(cleanStr);
+                        if (isNaN(d.getTime())) {
+                            const parts = cleanStr.split('/');
+                            if (parts.length === 3) d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                        }
+                        if (!isNaN(d.getTime())) {
+                            d.setHours(0,0,0,0);
+                            if (d < today) isOverdue = true;
+                        }
+                    }
+
+                    if (isOverdue) arrOverdue.push(item);
+                    else arrWIP.push(item);
+                }
+            });
+
+            // Actualizar KPIs Cards
+            calculateKPIs();
+
+            // Rellenar dinámicamente los selectores de filtros de la tabla
+            populateFilterOptions();
+
+            // Renderizar Gráficas
+            renderChartAreaScores();
+            renderChartDeptActions();
+            renderChartDeptOverdue();
+            renderChartAgingOpen();
+            renderChartAgingOverdue();
+
+            // Actualizar datos de la tabla
+            applyFilters();
+        }
+
+        // 5. CÁLCULO DE KPIs METRICS
+        function calculateKPIs() {
+            // KPI 1: Promedio de Score General 5S (Excluye -1) convertido a porcentaje (Promedio / 5) * 100
+            const scoreData = globalFilteredData.filter(item => item.responseScore !== -1);
+            let avgPercent = 0;
+            if (scoreData.length > 0) {
+                const sum = scoreData.reduce((acc, curr) => acc + curr.responseScore, 0);
+                const rawAvg = sum / scoreData.length;
+                avgPercent = (rawAvg / 5) * 100;
+            }
+            document.getElementById('kpi-avg-score').textContent = avgPercent.toFixed(1) + '%';
+
+            // KPI 2: Acciones Totales (Suma de los 3 arrays independientes de negocio)
+            const totalActions = arrClosed.length + arrOverdue.length + arrWIP.length;
+            document.getElementById('kpi-total-actions').textContent = totalActions;
+
+            // KPI 3: Acciones en Proceso
+            document.getElementById('kpi-open-actions').textContent = arrWIP.length;
+            
+            // KPI 4: Acciones Cerradas
+            document.getElementById('kpi-closed-actions').textContent = arrClosed.length;
+
+            // KPI 5: Acciones Vencidas
+            document.getElementById('kpi-overdue-actions').textContent = arrOverdue.length;
+
+            // KPI 6: Porcentaje de Cierre -> Cerradas / Totales Válidas
+            const closurePct = totalActions > 0 ? (arrClosed.length / totalActions) * 100 : 0;
+            document.getElementById('kpi-closed-percent').textContent = closurePct.toFixed(1) + '%';
+        }
+
+        // --- OPCIONES DE FILTRO DE TABLA (WIP + Overdue únicamente) ---
+        function populateFilterOptions() {
+            const deptSelect = document.getElementById('filter-dept');
+            const ownerSelect = document.getElementById('filter-owner');
+            
+            const currentDeptVal = deptSelect.value;
+            const currentOwnerVal = ownerSelect.value;
+
+            const depts = new Set();
+            const owners = new Set();
+
+            // Unión limpia de WIP y Overdue para filtros de la tabla
+            const activeActions = [...arrWIP, ...arrOverdue];
+
+            activeActions.forEach(item => {
+                if (item.department) depts.add(item.department);
+                if (item.owner) owners.add(item.owner);
+            });
+
+            deptSelect.innerHTML = '<option value="">Todos los Departamentos</option>';
+            Array.from(depts).sort().forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d;
+                if (d === currentDeptVal) opt.selected = true;
+                deptSelect.appendChild(opt);
+            });
+
+            ownerSelect.innerHTML = '<option value="">Todos los Propietarios</option>';
+            Array.from(owners).sort().forEach(o => {
+                const opt = document.createElement('option');
+                opt.value = o;
+                opt.textContent = o;
+                if (o === currentOwnerVal) opt.selected = true;
+                ownerSelect.appendChild(opt);
+            });
+        }
+
+        // 6. RENDERIZACIÓN DE GRÁFICAS (CHART.JS)
+
+        // Gráfica 1: Calificación por Área (Mixed Chart: Barras + Línea Meta 95% en rojo suave)
+        function toggleAreaTop10(mode) {
+            areaTopMode = mode;
+            const btnWorst = document.getElementById('btn-toggle-sort');
+            const btnBest = document.getElementById('btn-toggle-sort-best');
+            if (mode === 'worst') {
+                btnWorst.classList.add('active-toggle');
+                btnBest.classList.remove('active-toggle');
+            } else {
+                btnBest.classList.add('active-toggle');
+                btnWorst.classList.remove('active-toggle');
+            }
+            renderChartAreaScores();
+        }
+
+        // --- FUNCIÓN MAESTRA DE AGRUPAMIENTO POR AUDITORÍA ---
+        function getAuditScores(data) {
+            const auditGroups = {}; 
+            data.forEach(item => {
+                const score = item.responseScore;
+                if (score === -1) return;
+                
+                let dateKey = item.openDate ? item.openDate.split(' ')[0] : 'Sin Fecha';
+                let loc = item.cleanLocation || 'Sin Área';
+                let key = item.auditId ? item.auditId : (loc + '___' + dateKey); // Agrupamiento estricto por AuditID
+                
+                if (!auditGroups[key]) {
+                    auditGroups[key] = { location: loc, date: dateKey, sum: 0, count: 0, statusSet: new Set() };
+                }
+                auditGroups[key].sum += score;
+                auditGroups[key].count += 1;
+                if(item.status) auditGroups[key].statusSet.add(item.status);
+            });
+
+            return Object.values(auditGroups).map(group => {
+                let rawAvg = group.count > 0 ? group.sum / group.count : 0;
+                let percentage = (rawAvg / 5) * 100;
+                
+                let auditStatus = 'En Proceso';
+                if (group.statusSet.has('Overdue')) auditStatus = 'Overdue';
+                else if (group.statusSet.has('Open') || group.statusSet.has('Re-assigned') || group.statusSet.has('Waiting for approval')) auditStatus = 'En Proceso';
+                else if (group.statusSet.has('Close')) auditStatus = 'Cerrada';
+
+                return {
+                    location: group.location,
+                    date: group.date,
+                    rawAvg: Math.round(rawAvg * 100) / 100,
+                    percentage: Math.round(percentage * 10) / 10,
+                    status: auditStatus,
+                    dateObj: new Date(group.date.replace(/-/g, '/'))
+                };
+            });
+        }
+
+        function renderChartAreaScores() {
+            const audits = getAuditScores(globalFilteredData);
+            
+            // Promediar el score de las auditorías por área
+            const areaGroups = {};
+            audits.forEach(audit => {
+                const loc = audit.location;
+                if (!areaGroups[loc]) {
+                    areaGroups[loc] = { sum: 0, count: 0 };
+                }
+                areaGroups[loc].sum += audit.percentage;
+                areaGroups[loc].count += 1;
+            });
+
+            let areaScores = Object.keys(areaGroups).map(loc => {
+                return {
+                    location: loc,
+                    avg: Math.round((areaGroups[loc].sum / areaGroups[loc].count) * 10) / 10
+                };
+            });
+
+            if (areaTopMode === 'worst') {
+                areaScores.sort((a, b) => a.avg - b.avg);
+            } else {
+                areaScores.sort((a, b) => b.avg - a.avg);
+            }
+            
+            areaScores = areaScores.slice(0, 10);
+
+            const labels = areaScores.map(a => a.location);
+            const scores = areaScores.map(a => a.avg);
+
+            const ctx = document.getElementById('chartAreaScores').getContext('2d');
+            if (chartInstanceArea) chartInstanceArea.destroy();
+
+            chartInstanceArea = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Meta (95%)',
+                            datalabels: { display: false },
+                            data: Array(labels.length).fill(95),
+                            borderColor: '#EC7063', 
+                            borderWidth: 2,
+                            borderDash: [6, 4],
+                            fill: false,
+                            pointRadius: 0,
+                            pointHoverRadius: 0,
+                            order: 1
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Calificación Promedio',
+                            data: scores,
+                            backgroundColor: 'rgba(0, 154, 221, 0.75)',
+                            borderColor: '#009ADD',
+                            borderWidth: 1.5,
+                            borderRadius: 4,
+                            order: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { color: '#EAEAEA' },
+                            ticks: { 
+                                font: { family: 'Century Gothic' },
+                                callback: function(value) { return value + '%'; }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Century Gothic' } }
+                        }
+                    },
+                    plugins: {
+                        datalabels: { 
+                            color: '#FFFFFF', 
+                            anchor: 'center', 
+                            align: 'center',
+                            font: { weight: 'bold' }
+                        },
+                        legend: { 
+                            display: true,
+                            position: 'top',
+                            labels: { font: { family: 'Century Gothic', size: 11 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.dataset.type === 'line') {
+                                        return `Meta: ${context.parsed.y}%`;
+                                    }
+                                    return `Calificación: ${context.parsed.y.toFixed(1)}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfica 2: Acciones en Proceso (Vinculado ESTRICTA Y EXCLUSIVAMENTE al array arrWIP)
+        function setActionsGroupBy(type) {
+            actionsGroupBy = type;
+            const btnDept = document.getElementById('btn-toggle-dept');
+            const btnOwner = document.getElementById('btn-toggle-owner');
+            const chartTitle = document.getElementById('actions-chart-title');
+
+            if (type === 'dept') {
+                btnDept.classList.add('active-toggle');
+                btnOwner.classList.remove('active-toggle');
+                chartTitle.textContent = 'Acciones en Proceso por Departamento';
+            } else {
+                btnDept.classList.remove('active-toggle');
+                btnOwner.classList.add('active-toggle');
+                chartTitle.textContent = 'Acciones en Proceso por Responsable';
+            }
+
+            renderChartDeptActions();
+        }
+
+        function renderChartDeptActions() {
+            const counts = {};
+            
+            // Agrupar usando única y exclusivamente los datos del array arrWIP (En Proceso)
+            arrWIP.forEach(item => {
+                const key = (actionsGroupBy === 'dept') ? (item.department || 'Sin Departamento') : (item.owner || 'Sin Asignar');
+                counts[key] = (counts[key] || 0) + 1;
+            });
+
+            const sortedData = Object.keys(counts).map(key => {
+                return { name: key, count: counts[key] };
+            }).sort((a, b) => b.count - a.count);
+
+            const labels = sortedData.map(d => d.name);
+            const data = sortedData.map(d => d.count);
+
+            const ctx = document.getElementById('chartDeptActions').getContext('2d');
+            if (chartInstanceDept) chartInstanceDept.destroy();
+
+            chartInstanceDept = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'En Proceso',
+                        data: data,
+                        backgroundColor: 'rgba(0, 154, 221, 0.75)',
+                        borderColor: '#009ADD',
+                        borderWidth: 1.5,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: { color: '#EAEAEA' },
+                            ticks: { precision: 0 }
+                        },
+                        y: {
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        datalabels: { color: '#FFFFFF', anchor: 'center', align: 'center' },
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Gráfica 3: Acciones Overdue por Departamento o Propietario (Toggle dinámico)
+        function setOverdueGroupBy(type) {
+            overdueGroupBy = type;
+            const btnDept = document.getElementById('btn-toggle-overdue-dept');
+            const btnOwner = document.getElementById('btn-toggle-overdue-owner');
+            const chartTitle = document.getElementById('overdue-chart-title');
+
+            if (type === 'dept') {
+                btnDept.classList.add('active-toggle');
+                btnOwner.classList.remove('active-toggle');
+                chartTitle.textContent = 'Acciones Vencidas por Departamento';
+            } else {
+                btnDept.classList.remove('active-toggle');
+                btnOwner.classList.add('active-toggle');
+                chartTitle.textContent = 'Acciones Vencidas por Responsable';
+            }
+
+            renderChartDeptOverdue();
+        }
+
+        function renderChartDeptOverdue() {
+            const counts = {};
+            arrOverdue.forEach(item => {
+                const key = (overdueGroupBy === 'dept') ? (item.department || 'Sin Departamento') : (item.owner || 'Sin Asignar');
+                counts[key] = (counts[key] || 0) + 1;
+            });
+
+            const sortedOverdue = Object.keys(counts).map(key => {
+                return { name: key, count: counts[key] };
+            }).sort((a, b) => b.count - a.count);
+
+            const labels = sortedOverdue.map(d => d.name);
+            const data = sortedOverdue.map(d => d.count);
+
+            const ctx = document.getElementById('chartDeptOverdue').getContext('2d');
+            if (chartInstanceOverdue) chartInstanceOverdue.destroy();
+
+            chartInstanceOverdue = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: 'rgba(236, 112, 99, 0.75)',
+                        borderColor: '#EC7063',
+                        borderWidth: 1.5,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#EAEAEA' },
+                            ticks: { precision: 0 }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        datalabels: { color: '#FFFFFF', anchor: 'center', align: 'center' },
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // --- MANEJADOR DE FECHAS SEGURO Y TOLERANTE A ERRORES (V6 - BUGFIX SPLIT PARA AISLAR HORAS) ---
+        function calculateDaysDifference(openDateStr) {
+            if (!openDateStr || String(openDateStr).trim() === '' || String(openDateStr).toLowerCase() === 'null') return 0; // Fallback a 0
+            
+            let cleanStr = String(openDateStr).split(' ')[0].replace(/-/g, '/');
+            let d = new Date(cleanStr);
+            
+            // Si la fecha original falla, intentar parsearla bajo formato DD/MM/YYYY
+            if (isNaN(d.getTime())) {
+                const parts = cleanStr.split('/');
+                if (parts.length === 3) {
+                    d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`); // Convertir a YYYY/MM/DD
+                }
+            }
+            
+            // Si sigue fallando por un string absurdo o celda corrupta, devolvemos 0 para que no desaparezca de la gráfica
+            if (isNaN(d.getTime())) return 0;
+            
+            let diff = Math.abs(new Date() - d);
+            return Math.floor(diff / (1000 * 60 * 60 * 24));
+        }
+
+        function getAgingBucket(days) {
+            if (days < 0) days = 0;
+            if (days <= 7) return '0-7 días';
+            if (days <= 14) return '8-14 días';
+            if (days <= 30) return '15-30 días';
+            return '+30 días';
+        }
+
+        // --- PROCESAMIENTO DINÁMICO DE AGING CON FILTRADO DE FECHAS (V6) ---
+        function getStackedAgingData(actionsArray, groupByField) {
+            const categoriesSet = new Set();
+            actionsArray.forEach(item => {
+                const cat = (groupByField === 'dept') ? (item.department || 'Sin Departamento') : (item.owner || 'Sin Asignar');
+                categoriesSet.add(cat);
+            });
+            const categories = Array.from(categoriesSet).sort();
+
+            const bucketKeys = ['0-7 días', '8-14 días', '15-30 días', '+30 días'];
+            
+            const counts = {};
+            categories.forEach(cat => {
+                counts[cat] = {
+                    '0-7 días': 0,
+                    '8-14 días': 0,
+                    '15-30 días': 0,
+                    '+30 días': 0
+                };
+            });
+
+            actionsArray.forEach(item => {
+                const days = calculateDaysDifference(item.openDate);
+                if (days === null) return; 
+
+                const cat = (groupByField === 'dept') ? (item.department || 'Sin Departamento') : (item.owner || 'Sin Asignar');
+                const bucket = getAgingBucket(days);
+                if (counts[cat]) {
+                    counts[cat][bucket]++;
+                }
+            });
+
+            const colors = {
+                '0-7 días': 'rgba(82, 190, 128, 0.75)',    
+                '8-14 días': 'rgba(245, 176, 65, 0.75)',   
+                '15-30 días': 'rgba(230, 126, 34, 0.75)',  
+                '+30 días': 'rgba(236, 112, 99, 0.75)'     
+            };
+            const borderColors = {
+                '0-7 días': '#52BE80',
+                '8-14 días': '#F5B041',
+                '15-30 días': '#E67E22',
+                '+30 días': '#EC7063'
+            };
+
+            const datasets = bucketKeys.map(bucket => {
+                return {
+                    label: bucket,
+                    data: categories.map(cat => counts[cat][bucket]),
+                    backgroundColor: colors[bucket],
+                    borderColor: borderColors[bucket],
+                    borderWidth: 1,
+                    borderRadius: 2
+                };
+            });
+
+            return {
+                labels: categories,
+                datasets: datasets
+            };
+        }
+
+        // Gráfica 4: Aging de Acciones en Proceso (Iterando arrWIP)
+        function setAgingOpenGroupBy(type) {
+            agingOpenGroupBy = type;
+            const btnDept = document.getElementById('btn-toggle-aging-open-dept');
+            const btnOwner = document.getElementById('btn-toggle-aging-open-owner');
+            const chartTitle = document.getElementById('aging-open-chart-title');
+
+            if (type === 'dept') {
+                btnDept.classList.add('active-toggle');
+                btnOwner.classList.remove('active-toggle');
+                chartTitle.textContent = 'Antigüedad Acciones en Proceso por Departamento';
+            } else {
+                btnDept.classList.remove('active-toggle');
+                btnOwner.classList.add('active-toggle');
+                chartTitle.textContent = 'Antigüedad Acciones en Proceso por Responsable';
+            }
+
+            renderChartAgingOpen();
+        }
+
+        // Mapeador exacto de cálculo para Aging V6 (split ' ')
+        function renderChartAgingOpen() {
+            const dataObj = getStackedAgingData(arrWIP, agingOpenGroupBy);
+
+            const ctx = document.getElementById('chartAgingOpen').getContext('2d');
+            if (chartInstanceAgingOpen) chartInstanceAgingOpen.destroy();
+
+            chartInstanceAgingOpen = new Chart(ctx, {
+                type: 'bar',
+                data: dataObj,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { display: false },
+                            ticks: { font: { family: 'Century Gothic', size: 10 } }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            grid: { color: '#EAEAEA' },
+                            ticks: { precision: 0, font: { family: 'Century Gothic' } }
+                        }
+                    },
+                    plugins: {
+                        datalabels: { 
+                            color: '#FFFFFF', 
+                            anchor: 'center', 
+                            align: 'center',
+                            formatter: (value) => value > 0 ? value : ''
+                        },
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 10,
+                                font: { size: 10, family: 'Century Gothic' }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw} acc`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfica 5: Aging de Acciones Vencidas (Iterando arrOverdue)
+        function setAgingOverdueGroupBy(type) {
+            agingOverdueGroupBy = type;
+            const btnDept = document.getElementById('btn-toggle-aging-overdue-dept');
+            const btnOwner = document.getElementById('btn-toggle-aging-overdue-owner');
+            const chartTitle = document.getElementById('aging-overdue-chart-title');
+
+            if (type === 'dept') {
+                btnDept.classList.add('active-toggle');
+                btnOwner.classList.remove('active-toggle');
+                chartTitle.textContent = 'Antigüedad Acciones Vencidas por Departamento';
+            } else {
+                btnDept.classList.remove('active-toggle');
+                btnOwner.classList.add('active-toggle');
+                chartTitle.textContent = 'Antigüedad Acciones Vencidas por Responsable';
+            }
+
+            renderChartAgingOverdue();
+        }
+
+        function renderChartAgingOverdue() {
+            const dataObj = getStackedAgingData(arrOverdue, agingOverdueGroupBy);
+
+            const ctx = document.getElementById('chartAgingOverdue').getContext('2d');
+            if (chartInstanceAgingOverdue) chartInstanceAgingOverdue.destroy();
+
+            chartInstanceAgingOverdue = new Chart(ctx, {
+                type: 'bar',
+                data: dataObj,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { display: false },
+                            ticks: { font: { family: 'Century Gothic', size: 10 } }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            grid: { color: '#EAEAEA' },
+                            ticks: { precision: 0, font: { family: 'Century Gothic' } }
+                        }
+                    },
+                    plugins: {
+                        datalabels: { 
+                            color: '#FFFFFF', 
+                            anchor: 'center', 
+                            align: 'center',
+                            formatter: (value) => value > 0 ? value : ''
+                        },
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 10,
+                                font: { size: 10, family: 'Century Gothic' }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw} acc`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 7. LÓGICA DE LA DATA TABLE DE ACCIONES ACTIVAS (FILTRADO, ORDENAMIENTO Y PAGINACIÓN)
+
+        function onFilterChange() {
+            tablePage = 1;
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const searchValue = document.getElementById('table-search').value.toLowerCase().trim();
+            const deptValue = document.getElementById('filter-dept').value;
+            const ownerValue = document.getElementById('filter-owner').value;
+
+            // Tabla uniendo únicamente WIP y Overdue (las cerradas quedan excluidas)
+            let result = [...arrWIP, ...arrOverdue];
+
+            // Filtro por departamento
+            if (deptValue) {
+                result = result.filter(item => item.department === deptValue);
+            }
+
+            // Filtro por propietario
+            if (ownerValue) {
+                result = result.filter(item => item.owner === ownerValue);
+            }
+
+            // Filtro por búsqueda global
+            if (searchValue) {
+                result = result.filter(item => {
+                    const safeLower = (val) => val ? String(val).toLowerCase() : '';
+                    return safeLower(item.auditId).includes(searchValue) ||
+                           safeLower(item.actionId).includes(searchValue) ||
+                           safeLower(item.cleanLocation).includes(searchValue) ||
+                           safeLower(item.owner).includes(searchValue) ||
+                           safeLower(item.department).includes(searchValue) ||
+                           safeLower(item.status).includes(searchValue);
+                });
+            }
+
+            tableData = result;
+
+            sortDataArray(tableData, tableSortCol, tableSortAsc);
+
+            renderTable();
+        }
+
+        function sortDataArray(array, column, ascending) {
+            array.sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+
+                if (column === 'responseScore') {
+                    valA = parseInt(valA);
+                    valB = parseInt(valB);
+                } else {
+                    valA = String(valA).toLowerCase();
+                    valB = String(valB).toLowerCase();
+                }
+
+                if (valA < valB) return ascending ? -1 : 1;
+                if (valA > valB) return ascending ? 1 : -1;
+                return 0;
+            });
+        }
+
+        function sortTable(column) {
+            if (tableSortCol === column) {
+                tableSortAsc = !tableSortAsc;
+            } else {
+                tableSortCol = column;
+                tableSortAsc = true;
+            }
+
+            const headers = ['auditId', 'actionId', 'cleanLocation', 'responseScore', 'department', 'owner', 'dueDate', 'status'];
+            headers.forEach(h => {
+                const el = document.getElementById(`th-${h}`);
+                if (el) {
+                    el.className = '';
+                    if (h === tableSortCol) {
+                        el.className = tableSortAsc ? 'sort-asc' : 'sort-desc';
+                    }
+                }
+            });
+
+            applyFilters();
+        }
+
+        function renderTable() {
+            const tableBody = document.getElementById('table-body');
+            tableBody.innerHTML = '';
+
+            const totalRows = tableData.length;
+            
+            if (totalRows === 0) {
+                tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--color-text-muted); padding: 30px;">No se encontraron acciones en proceso o vencidas bajo los filtros especificados.</td></tr>`;
+                document.getElementById('pagination-info').textContent = 'Mostrando 0 - 0 de 0 resultados';
+                document.getElementById('pagination-buttons').innerHTML = '';
+                return;
+            }
+
+            const totalPages = Math.ceil(totalRows / tableRowsPerPage);
+            if (tablePage > totalPages) tablePage = totalPages;
+
+            const startIndex = (tablePage - 1) * tableRowsPerPage;
+            const endIndex = Math.min(startIndex + tableRowsPerPage, totalRows);
+            const pageData = tableData.slice(startIndex, endIndex);
+
+            pageData.forEach(item => {
+                const tr = document.createElement('tr');
+
+                let statusBadge = '';
+                const st = item.status.toLowerCase().trim();
+                if (st === 'overdue' || st === 'vencida') {
+                    statusBadge = `<span class="badge badge-danger">${item.status}</span>`;
+                } else if (st === 'closed' || st === 'close' || st === 'cerrada' || st === 'cerrado') {
+                    statusBadge = `<span class="badge badge-success">${item.status}</span>`;
+                } else if (st === 'open' || st === 'abierta') {
+                    statusBadge = `<span class="badge badge-warning">${item.status}</span>`;
+                } else {
+                    statusBadge = `<span class="badge" style="background-color: rgba(0, 154, 221, 0.1); color: var(--color-primary);">${item.status}</span>`;
+                }
+
+                tr.innerHTML = `
+                    <td><strong>${item.auditId}</strong></td>
+                    <td>${item.actionId}</td>
+                    <td>${item.cleanLocation}</td>
+                    <td><span class="badge-score">${item.responseScore}</span></td>
+                    <td>${item.department}</td>
+                    <td>${item.owner}</td>
+                    <td>${item.dueDate}</td>
+                    <td>${statusBadge}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            document.getElementById('pagination-info').textContent = `Mostrando ${startIndex + 1} - ${endIndex} de ${totalRows} resultados`;
+
+            renderPaginationControls(totalPages);
+        }
+
+        function renderPaginationControls(totalPages) {
+            const container = document.getElementById('pagination-buttons');
+            container.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            const btnPrev = document.createElement('button');
+            btnPrev.className = 'btn-page';
+            btnPrev.textContent = '◀';
+            btnPrev.disabled = tablePage === 1;
+            btnPrev.onclick = () => { tablePage--; renderTable(); };
+            container.appendChild(btnPrev);
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (totalPages > 6 && Math.abs(i - tablePage) > 2 && i !== 1 && i !== totalPages) {
+                    if (i === 2 || i === totalPages - 1) {
+                        const dots = document.createElement('span');
+                        dots.textContent = '...';
+                        dots.style.padding = '0 6px';
+                        container.appendChild(dots);
+                    }
+                    continue;
+                }
+
+                const btnPage = document.createElement('button');
+                btnPage.className = `btn-page ${i === tablePage ? 'active' : ''}`;
+                btnPage.textContent = i;
+                btnPage.onclick = () => { tablePage = i; renderTable(); };
+                container.appendChild(btnPage);
+            }
+
+            const btnNext = document.createElement('button');
+            btnNext.className = 'btn-page';
+            btnNext.textContent = '▶';
+            btnNext.disabled = tablePage === totalPages;
+            btnNext.onclick = () => { tablePage++; renderTable(); };
+            container.appendChild(btnNext);
+        }
+
+        // 8. EXPORTAR TABLA A CSV
+        function exportTableToCSV() {
+            if (tableData.length === 0) {
+                alert('No hay datos en la tabla para exportar.');
+                return;
+            }
+
+            let csvContent = '\uFEFF'; 
+            csvContent += 'ID Auditoria,ID Accion,Area Limpia,Calificacion,Departamento,Responsable,Fecha Vence,Estado\n';
+
+            tableData.forEach(item => {
+                const row = [
+                    `"${item.auditId}"`,
+                    `"${item.actionId}"`,
+                    `"${item.cleanLocation}"`,
+                    item.responseScore,
+                    `"${item.department}"`,
+                    `"${item.owner}"`,
+                    `"${item.dueDate}"`,
+                    `"${item.status}"`
+                ];
+                csvContent += row.join(',') + '\n';
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `flex_acciones_activas_5S_${new Date().toISOString().slice(0,10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 9. BORRADO DE LA BASE DE DATOS LOCAL
+        function resetDatabase() {
+            if (confirm('¿Estás seguro de que deseas borrar toda la base de datos de auditorías guardada localmente?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                allAuditData = [];
+                arrClosed = [];
+                arrOverdue = [];
+                arrWIP = [];
+                tableData = [];
+                loadFromLocalStorage();
+            }
+        }
+
+        // 10. FORMATO DE FECHA
+        function formatDate(d) {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        // 11. CARGA DE DATOS DEMO (AGING Y KPIS DINÁMICOS - CON TEXTO DE PRUEBA COMPLEJO Y COMAS INTERNAS)
+        function loadDemoData() {
+            const today = new Date();
+            const dMinus = (days) => {
+                const d = new Date(today.getTime() - days * 24 * 60 * 60 * 1000);
+                return formatDate(d);
+            };
+
+            const demoData = [
+                // Auditoría 1
+                { auditId: 'AUD-2026-001', actionId: 'ACT-101', location: 'Flex -> Building 1 -> Assembly -> L10', cleanLocation: 'L10', responseScore: 3, department: 'Production', owner: 'John Doe', status: 'Open', dueDate: dMinus(-15), openDate: dMinus(5) + ' 10:15:30', comments: 'Requires urgent clean-up, floor has oil spills.' }, 
+                { auditId: 'AUD-2026-001', actionId: 'ACT-102', location: 'Flex -> Building 1 -> Assembly -> L10', cleanLocation: 'L10', responseScore: 4, department: 'Maintenance', owner: 'Jane Smith', status: 'Close', dueDate: dMinus(-5), openDate: dMinus(12) + ' 11:30:00', comments: 'Toolbox not in standard location. Checked and resolved.' }, 
+                { auditId: 'AUD-2026-001', actionId: 'ACT-103', location: 'Flex -> Building 1 -> Assembly -> L10', cleanLocation: 'L10', responseScore: -1, department: 'Quality', owner: 'Carlos Ruiz', status: 'Closed', dueDate: dMinus(-3), openDate: dMinus(2) + ' 09:45:12', comments: 'Not applicable for this specific line layout.' }, 
+                
+                // Auditoría 2
+                { auditId: 'AUD-2026-002', actionId: 'ACT-104', location: 'Flex -> Building 1 -> SMT -> L16', cleanLocation: 'L16', responseScore: 1, department: 'Production', owner: 'Carlos Ruiz', status: 'Overdue', dueDate: dMinus(10), openDate: dMinus(40) + ' 14:22:00', comments: 'ESD band test failed, highly critical, needs retest immediately.' }, 
+                { auditId: 'AUD-2026-002', actionId: 'ACT-105', location: 'Flex -> Building 1 -> SMT -> L16', cleanLocation: 'L16', responseScore: 5, department: 'Quality', owner: 'Maria Gomez', status: 'Closed', dueDate: dMinus(-10), openDate: dMinus(3) + ' 18:00:00', comments: 'Perfect conditions, no action needed.' }, 
+                { auditId: 'AUD-2026-002', actionId: 'ACT-106', location: 'Flex -> Building 1 -> SMT -> L16', cleanLocation: 'L16', responseScore: 2, department: 'Maintenance', owner: 'Luis Perez', status: 'Re-assigned', dueDate: dMinus(-20), openDate: dMinus(22) + ' 07:11:59', comments: 'Reassigned from Quality to Maintenance due to electrical issues.' }, 
+                
+                // Auditoría 3
+                { auditId: 'AUD-2026-003', actionId: 'ACT-107', location: 'Flex -> Building 2 -> Logistics -> WH2', cleanLocation: 'WH2', responseScore: 2, department: 'Logistics', owner: 'Luis Perez', status: 'Waiting for approval', dueDate: dMinus(-30), openDate: dMinus(15) + ' 15:30:22', comments: 'Waiting for supervisor approval on new racks layout.' }, 
+                { auditId: 'AUD-2026-003', actionId: 'ACT-108', location: 'Flex -> Building 2 -> Logistics -> WH2', cleanLocation: 'WH2', responseScore: 4, department: 'EHS', owner: 'Ana Martinez', status: '', dueDate: dMinus(-1), openDate: dMinus(8) + ' 12:00:00', comments: 'Fire extinguisher needs monthly check stamp.' }, 
+                { auditId: 'AUD-2026-003', actionId: 'ACT-109', location: 'Flex -> Building 2 -> Logistics -> WH2', cleanLocation: 'WH2', responseScore: 5, department: 'Logistics', owner: 'Luis Perez', status: 'Closed', dueDate: dMinus(-2), openDate: dMinus(25) + ' 08:30:00', comments: 'Everything complies with the 5S standard.' }, 
+                
+                // Auditoría 4
+                { auditId: 'AUD-2026-004', actionId: 'ACT-110', location: 'Flex -> Building 2 -> Quality -> QALab', cleanLocation: 'QALab', responseScore: 4, department: 'Quality', owner: 'Maria Gomez', status: 'Overdue', dueDate: dMinus(5), openDate: dMinus(35) + ' 16:50:00', comments: 'Calibrations overdue by 2 weeks. Audit finding #12.' }, 
+                { auditId: 'AUD-2026-004', actionId: 'ACT-111', location: 'Flex -> Building 2 -> Quality -> QALab', cleanLocation: 'QALab', responseScore: -1, department: 'Production', owner: 'John Doe', status: 'nan', dueDate: dMinus(-10), openDate: dMinus(4) + ' 23:59:59', comments: 'N/A for this audit block.' }, 
+                { auditId: 'AUD-2026-004', actionId: 'ACT-112', location: 'Flex -> Building 2 -> Quality -> QALab', cleanLocation: 'QALab', responseScore: 3, department: 'EHS', owner: 'Ana Martinez', status: 'null', dueDate: dMinus(-20), openDate: dMinus(18) + ' 02:00:00', comments: 'Chemical waste bin is full, please arrange pickup.' }, 
+
+                // Auditoría 5
+                { auditId: 'AUD-2026-005', actionId: 'ACT-113', location: 'Flex -> Building 1 -> Assembly -> L12', cleanLocation: 'L12', responseScore: 1, department: 'Production', owner: 'Carlos Ruiz', status: 'Overdue', dueDate: dMinus(20), openDate: dMinus(50) + ' 05:40:00', comments: 'Operator not wearing safety glasses in assembly area.' }, 
+                { auditId: 'AUD-2026-005', actionId: 'ACT-114', location: 'Flex -> Building 1 -> Assembly -> L12', cleanLocation: 'L12', responseScore: 2, department: 'Quality', owner: 'John Doe', status: 'Open', dueDate: dMinus(-25), openDate: dMinus(6) + ' 13:13:13', comments: 'Shadow board is missing 3 main tools.' }, 
+
+                // Auditoría 6
+                { auditId: 'AUD-2026-006', actionId: 'ACT-115', location: 'Flex -> Building 2 -> SMT -> L18', cleanLocation: 'L18', responseScore: 5, department: 'Maintenance', owner: 'Jane Smith', status: 'Closed', dueDate: dMinus(-1), openDate: dMinus(10) + ' 04:20:00', comments: 'Area is completely clean and organized.' }, 
+                { auditId: 'AUD-2026-006', actionId: 'ACT-116', location: 'Flex -> Building 2 -> SMT -> L18', cleanLocation: 'L18', responseScore: 4, department: 'Production', owner: 'Carlos Ruiz', status: 'Open', dueDate: dMinus(-15), openDate: dMinus(11) + ' 19:15:00', comments: 'Slight dust accumulation near the feeder carts.' }, 
+
+                // Auditoría 7
+                { auditId: 'AUD-2026-007', actionId: 'ACT-117', location: 'Flex -> Building 1 -> SMT -> L16', cleanLocation: 'L16', responseScore: 3, department: 'Maintenance', owner: 'Jane Smith', status: 'Overdue', dueDate: dMinus(12), openDate: dMinus(32) + ' 21:00:00', comments: 'Preventive maintenance tag is missing on machine #3.' }, 
+                { auditId: 'AUD-2026-007', actionId: 'ACT-118', location: 'Flex -> Building 2 -> Logistics -> WH2', cleanLocation: 'WH2', responseScore: 1, department: 'Logistics', owner: 'Luis Perez', status: 'Open', dueDate: dMinus(-14), openDate: dMinus(20) + ' 20:01:07', comments: 'Pallets blocking emergency exit route.' } 
+            ];
+
+            const upsertResults = runUpsert(demoData);
+            
+            const statusDiv = document.getElementById('upload-status');
+            const statusText = document.getElementById('status-text');
+            statusText.innerHTML = `<strong>Modo Demostración:</strong> Se han cargado <strong>${demoData.length}</strong> registros simulados bajo la arquitectura de arrays V6 (Bugfix Aging & WIP).`;
+            statusDiv.classList.remove('hidden');
+
+            loadFromLocalStorage();
+        }
+
+        // 12. DESCARGA DE ARCHIVO CSV DE EJEMPLO
+        function downloadSampleCSV() {
+            const today = new Date();
+            const dMinus = (days) => {
+                const d = new Date(today.getTime() - days * 24 * 60 * 60 * 1000);
+                return formatDate(d);
+            };
+
+            const csvRows = [
+                ['AuditID', 'ActionID', 'Location', 'ResponseScore', 'ActionLogDepartament', 'ActionLogOwner', 'ActionLogStatus', 'ActionLogDueDate', 'ActionLogOpenDate', 'Comments'],
+                ['AUD-2026-001', 'ACT-101', 'Flex -> Building 1 -> Assembly -> L10', '3', 'Production', 'John Doe', 'Open', dMinus(-15), dMinus(5) + ' 08:00:00', 'Requires urgent clean-up, floor has oil spills.'],
+                ['AUD-2026-001', 'ACT-102', 'Flex -> Building 1 -> Assembly -> L10', '4', 'Maintenance', 'Jane Smith', 'Close', dMinus(-5), dMinus(12) + ' 09:30:00', 'Toolbox not in standard location. Checked and resolved.'],
+                ['AUD-2026-002', 'ACT-104', 'Flex -> Building 1 -> SMT -> L16', '1', 'Production', 'Carlos Ruiz', 'Overdue', dMinus(10), dMinus(40) + ' 10:00:00', 'ESD band test failed, "highly critical, needs retest \n immediately".'],
+                ['AUD-2026-002', 'ACT-106', 'Flex -> Building 1 -> SMT -> L16', '2', 'Maintenance', 'Luis Perez', 'Re-assigned', dMinus(-20), dMinus(22) + ' 11:00:00', 'Reassigned from Quality to Maintenance due to electrical issues.'],
+                ['AUD-2026-003', 'ACT-107', 'Flex -> Building 2 -> Logistics -> WH2', '2', 'Logistics', 'Luis Perez', 'Waiting for approval', dMinus(-30), dMinus(15) + ' 12:00:00', 'Waiting for supervisor approval on new racks layout, "layout plan A, B, and C".'],
+                ['AUD-2026-003', 'ACT-108', 'Flex -> Building 2 -> Logistics -> WH2', '4', 'EHS', 'Ana Martinez', '', dMinus(-1), dMinus(8) + ' 13:00:00', ''],
+                ['AUD-2026-004', 'ACT-110', 'Flex -> Building 2 -> Quality -> QALab', '4', 'Quality', 'Maria Gomez', 'Overdue', dMinus(5), dMinus(35) + ' 14:00:00', 'Calibrations overdue by 2 weeks. Audit finding #12.']
+            ];
+
+            let csvContent = '\uFEFF';
+            csvRows.forEach(row => {
+                csvContent += row.map(val => `"${val}"`).join(',') + '\n';
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'plantilla_auditoria_5s_v6.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- LÓGICA DE VISTA DE HISTORIAL (SPA) ---
+        
+        function openHistoryView() {
+            // Ocultar las gráficas pero permanecer dentro del view-dashboard
+            document.getElementById('dashboard-content').classList.add('hidden');
+            document.getElementById('detail-view').classList.add('hidden');
+            document.getElementById('history-view').classList.remove('hidden');
+            renderHistoryView();
+            window.scrollTo(0, 0); // Asegurar que el botón de regreso se vea
+        }
+
+        function closeHistoryView() {
+            document.getElementById('history-view').classList.add('hidden');
+            document.getElementById('dashboard-content').classList.remove('hidden');
+        }
+
+        function renderHistoryView() {
+            const startDateVal = document.getElementById('history-date-start').value;
+            const endDateVal = document.getElementById('history-date-end').value;
+            
+            let startDate = startDateVal ? new Date(startDateVal) : null;
+            let endDate = endDateVal ? new Date(endDateVal) : null;
+            if (endDate) {
+                // Incluir todo el día final
+                endDate.setHours(23, 59, 59, 999);
+            }
+
+            // Filtrar allAuditData (excluyendo solo -1)
+            let filteredData = allAuditData.filter(item => {
+                const score = item.responseScore;
+                if (score === -1) return false;
+                
+                // Filtro por Fecha de Apertura (Audit Date)
+                if (startDate || endDate) {
+                    if (!item.openDate || item.openDate.trim() === '') return false;
+                    
+                    let cleanStr = String(item.openDate).split(' ')[0].replace(/-/g, '/');
+                    let d = new Date(cleanStr);
+                    if (isNaN(d.getTime())) {
+                        const parts = cleanStr.split('/');
+                        if (parts.length === 3) {
+                            d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                        }
+                    }
+                    if (isNaN(d.getTime())) return false; // Excluir si la fecha es inválida y hay filtros
+                    
+                    if (startDate && d < startDate) return false;
+                    if (endDate && d > endDate) return false;
+                }
+                
+                return true;
+            });
+
+            // Agrupar los datos filtrados en Auditorías Únicas
+            const audits = getAuditScores(filteredData);
+
+            // 1. DIBUJAR GRÁFICA COMPLETA
+            const areaGroups = {};
+            audits.forEach(audit => {
+                const loc = audit.location;
+                if (!areaGroups[loc]) {
+                    areaGroups[loc] = { sum: 0, count: 0 };
+                }
+                areaGroups[loc].sum += audit.percentage;
+                areaGroups[loc].count += 1;
+            });
+
+            let areaScores = Object.keys(areaGroups).map(loc => {
+                return {
+                    location: loc,
+                    avg: Math.round((areaGroups[loc].sum / areaGroups[loc].count) * 10) / 10
+                };
+            }).sort((a, b) => b.avg - a.avg); // Ordenado de Mayor a Menor
+
+            const labels = areaScores.map(a => a.location);
+            const scores = areaScores.map(a => a.avg);
+
+            const ctx = document.getElementById('chartHistoryAreaScores').getContext('2d');
+            if (chartInstanceHistory) chartInstanceHistory.destroy();
+
+            chartInstanceHistory = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Calificación Promedio',
+                        data: scores,
+                        backgroundColor: 'rgba(0, 154, 221, 0.75)',
+                        borderColor: '#009ADD',
+                        borderWidth: 1.5,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { color: '#EAEAEA' },
+                            ticks: { callback: function(value) { return value + '%'; } }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        datalabels: { color: '#FFFFFF', anchor: 'center', align: 'center' },
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // 2. DIBUJAR TABLA DE HISTORIAL
+            const tbody = document.getElementById('history-table-body');
+            tbody.innerHTML = '';
+            
+            // Ordenar auditorías por fecha descendente (más recientes primero)
+            audits.sort((a, b) => {
+                let dA = isNaN(a.dateObj) ? new Date(0) : a.dateObj;
+                let dB = isNaN(b.dateObj) ? new Date(0) : b.dateObj;
+                return dB - dA;
+            });
+
+            if (audits.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No hay resultados para este rango de fechas.</td></tr>';
+                return;
+            }
+
+            audits.forEach(audit => {
+                const tr = document.createElement('tr');
+                
+                let statusClass = 'badge-warning'; // En Proceso
+                const st = String(audit.status).toLowerCase();
+                if (st.includes('cerrada')) statusClass = 'badge-success';
+                else if (st.includes('overdue')) statusClass = 'badge-danger';
+
+                tr.innerHTML = `
+                    <td>${audit.location}</td>
+                    <td><strong>${audit.rawAvg} (${audit.percentage}%)</strong></td>
+                    <td>${audit.date}</td>
+                    <td><span class="badge ${statusClass}">${audit.status}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        // CONTROL DE VISTAS DE DETALLE (DRILL-DOWN) CON FILTROS
+        let currentDetailData = [];
+
+        function openDetailView(type) {
+            document.getElementById('dashboard-content').classList.add('hidden');
+            document.getElementById('history-view').classList.add('hidden');
+            document.getElementById('detail-view').classList.remove('hidden');
+            
+            let dataToShow = [];
+            let title = '';
+
+            if (type === 'active') {
+                title = 'Detalle de Acciones Activas (En Proceso + Vencidas)';
+                dataToShow = [...arrWIP, ...arrOverdue];
+            } else if (type === 'overdue' || type === 'aging_overdue') {
+                title = 'Detalle de Acciones Vencidas';
+                dataToShow = arrOverdue;
+            } else if (type === 'aging_open') {
+                title = 'Detalle de Acciones en Proceso';
+                dataToShow = arrWIP;
+            }
+
+            document.getElementById('detail-view-title').textContent = title;
+            currentDetailData = dataToShow;
+            
+            populateDetailFilters(dataToShow);
+            applyDetailFilters(); 
+            window.scrollTo(0, 0);
+        }
+
+        function populateDetailFilters(data) {
+            const ownerSelect = document.getElementById('detail-filter-owner');
+            const statusSelect = document.getElementById('detail-filter-status');
+            
+            const owners = new Set();
+            const statuses = new Set();
+            
+            data.forEach(item => {
+                owners.add(item.owner || 'Sin Asignar');
+                statuses.add(item.status || 'Open');
+            });
+
+            ownerSelect.innerHTML = '<option value="All">Todos</option>';
+            Array.from(owners).sort().forEach(owner => {
+                const opt = document.createElement('option');
+                opt.value = owner;
+                opt.textContent = owner;
+                ownerSelect.appendChild(opt);
+            });
+
+            statusSelect.innerHTML = '<option value="All">Todos</option>';
+            Array.from(statuses).sort().forEach(status => {
+                const opt = document.createElement('option');
+                opt.value = status;
+                opt.textContent = status;
+                statusSelect.appendChild(opt);
+            });
+            
+            document.getElementById('detail-filter-date').value = '';
+        }
+
+        function clearDetailFilters() {
+            document.getElementById('detail-filter-owner').value = 'All';
+            document.getElementById('detail-filter-status').value = 'All';
+            document.getElementById('detail-filter-date').value = '';
+            applyDetailFilters();
+        }
+
+        function applyDetailFilters() {
+            const ownerFilter = document.getElementById('detail-filter-owner').value;
+            const statusFilter = document.getElementById('detail-filter-status').value;
+            const dateFilter = document.getElementById('detail-filter-date').value; 
+
+            let filtered = currentDetailData;
+
+            if (ownerFilter !== 'All') {
+                filtered = filtered.filter(item => (item.owner || 'Sin Asignar') === ownerFilter);
+            }
+            if (statusFilter !== 'All') {
+                filtered = filtered.filter(item => (item.status || 'Open') === statusFilter);
+            }
+            if (dateFilter) {
+                filtered = filtered.filter(item => {
+                    if (!item.dueDate || item.dueDate === 'Sin Fecha') return false;
+                    let itemDateStr = item.dueDate.replace(/-/g, '/').split(' ')[0];
+                    let d = new Date(itemDateStr);
+                    if (isNaN(d.getTime())) {
+                        const parts = itemDateStr.split('/');
+                        if (parts.length === 3) d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                    }
+                    if (!isNaN(d.getTime())) {
+                        const selD = new Date(dateFilter + 'T00:00:00');
+                        return d.getTime() === selD.getTime();
+                    }
+                    return false;
+                });
+            }
+
+            renderDetailTable(filtered);
+        }
+
+        function renderDetailTable(dataToShow) {
+            const tbody = document.getElementById('detail-table-body');
+            tbody.innerHTML = '';
+
+            if (dataToShow.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px;">No hay acciones que coincidan con los filtros.</td></tr>`;
+            } else {
+                dataToShow.forEach(item => {
+                    const row = document.createElement('tr');
+                    
+                    const tdId = document.createElement('td');
+                    tdId.textContent = item.actionId;
+                    tdId.style.fontWeight = 'bold';
+                    
+                    const tdComments = document.createElement('td');
+                    tdComments.textContent = item.comments || 'Sin comentarios o Acción no descrita en el archivo';
+                    tdComments.style.whiteSpace = 'normal'; 
+                    tdComments.style.maxWidth = '500px';
+                    
+                    const tdOwner = document.createElement('td');
+                    tdOwner.textContent = item.owner || 'Sin Asignar';
+                    
+                    const tdDate = document.createElement('td');
+                    tdDate.textContent = item.dueDate || 'Sin Fecha';
+                    
+                    const tdStatus = document.createElement('td');
+                    const span = document.createElement('span');
+                    span.className = `status-badge status-${item.status ? item.status.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'open'}`;
+                    span.textContent = item.status || 'Open';
+                    tdStatus.appendChild(span);
+                    
+                    row.appendChild(tdId);
+                    row.appendChild(tdComments);
+                    row.appendChild(tdOwner);
+                    row.appendChild(tdDate);
+                    row.appendChild(tdStatus);
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
+        function closeDetailView() {
+            document.getElementById('detail-view').classList.add('hidden');
+            document.getElementById('dashboard-content').classList.remove('hidden');
+        }
+
+        // --- LÓGICA DEL EDITOR MANUAL DE ACCIONES ---
+        let editorFilteredData = [];
+        let editorPage = 1;
+        const editorRowsPerPage = 20;
+
+        function initActionsEditor() {
+            populateEditorFilters();
+            editorFilteredData = [...allAuditData];
+            editorPage = 1;
+            applyEditorFilters();
+        }
+
+        function populateEditorFilters() {
+            const ownerSelect = document.getElementById('editor-filter-owner');
+            const statusSelect = document.getElementById('editor-filter-status');
+            
+            const owners = new Set();
+            const statuses = new Set();
+            
+            allAuditData.forEach(item => {
+                owners.add(item.owner || 'Sin Asignar');
+                statuses.add(item.status || 'Open');
+            });
+
+            ownerSelect.innerHTML = '<option value="All">Todos</option>';
+            Array.from(owners).sort().forEach(owner => {
+                const opt = document.createElement('option');
+                opt.value = owner;
+                opt.textContent = owner;
+                ownerSelect.appendChild(opt);
+            });
+
+            statusSelect.innerHTML = '<option value="All">Todos</option>';
+            Array.from(statuses).sort().forEach(status => {
+                const opt = document.createElement('option');
+                opt.value = status;
+                opt.textContent = status;
+                statusSelect.appendChild(opt);
+            });
+        }
+
+        function clearEditorFilters() {
+            document.getElementById('editor-search').value = '';
+            document.getElementById('editor-filter-owner').value = 'All';
+            document.getElementById('editor-filter-status').value = 'All';
+            applyEditorFilters();
+        }
+
+        function applyEditorFilters() {
+            const searchVal = document.getElementById('editor-search').value.toLowerCase().trim();
+            const ownerVal = document.getElementById('editor-filter-owner').value;
+            const statusVal = document.getElementById('editor-filter-status').value;
+
+            editorFilteredData = allAuditData.filter(item => {
+                let match = true;
+                if (ownerVal !== 'All' && (item.owner || 'Sin Asignar') !== ownerVal) match = false;
+                if (statusVal !== 'All' && (item.status || 'Open') !== statusVal) match = false;
+                
+                if (searchVal) {
+                    const safeLower = (val) => val ? String(val).toLowerCase() : '';
+                    if (!safeLower(item.auditId).includes(searchVal) &&
+                        !safeLower(item.actionId).includes(searchVal) &&
+                        !safeLower(item.comments).includes(searchVal)) {
+                        match = false;
+                    }
+                }
+                return match;
+            });
+
+            editorPage = 1;
+            renderEditorTable();
+        }
+
+        function renderEditorTable() {
+            const tbody = document.getElementById('editor-table-body');
+            tbody.innerHTML = '';
+
+            const totalRows = editorFilteredData.length;
+            if (totalRows === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px;">No se encontraron acciones.</td></tr>`;
+                document.getElementById('editor-pagination-info').textContent = 'Mostrando 0 - 0 de 0';
+                document.getElementById('editor-pagination-buttons').innerHTML = '';
+                return;
+            }
+
+            const totalPages = Math.ceil(totalRows / editorRowsPerPage);
+            if (editorPage > totalPages) editorPage = totalPages;
+
+            const startIndex = (editorPage - 1) * editorRowsPerPage;
+            const endIndex = Math.min(startIndex + editorRowsPerPage, totalRows);
+            const pageData = editorFilteredData.slice(startIndex, endIndex);
+
+            pageData.forEach((item, index) => {
+                const row = document.createElement('tr');
+                
+                const tdAudit = document.createElement('td');
+                tdAudit.textContent = item.auditId;
+                
+                const tdAction = document.createElement('td');
+                tdAction.textContent = item.actionId;
+                tdAction.style.fontWeight = 'bold';
+                
+                const tdComments = document.createElement('td');
+                tdComments.textContent = item.comments || 'Sin comentarios';
+                tdComments.style.whiteSpace = 'normal';
+                tdComments.style.maxWidth = '300px';
+                
+                const tdOwner = document.createElement('td');
+                tdOwner.textContent = item.owner || 'Sin Asignar';
+                
+                const tdDate = document.createElement('td');
+                tdDate.textContent = item.dueDate || 'Sin Fecha';
+                
+                const tdStatus = document.createElement('td');
+                const span = document.createElement('span');
+                span.className = `status-badge status-${item.status ? item.status.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'open'}`;
+                span.textContent = item.status || 'Open';
+                tdStatus.appendChild(span);
+                
+                const tdEdit = document.createElement('td');
+                tdEdit.style.textAlign = 'center';
+                const btnEdit = document.createElement('button');
+                btnEdit.className = 'btn-icon';
+                btnEdit.title = 'Editar Acción';
+                btnEdit.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>';
+                btnEdit.onclick = () => openEditModal(item.auditId, item.actionId);
+                tdEdit.appendChild(btnEdit);
+                
+                row.appendChild(tdAudit);
+                row.appendChild(tdAction);
+                row.appendChild(tdComments);
+                row.appendChild(tdOwner);
+                row.appendChild(tdDate);
+                row.appendChild(tdStatus);
+                row.appendChild(tdEdit);
+                
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('editor-pagination-info').textContent = `Mostrando ${startIndex + 1} - ${endIndex} de ${totalRows}`;
+            renderEditorPagination(totalPages);
+        }
+
+        function renderEditorPagination(totalPages) {
+            const container = document.getElementById('editor-pagination-buttons');
+            container.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            const btnPrev = document.createElement('button');
+            btnPrev.className = 'btn-page';
+            btnPrev.textContent = '◀';
+            btnPrev.disabled = editorPage === 1;
+            btnPrev.onclick = () => { editorPage--; renderEditorTable(); };
+            container.appendChild(btnPrev);
+
+            const btnNext = document.createElement('button');
+            btnNext.className = 'btn-page';
+            btnNext.textContent = '▶';
+            btnNext.disabled = editorPage === totalPages;
+            btnNext.onclick = () => { editorPage++; renderEditorTable(); };
+            container.appendChild(btnNext);
+        }
+
+        function openEditModal(auditId, actionId) {
+            const item = allAuditData.find(a => a.auditId === auditId && a.actionId === actionId);
+            if (!item) return;
+
+            document.getElementById('edit-audit-id').value = item.auditId;
+            document.getElementById('edit-action-id').value = item.actionId;
+            document.getElementById('edit-display-id').value = `${item.auditId} / ${item.actionId}`;
+            
+            document.getElementById('edit-owner').value = item.owner || '';
+            
+            let dateVal = '';
+            if (item.dueDate && item.dueDate !== 'Sin Fecha') {
+                const parts = item.dueDate.split('/');
+                if (parts.length === 3) {
+                    dateVal = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+                } else if (item.dueDate.includes('-')) {
+                    dateVal = item.dueDate.split(' ')[0];
+                }
+            }
+            document.getElementById('edit-date').value = dateVal;
+            
+            const sel = document.getElementById('edit-status');
+            const validOptions = Array.from(sel.options).map(o => o.value);
+            let s = item.status ? item.status.trim() : 'Open';
+            if (!validOptions.includes(s)) {
+                // Mapeos comunes
+                if (s.toLowerCase() === 'close' || s.toLowerCase() === 'cerrada' || s.toLowerCase() === 'cerrado') s = 'Closed';
+                else if (s.toLowerCase() === 'abierta') s = 'Open';
+                else if (s.toLowerCase() === 'vencida') s = 'Overdue';
+                else s = 'Open'; // fallback
+            }
+            sel.value = s;
+
+            document.getElementById('edit-action-modal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-action-modal').classList.remove('active');
+        }
+
+        function saveActionEdit() {
+            const auditId = document.getElementById('edit-audit-id').value;
+            const actionId = document.getElementById('edit-action-id').value;
+            const newOwner = document.getElementById('edit-owner').value.trim();
+            const newStatus = document.getElementById('edit-status').value;
+            const newDate = document.getElementById('edit-date').value;
+
+            // Actualizar allAuditData en memoria
+            const idx = allAuditData.findIndex(a => a.auditId === auditId && a.actionId === actionId);
+            if (idx === -1) return;
+
+            allAuditData[idx].owner = newOwner || 'Sin Asignar';
+            allAuditData[idx].status = newStatus;
+            
+            if (newDate) {
+                const d = new Date(newDate + 'T12:00:00');
+                allAuditData[idx].dueDate = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+            } else {
+                allAuditData[idx].dueDate = 'Sin Fecha';
+            }
+
+            // Guardar en localStorage
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(allAuditData));
+            
+            // Cerrar modal
+            closeEditModal();
+            
+            // Refrescar vistas
+            updateDashboard();
+            applyEditorFilters(); // Refresca la tabla del editor actual
+
+            // Feedback visual rápido
+            const originalText = document.querySelector('#nav-actions span:last-child').textContent;
+            document.querySelector('#nav-actions span:last-child').textContent = '¡Guardado!';
+            setTimeout(() => {
+                document.querySelector('#nav-actions span:last-child').textContent = originalText;
+            }, 1500);
+        }
+        // --- MÓDULO DE LAYOUT INTERACTIVO ---
+        let isLayoutEditMode = false;
+        let layoutBoxes = []; 
+        let currentMap = 'b27.png';
+        let currentViewMode = 'areas';
+
+        // Diccionario de Sectores
+        const sectorMapping = {
+            'Sector 1': ['Linea 15', 'Linea 16', 'Equipment room', 'Test room 1', 'Tool room', 'Critical repair 1', 'Critical repair 2'],
+            'Sector 2': ['Linea 11', 'Linea 12', 'Linea 13', 'Linea 14', 'ICT', 'Control tower', 'Bonepile'],
+            'Sector 3': ['Assembly', 'Dissasy', 'Debug', 'IST'],
+            'Sector 4': ['Cuarto limpio', 'Pack'],
+            'Sector 5': ['Conteos internos', 'Embarque', 'Fresh market', 'HV alto valor', 'Incoming', 'Receipt', 'SMKT Backend', 'SMKT SMT', 'Surtido de material', 'Usis'],
+            'Sector 6': ['Lobby', 'Monitores', 'Oficinas'],
+            'Sector 7': ['RMA VLP', 'RMA GLP', 'MRB', 'MOONSHINE']
+        };
+
+        // Coordenadas harcodeadas para que el usuario luego pegue las reales aquí
+        let mapCoordinates = {
+            'b27.png': { areas: [], sectors: [] },
+            'b29.png': { areas: [], sectors: [] }
+        };
+
+        // Intentar cargar coordenadas guardadas
+        const savedCoords = localStorage.getItem('flex_layout_coords_v2');
+        if (savedCoords) {
+            try {
+                mapCoordinates = JSON.parse(savedCoords);
+            } catch(e) {}
+        }
+
+        function changeLayoutMap() {
+            currentMap = document.getElementById('layout-selector').value;
+            currentViewMode = document.getElementById('layout-view-mode').value;
+            const container = document.getElementById('layout-map-container');
+            container.style.backgroundImage = `url('./${currentMap}')`;
+            renderLayoutBoxes();
+        }
+
+        function initLayoutModule() {
+            changeLayoutMap();
+            // Asegurarse de que el tooltip exista
+            if (!document.getElementById('layout-tooltip-el')) {
+                const tt = document.createElement('div');
+                tt.id = 'layout-tooltip-el';
+                tt.className = 'layout-tooltip';
+                document.body.appendChild(tt);
+            }
+        }
+
+        function toggleLayoutEditMode() {
+            isLayoutEditMode = !isLayoutEditMode;
+            const btnEdit = document.getElementById('btn-layout-edit');
+            const btnAdd = document.getElementById('btn-layout-add');
+            const btnSave = document.getElementById('btn-layout-save');
+            
+            if (isLayoutEditMode) {
+                btnEdit.textContent = 'Desactivar Modo Edición';
+                btnEdit.style.backgroundColor = '#dc3545'; // Rojo peligro
+                btnAdd.classList.remove('hidden');
+                btnSave.classList.remove('hidden');
+            } else {
+                btnEdit.textContent = 'Activar Modo Edición';
+                btnEdit.style.backgroundColor = '#6c757d'; // Gris original
+                btnAdd.classList.add('hidden');
+                btnSave.classList.add('hidden');
+            }
+            renderLayoutBoxes();
+        }
+
+        function addLayoutBox() {
+            const labelStr = currentViewMode === 'sectors' ? 'Sector (Ej. Sector 1)' : 'Área (Ej. L1, SMT)';
+            const areaId = prompt(`Ingresa el ID del ${labelStr} para este recuadro:`);
+            if (!areaId) return;
+
+            mapCoordinates[currentMap][currentViewMode].push({
+                areaId: areaId,
+                top: 10,
+                left: 10,
+                width: 15,
+                height: 15
+            });
+            renderLayoutBoxes();
+        }
+
+        function saveLayoutCoordinates() {
+            localStorage.setItem('flex_layout_coords_v2', JSON.stringify(mapCoordinates));
+            alert('¡Coordenadas guardadas exitosamente en tu navegador! Se quedarán guardadas permanentemente.');
+        }
+
+        function renderLayoutBoxes() {
+            const container = document.getElementById('layout-map-container');
+            container.innerHTML = '';
+
+            const boxes = mapCoordinates[currentMap][currentViewMode] || [];
+            boxes.forEach((box, index) => {
+                const div = document.createElement('div');
+                div.className = 'layout-box' + (isLayoutEditMode ? ' edit-mode' : ' prod-mode');
+                div.dataset.areaId = box.areaId;
+                div.style.top = box.top + '%';
+                div.style.left = box.left + '%';
+                div.style.width = box.width + '%';
+                div.style.height = box.height + '%';
+
+                const label = document.createElement('div');
+                label.className = 'layout-box-label';
+                label.textContent = box.areaId;
+                div.appendChild(label);
+
+                if (isLayoutEditMode) {
+                    // Borrar o Renombrar con doble clic
+                    div.addEventListener('dblclick', (e) => {
+                        e.stopPropagation();
+                        const action = prompt(`Recuadro: ${box.areaId}\n\nEscribe "borrar" para eliminar este recuadro, o simplemente escribe el nuevo nombre si te equivocaste y presiona Aceptar:`, box.areaId);
+                        if (action !== null) {
+                            const trimmedAction = action.trim();
+                            if (trimmedAction.toLowerCase() === "borrar") {
+                                mapCoordinates[currentMap][currentViewMode].splice(index, 1);
+                            } else if (trimmedAction !== "") {
+                                box.areaId = trimmedAction;
+                            }
+                            renderLayoutBoxes();
+                        }
+                    });
+
+                    // Drag logic
+                    setupDraggable(div, box, index);
+                    // Resize logic
+                    const resizer = document.createElement('div');
+                    resizer.className = 'resize-handle';
+                    setupResizable(resizer, div, box, index);
+                    div.appendChild(resizer);
+                } else {
+                    // Prod mode logic
+                    const stats = calculateAreaStats(box.areaId);
+                    
+                    // Colores
+                    if (stats.validCount > 0) {
+                        if (stats.avgScore < 3.5 || stats.overdue > 0) {
+                            div.style.backgroundColor = 'rgba(236, 112, 99, 0.6)'; // Rojo
+                        } else if (stats.avgScore >= 4.5 && stats.overdue === 0 && stats.wip === 0) {
+                            div.style.backgroundColor = 'rgba(82, 190, 128, 0.6)'; // Verde
+                        } else {
+                            div.style.backgroundColor = 'rgba(244, 208, 63, 0.6)'; // Amarillo
+                        }
+                    } else {
+                        div.style.backgroundColor = 'rgba(150, 150, 150, 0.4)'; // Gris si no hay data
+                    }
+
+                    // Hover y Tooltip
+                    div.addEventListener('mouseenter', (e) => {
+                        const tt = document.getElementById('layout-tooltip-el');
+                        const scoreStr = stats.validCount > 0 ? ((stats.avgScore / 5) * 100).toFixed(1) + '%' : 'N/A';
+                        tt.innerHTML = `
+                            <h4>${currentViewMode === 'sectors' ? 'Sector' : 'Área'}: ${box.areaId}</h4>
+                            <p><span>Score Promedio:</span> <span>${scoreStr}</span></p>
+                            <p><span>Acciones Open:</span> <span>${stats.wip}</span></p>
+                            <p><span>Acciones Vencidas:</span> <span style="color:#EC7063">${stats.overdue}</span></p>
+                        `;
+                        tt.style.display = 'block';
+                        const rect = div.getBoundingClientRect();
+                        tt.style.top = (rect.top - 100) + 'px';
+                        tt.style.left = (rect.left + (rect.width/2) - 100) + 'px';
+
+                        // Iluminar todas las cajas hermanas que compartan el mismo nombre
+                        document.querySelectorAll(`.layout-box[data-area-id="${box.areaId}"]`).forEach(el => {
+                            el.classList.add('hover-active');
+                        });
+                    });
+                    
+                    div.addEventListener('mouseleave', () => {
+                        document.getElementById('layout-tooltip-el').style.display = 'none';
+                        // Apagar todas las cajas hermanas
+                        document.querySelectorAll(`.layout-box[data-area-id="${box.areaId}"]`).forEach(el => {
+                            el.classList.remove('hover-active');
+                        });
+                    });
+
+                    // Click para Deep Dive
+                    div.addEventListener('click', () => {
+                        document.getElementById('layout-tooltip-el').style.display = 'none';
+                        openLayoutDetail(box.areaId, stats);
+                    });
+                }
+
+                container.appendChild(div);
+            });
+        }
+
+        // --- LÓGICA DE DRAG & DROP Y RESIZE (Simplificada y en Porcentajes) ---
+        function setupDraggable(element, boxData, index) {
+            let isDragging = false;
+            let startX, startY, startLeft, startTop;
+
+            element.addEventListener('mousedown', (e) => {
+                if (e.target.classList.contains('resize-handle')) return;
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                const container = element.parentElement;
+                startLeft = (parseFloat(element.style.left) / 100) * container.clientWidth;
+                startTop = (parseFloat(element.style.top) / 100) * container.clientHeight;
+                e.stopPropagation();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const container = element.parentElement;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                
+                let newLeft = ((startLeft + dx) / container.clientWidth) * 100;
+                let newTop = ((startTop + dy) / container.clientHeight) * 100;
+                
+                newLeft = Math.max(0, Math.min(newLeft, 100 - boxData.width));
+                newTop = Math.max(0, Math.min(newTop, 100 - boxData.height));
+                
+                element.style.left = newLeft + '%';
+                element.style.top = newTop + '%';
+                boxData.left = parseFloat(newLeft.toFixed(2));
+                boxData.top = parseFloat(newTop.toFixed(2));
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+        }
+
+        function setupResizable(resizer, element, boxData, index) {
+            let isResizing = false;
+            let startX, startY, startWidth, startHeight;
+
+            resizer.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                const container = element.parentElement;
+                startWidth = (parseFloat(element.style.width) / 100) * container.clientWidth;
+                startHeight = (parseFloat(element.style.height) / 100) * container.clientHeight;
+                e.stopPropagation();
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                const container = element.parentElement;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                
+                let newWidth = ((startWidth + dx) / container.clientWidth) * 100;
+                let newHeight = ((startHeight + dy) / container.clientHeight) * 100;
+                
+                newWidth = Math.max(2, Math.min(newWidth, 100 - boxData.left));
+                newHeight = Math.max(2, Math.min(newHeight, 100 - boxData.top));
+                
+                element.style.width = newWidth + '%';
+                element.style.height = newHeight + '%';
+                boxData.width = parseFloat(newWidth.toFixed(2));
+                boxData.height = parseFloat(newHeight.toFixed(2));
+            });
+
+            document.addEventListener('mouseup', () => {
+                isResizing = false;
+            });
+        }
+
+        // --- CÁLCULO DE KPIs PARA LAYOUT ---
+        function calculateAreaStats(areaId) {
+            let sumScores = 0;
+            let validCount = 0;
+            let wip = 0;
+            let overdue = 0;
+            
+            let targetAreas = [areaId.trim().toLowerCase().replace(/[^a-z0-9]/g, '')];
+            if (currentViewMode === 'sectors') {
+                const sectorKey = Object.keys(sectorMapping).find(k => k.trim().toLowerCase() === areaId.trim().toLowerCase());
+                if (sectorKey) {
+                    targetAreas = sectorMapping[sectorKey].map(a => a.trim().toLowerCase().replace(/[^a-z0-9]/g, ''));
+                }
+            }
+
+            const areaActions = allAuditData.filter(a => {
+                const loc = (a.cleanLocation || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                return targetAreas.some(target => loc.includes(target));
+            });
+            
+            areaActions.forEach(a => {
+                // Para score, valores de 1 a 5, omitir -1
+                if (a.responseScore >= 1 && a.responseScore <= 5) {
+                    sumScores += a.responseScore;
+                    validCount++;
+                }
+                
+                // Conteo de acciones (1 a 4)
+                if (a.responseScore >= 1 && a.responseScore <= 4) {
+                    const status = (a.status || 'open').toLowerCase().replace(/[^a-z0-9]/g, '-');
+                    if (status === 'overdue') {
+                        overdue++;
+                    } else if (status !== 'closed' && status !== 'close') {
+                        wip++;
+                    }
+                }
+            });
+
+            return {
+                avgScore: validCount > 0 ? (sumScores / validCount) : 0,
+                validCount: validCount,
+                wip: wip,
+                overdue: overdue,
+                actions: areaActions
+            };
+        }
+
+        // --- DEEP DIVE (DETALLE DEL ÁREA) ---
+        function openLayoutDetail(areaId, stats) {
+            document.getElementById('view-layout-main').classList.add('hidden');
+            document.getElementById('view-layout-detail').classList.remove('hidden');
+            
+            const labelStr = currentViewMode === 'sectors' ? 'Sector' : 'Área';
+            document.getElementById('layout-detail-title').textContent = `Detalle de ${labelStr}: ${areaId}`;
+            document.getElementById('layout-detail-score').textContent = stats.validCount > 0 ? ((stats.avgScore / 5) * 100).toFixed(1) + '%' : 'N/A';
+            document.getElementById('layout-detail-wip').textContent = stats.wip;
+            document.getElementById('layout-detail-overdue').textContent = stats.overdue;
+
+            // Llenar tabla de WIP y Overdue
+            const activeActions = stats.actions.filter(a => {
+                if (a.responseScore < 1 || a.responseScore > 4) return false;
+                const status = (a.status || 'open').toLowerCase().replace(/[^a-z0-9]/g, '-');
+                return status !== 'closed' && status !== 'close';
+            });
+
+            const tbody = document.getElementById('layout-detail-table-body');
+            tbody.innerHTML = '';
+
+            if (activeActions.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px;">No hay acciones activas. ¡Excelente!</td></tr>`;
+            } else {
+                activeActions.forEach(item => {
+                    const row = document.createElement('tr');
+                    
+                    const tdId = document.createElement('td');
+                    tdId.textContent = item.actionId;
+                    
+                    const tdComments = document.createElement('td');
+                    tdComments.textContent = item.comments || 'Sin comentarios';
+                    
+                    const tdOwner = document.createElement('td');
+                    tdOwner.textContent = item.owner || 'Sin Asignar';
+                    
+                    const tdStatus = document.createElement('td');
+                    const span = document.createElement('span');
+                    span.className = `status-badge status-${item.status ? item.status.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'open'}`;
+                    span.textContent = item.status || 'Open';
+                    tdStatus.appendChild(span);
+                    
+                    row.appendChild(tdId);
+                    row.appendChild(tdComments);
+                    row.appendChild(tdOwner);
+                    row.appendChild(tdStatus);
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
+        function closeLayoutDetail() {
+            document.getElementById('view-layout-detail').classList.add('hidden');
+            document.getElementById('view-layout-main').classList.remove('hidden');
+        }
+    </script>
+
+    <!-- MODAL PARA EDITAR ACCIÓN -->
+    <div id="edit-action-modal" class="modal-overlay" onclick="if(event.target === this) closeEditModal()">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Editar Acción Correctiva</h3>
+                <button class="btn-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-audit-id">
+                <input type="hidden" id="edit-action-id">
+                
+                <div class="form-group">
+                    <label>ID Acción (Sólo lectura)</label>
+                    <input type="text" id="edit-display-id" class="form-control" disabled>
+                </div>
+                
+                <div class="form-group">
+                    <label>Responsable (Owner)</label>
+                    <input type="text" id="edit-owner" class="form-control" placeholder="Escribe el nombre del responsable">
+                </div>
+                
+                <div class="form-group">
+                    <label>Fecha de Vencimiento (Due Date)</label>
+                    <input type="date" id="edit-date" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label>Estado (Status)</label>
+                    <select id="edit-status" class="form-control">
+                        <option value="Open">Open</option>
+                        <option value="Close">Close</option>
+                        <option value="Overdue">Overdue</option>
+                        <option value="Closed">Closed</option>
+                        <option value="Waiting for approval">Waiting for approval</option>
+                        <option value="Re-assigned">Re-assigned</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveActionEdit()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
