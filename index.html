@@ -1264,38 +1264,55 @@
             display: none !important;
         }
 
-        .track-path {
+        .track-lane {
             position: relative;
-            width: 90%;
-            height: 200px;
-            margin: 0 auto;
+            width: 100%;
+            height: 70px;
             background: #555555;
-            border-radius: 100px;
-            border: 5px dashed #ffffff;
+            border-bottom: 2px dashed #ffffff;
             display: flex;
             align-items: center;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            margin-bottom: 5px;
         }
+        
+        .track-lane:first-child { border-top: 2px solid #ffffff; margin-top: 10px; }
+        .track-lane:last-child { border-bottom: 2px solid #ffffff; }
 
         .track-start, .track-finish {
             position: absolute;
             top: 0;
             bottom: 0;
-            width: 50px;
+            width: 40px;
             background: repeating-conic-gradient(#fff 0 90deg, #000 0 180deg) 50% / 20px 20px;
             z-index: 2;
         }
 
-        .track-start { left: 0; border-radius: 100px 0 0 100px; }
-        .track-finish { right: 0; border-radius: 0 100px 100px 0; }
+        .track-start { left: 0; }
+        .track-finish { right: 0; }
+        
+        .progress-trail {
+            position: absolute;
+            left: 40px;
+            top: 50%;
+            height: 8px;
+            transform: translateY(-50%);
+            background-color: transparent;
+            z-index: 5;
+            border-radius: 4px;
+            transition: width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            width: 0%;
+        }
+        .progress-trail.trail-good { background-color: #00ff00; box-shadow: 0 0 10px #00ff00; }
+        .progress-trail.trail-bad { background-color: #ff3333; box-shadow: 0 0 10px #ff3333; }
 
         .racer-circle {
             position: absolute;
             width: 45px;
             height: 45px;
             border-radius: 50%;
-            background-color: var(--color-primary);
-            color: white;
+            background-color: #ffffff; /* Blanco como solicitaste */
+            color: #000000;
             font-weight: bold;
             font-size: 14px;
             display: flex;
@@ -1305,12 +1322,13 @@
             transition: left 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
             z-index: 10;
             transform: translate(-50%, -50%);
-            border: 3px solid #fff;
+            border: 3px solid #333;
+            top: 50%;
         }
 
         .racer-label {
             position: absolute;
-            top: -30px;
+            top: -25px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0,0,0,0.9);
@@ -1319,7 +1337,7 @@
             border-radius: 4px;
             font-size: 11px;
             white-space: nowrap;
-            border: 1px solid var(--color-primary);
+            border: 1px solid var(--color-border);
         }
     </style>
 </head>
@@ -1434,9 +1452,6 @@
                                 <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
                             </svg>
                             Cargar Datos Demo
-                        </button>
-                        <button class="btn btn-secondary" id="btn-competition-mode" onclick="toggleCompetitionMode()" style="background-color: #ff0000; color: white; border: none; font-weight: bold;">
-                            🏁 Modo Competencia
                         </button>
                         <button id="btn-reset" class="btn btn-danger hidden" onclick="resetDatabase()">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-right:4px;">
@@ -1631,6 +1646,9 @@
                                     <label for="global-date-end" style="font-size: 13px; color: var(--color-text-light);">Hasta:</label>
                                     <input type="date" id="global-date-end" class="filter-select" style="width: auto; padding: 6px;" onchange="updateDashboard()">
                                     <button class="btn btn-secondary" onclick="clearGlobalDateFilter()" style="padding: 6px 12px; font-size: 13px;">Limpiar</button>
+                                    <button class="btn btn-secondary" id="btn-competition-mode" onclick="toggleCompetitionMode()" style="background-color: #ff0000; color: white; border: none; font-weight: bold; padding: 6px 12px; margin-left: 15px;">
+                                        🏁 Modo Competencia
+                                    </button>
                                 </div>
                             </div>
                         </section>
@@ -1638,12 +1656,7 @@
                         <!-- PISTA DE CARRERAS (MODO COMPETENCIA) -->
                         <section class="racetrack-container" id="competition-track-container">
                             <h2 style="color: white; text-align: center; margin-bottom: 20px; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;">Copa 5S Flex</h2>
-                            <div class="track-path">
-                                <div class="track-start"></div>
-                                <div class="track-finish"></div>
-                                <!-- Los corredores se inyectarán aquí vía JS -->
-                                <div id="track-racers-container"></div>
-                            </div>
+                            <!-- Los carriles se inyectarán aquí vía JS -->
                         </section>
 
             <!-- CARDS DE KPIs SUPERIORES -->
@@ -2580,54 +2593,68 @@
         }
 
         function renderCompetitionRace() {
-            const container = document.getElementById('track-racers-container');
-            container.innerHTML = '';
+            const container = document.getElementById('competition-track-container');
             
-            // Extraer áreas únicas
+            // Limpiar carriles anteriores manteniendo el título
+            const oldLanes = container.querySelectorAll('.track-lane');
+            oldLanes.forEach(lane => lane.remove());
+            
             const areaNames = [...new Set(globalFilteredData.map(item => item.area))].filter(Boolean);
             
-            areaNames.forEach((areaName, index) => {
+            let racersData = [];
+            
+            areaNames.forEach((areaName) => {
                 const stats = calculateAreaStats(areaName);
                 if (stats.last3Avg === 0) return; // Ignorar áreas vacías
                 
-                // Calcular score base
                 const areaActions = globalFilteredData.filter(item => item.area === areaName && item.actionId);
                 const onTimeClosed = areaActions.filter(item => item.status && item.status.toLowerCase() === 'closed on time').length;
                 const overdue = areaActions.filter(item => item.status && item.status.toLowerCase() === 'overdue').length;
                 
-                // Formula solicitada
                 let competitionScore = stats.last3Avg + onTimeClosed - overdue;
                 competitionScore = Math.max(0, Math.min(competitionScore, 100)); // Limitar entre 0 y 100
                 
-                const racer = document.createElement('div');
-                racer.className = 'racer-circle';
-                racer.textContent = (index + 1); // Número temporal antes de poner a Mario Kart
-                
-                const colors = ['#e74c3c', '#3498db', '#f1c40f', '#9b59b6', '#e67e22', '#1abc9c', '#34495e'];
-                racer.style.backgroundColor = colors[index % colors.length];
-                
-                // Iniciar en 0 y hacer transición CSS
-                racer.style.left = '0%'; 
-                racer.style.top = (25 + (index * 45)) + 'px'; // Separación vertical para evitar empalmes
-                
-                const label = document.createElement('div');
-                label.className = 'racer-label';
-                label.textContent = areaName;
-                racer.appendChild(label);
-                
-                container.appendChild(racer);
-                
-                // Animar hacia la posición final usando setTimeout para que el navegador procese el render inicial
-                setTimeout(() => {
-                    racer.style.left = competitionScore + '%';
-                }, 150);
+                racersData.push({
+                    name: areaName,
+                    score: competitionScore,
+                    overdueCount: overdue
+                });
             });
             
-            // Ajustar altura de la pista para que quepan todos los competidores
-            const trackPath = document.querySelector('.track-path');
-            if (trackPath) {
-                trackPath.style.height = Math.max(200, (areaNames.length * 45) + 50) + 'px';
-            }
+            // Ordenar de mayor a menor puntaje (Posiciones de la carrera)
+            racersData.sort((a, b) => b.score - a.score);
+            
+            let html = '';
+            racersData.forEach((racer, index) => {
+                const isGood = racer.overdueCount === 0;
+                const trailClass = isGood ? 'trail-good' : 'trail-bad';
+                
+                html += `
+                    <div class="track-lane">
+                        <div class="track-start"></div>
+                        <div class="track-finish"></div>
+                        <div class="progress-trail ${trailClass}" id="trail-${index}"></div>
+                        <div class="racer-circle" id="racer-${index}">
+                            ${index + 1}
+                            <div class="racer-label">${racer.name}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.insertAdjacentHTML('beforeend', html);
+            
+            // Animar hacia la posición final
+            setTimeout(() => {
+                racersData.forEach((racer, index) => {
+                    const circle = document.getElementById(`racer-${index}`);
+                    const trail = document.getElementById(`trail-${index}`);
+                    if (circle && trail) {
+                        circle.style.left = racer.score + '%';
+                        trail.style.width = racer.score + '%';
+                    }
+                });
+            }, 150);
         }
 
         // 5. CÁLCULO DE KPIs METRICS
