@@ -7,6 +7,8 @@
     <!-- Importar Chart.js desde CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <!-- Importar Supabase Auth desde unpkg (bypass firewall) -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         /* --- DISEÑO DE UI/UX - PALETA DE COLORES Y TIPOGRAFÍA --- */
         :root {
@@ -50,9 +52,75 @@
 
         /* --- LAYOUT PRINCIPAL (SIDEBAR + CONTENT) --- */
         .app-layout {
-            display: flex;
+            display: none; /* Oculto por defecto hasta validar sesión en Supabase */
             min-height: 100vh;
             width: 100%;
+        }
+
+        /* --- LOGIN OVERLAY --- */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+        }
+        .login-card {
+            background: var(--color-bg-white);
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .login-card h2 {
+            color: var(--color-secondary);
+            margin-bottom: 5px;
+        }
+        .login-card p {
+            color: var(--color-text-muted);
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        .login-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: var(--font-family);
+        }
+        .login-input:focus {
+            border-color: var(--color-primary);
+            outline: none;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .login-btn:hover {
+            background-color: var(--color-primary-hover);
+        }
+        .login-error {
+            color: var(--color-danger);
+            font-size: 13px;
+            margin-top: 15px;
+            display: none;
         }
 
         /* --- SIDEBAR --- */
@@ -932,9 +1000,244 @@
         .hidden {
             display: none !important;
         }
+        /* Estilos para el Modal y Tarjetas Interactivas del Deep Dive */
+        .interactive-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 154, 221, 0.2);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--color-bg-white);
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            overflow: hidden;
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: var(--color-text);
+        }
+
+        #layout-owners-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        #layout-owners-table th, #layout-owners-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+            color: var(--color-text-muted);
+        }
+        #layout-owners-table th {
+            background: rgba(0,0,0,0.02);
+            color: var(--color-text);
+            font-weight: 600;
+        }
+        /* ESTILOS DEL CALENDARIO 5S */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background-color: var(--color-border);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        .cal-day-header {
+            background-color: #f8f9fa;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            color: var(--color-text-muted);
+        }
+
+        .cal-day {
+            background-color: var(--color-bg-white);
+            min-height: 120px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            position: relative;
+        }
+
+        .cal-day.empty {
+            background-color: #f9f9f9;
+        }
+
+        .cal-day.today {
+            background-color: rgba(0, 154, 221, 0.05);
+        }
+
+        .cal-date-number {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--color-text);
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .cal-add-btn {
+            cursor: pointer;
+            color: var(--color-text-muted);
+            font-size: 16px;
+            line-height: 1;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .cal-day:hover .cal-add-btn {
+            opacity: 1;
+        }
+
+        .cal-add-btn:hover {
+            color: var(--color-primary);
+        }
+
+        .cal-event {
+            font-size: 11px;
+            padding: 4px 6px;
+            border-radius: 4px;
+            background-color: var(--color-primary);
+            color: white;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: transform 0.1s;
+        }
+
+        .cal-event:hover {
+            transform: scale(1.02);
+            filter: brightness(1.1);
+        }
+
+        .cal-event.status-completada {
+            background-color: var(--color-success);
+        }
+
+        .cal-event.status-cancelada {
+            background-color: var(--color-danger);
+            text-decoration: line-through;
+            opacity: 0.8;
+        }
+        /* ESTILOS DE CONTROL DE ÁREAS */
+        .area-card {
+            background: var(--color-bg-white);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            transition: var(--transition);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .area-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+            border-color: var(--color-primary);
+        }
+
+        .area-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .area-card-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--color-text);
+            margin: 0;
+        }
+
+        .area-card-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .area-card-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--color-text-muted);
+        }
+
+        .area-card-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .area-card-stat-val {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--color-text);
+        }
     </style>
 </head>
 <body>
+    <!-- CONTENEDOR DE LOGIN SUPABASE -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-card">
+            <h2>LeanView 5´S</h2>
+            <p>Ingresa tus credenciales para acceder</p>
+            <form id="login-form" onsubmit="event.preventDefault(); handleLogin(event); return false;">
+                <input type="email" id="login-email" class="login-input" placeholder="Correo Electrónico" required>
+                <input type="password" id="login-password" class="login-input" placeholder="Contraseña" required>
+                <button type="submit" id="login-submit-btn" class="login-btn">Entrar</button>
+                <div id="login-error-msg" class="login-error">Credenciales incorrectas. Intenta de nuevo.</div>
+            </form>
+            <p style="margin-top: 20px; font-size: 12px;">Contacta al administrador para solicitar tu cuenta.</p>
+        </div>
+    </div>
 
     <div class="app-layout">
         
@@ -982,6 +1285,15 @@
                     <span>Areas</span>
                 </a>
             </nav>
+
+            <div style="margin-top: auto; padding-bottom: 20px;">
+                <nav class="sidebar-nav">
+                    <a class="nav-item" style="color: #EC7063;" onclick="handleLogout()">
+                        <span class="nav-icon">🚪</span>
+                        <span>Cerrar Sesión</span>
+                    </a>
+                </nav>
+            </div>
         </aside>
 
         <!-- CONTENIDO PRINCIPAL -->
@@ -1105,6 +1417,80 @@
                     <p style="max-width: 400px; line-height: 1.6;">Estamos construyendo esta funcionalidad para la próxima versión de LeanView 5'S. ¡Vuelve pronto!</p>
                 </div>
                 
+                <!-- VISTA CALENDARIO 5S -->
+                <div id="view-calendar" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
+                    <div class="chart-header" style="justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--color-border); margin-bottom: 10px;">
+                        <h2 style="margin: 0; font-size: 24px; color: var(--color-text);">Calendario de Auditorías</h2>
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <button class="btn btn-secondary" onclick="changeMonth(-1)">◀ Mes Anterior</button>
+                            <h3 id="calendar-month-year" style="margin: 0; min-width: 150px; text-align: center; font-size: 18px;">Mes Año</h3>
+                            <button class="btn btn-secondary" onclick="changeMonth(1)">Mes Siguiente ▶</button>
+                        </div>
+                    </div>
+                    
+                    <div class="calendar-grid" id="calendar-grid-container">
+                        <!-- Days of week -->
+                        <div class="cal-day-header">Dom</div>
+                        <div class="cal-day-header">Lun</div>
+                        <div class="cal-day-header">Mar</div>
+                        <div class="cal-day-header">Mié</div>
+                        <div class="cal-day-header">Jue</div>
+                        <div class="cal-day-header">Vie</div>
+                        <div class="cal-day-header">Sáb</div>
+                        <!-- Days body injected via JS -->
+                    </div>
+                </div>
+
+                <!-- MODAL PARA AGREGAR/EDITAR EVENTO DE CALENDARIO -->
+                <div class="modal" id="calendar-event-modal">
+                    <div class="modal-content" style="max-width: 500px;">
+                        <div class="modal-header">
+                            <h3 id="cal-modal-title">Programar Auditoría</h3>
+                            <button class="btn btn-primary" onclick="closeCalendarModal()" style="background: transparent; color: var(--color-text); border: none; font-size: 20px;">×</button>
+                        </div>
+                        <div style="padding: 20px; display: flex; flex-direction: column; gap: 15px;">
+                            <input type="hidden" id="cal-event-id">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--color-text-muted);">Fecha</label>
+                                <input type="date" id="cal-event-date" class="filter-select" style="width: 100%; border: 1px solid var(--color-border);" required>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--color-text-muted);">Área o Sector</label>
+                                <input type="text" id="cal-event-area" class="filter-select" placeholder="Ej. Línea 3" style="width: 100%; border: 1px solid var(--color-border);" required autocomplete="off">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--color-text-muted);">Estado</label>
+                                <select id="cal-event-status" class="filter-select" style="width: 100%; border: 1px solid var(--color-border);">
+                                    <option value="Programada">Programada</option>
+                                    <option value="Completada">Completada</option>
+                                    <option value="Cancelada">Cancelada</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
+                                <button class="btn btn-secondary" onclick="deleteCalendarEvent()" id="btn-delete-event" style="display: none; background: #fee2e2; color: #dc2626; border-color: #fca5a5;">Eliminar</button>
+                                <button class="btn btn-secondary" onclick="closeCalendarModal()">Cancelar</button>
+                                <button class="btn btn-primary" onclick="saveCalendarEvent()">Guardar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VISTA CONTROL DE ÁREAS -->
+                <div id="view-areas" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
+                    <div class="chart-header" style="justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--color-border); margin-bottom: 10px;">
+                        <h2 style="margin: 0; font-size: 24px; color: var(--color-text);">Control de Áreas</h2>
+                        <div class="search-box">
+                            <svg class="search-icon" viewBox="0 0 24 24">
+                                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                            </svg>
+                            <input type="text" id="search-areas-input" placeholder="Buscar área..." oninput="filterAreasList()">
+                        </div>
+                    </div>
+                    <div class="areas-grid" id="areas-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                        <!-- Las tarjetas de áreas se generarán aquí con JS -->
+                    </div>
+                </div>
+
                 <!-- EMPTY STATE (GLOBAL) -->
                 <div id="dashboard-empty-state" class="empty-state">
                     <svg class="empty-state-icon" viewBox="0 0 24 24">
@@ -1327,32 +1713,63 @@
                 <!-- VISTA DE DEEP DIVE (DETALLE DE ÁREA) -->
                 <div id="view-layout-detail" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
                     <div class="chart-header" style="justify-content: flex-start; gap: 15px; border-bottom: 1px solid var(--color-border); padding-bottom: 10px; margin-bottom: 0;">
-                        <button class="btn btn-primary" onclick="closeLayoutDetail()">
+                        <button class="btn btn-primary" id="btn-back-deepdive" onclick="closeLayoutDetail()">
                             ◀ Volver al Mapa
                         </button>
                         <h2 id="layout-detail-title" style="margin: 0; font-size: 20px; color: var(--color-text);">Detalle de Área</h2>
                     </div>
 
-                    <section class="kpis-grid">
-                        <div class="kpi-card score">
-                            <span class="kpi-title">Última Calificación Promedio</span>
-                            <span class="kpi-value" id="layout-detail-score">0.0</span>
+                    <section class="kpis-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                        <div class="kpi-card score" style="cursor: default;">
+                            <span class="kpi-title">Score Últimas 3 Audits</span>
+                            <span class="kpi-value" id="ld-kpi-score">0.0%</span>
                         </div>
-                        <div class="kpi-card warning">
-                            <span class="kpi-title">Acciones Abiertas (En Proceso)</span>
-                            <span class="kpi-value" id="layout-detail-wip">0</span>
+                        <div class="kpi-card" id="ld-kpi-improvement-card" style="cursor: default; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                            <span class="kpi-title" style="color: rgba(255,255,255,0.9);">Mejora Continua</span>
+                            <span class="kpi-value" id="ld-kpi-improvement">N/A</span>
                         </div>
-                        <div class="kpi-card overdue">
+                        <div class="kpi-card" style="cursor: default; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white;">
+                            <span class="kpi-title" style="color: rgba(255,255,255,0.9);">On-Time Closure</span>
+                            <span class="kpi-value" id="ld-kpi-ontime">0.0%</span>
+                        </div>
+                        <div class="kpi-card warning interactive-card" onclick="openLayoutListModal('wip')" style="cursor: pointer; transition: transform 0.2s;">
+                            <span class="kpi-title">Acciones en Proceso (WIP)</span>
+                            <span class="kpi-value" id="ld-kpi-wip">0</span>
+                            <span style="font-size: 12px; opacity: 0.8; margin-top: 5px;">👆 Clic para ver lista</span>
+                        </div>
+                        <div class="kpi-card overdue interactive-card" onclick="openLayoutListModal('overdue')" style="cursor: pointer; transition: transform 0.2s;">
                             <span class="kpi-title">Acciones Vencidas (Overdue)</span>
-                            <span class="kpi-value" id="layout-detail-overdue">0</span>
+                            <span class="kpi-value" id="ld-kpi-overdue">0</span>
+                            <span style="font-size: 12px; opacity: 0.8; margin-top: 5px;">👆 Clic para ver lista</span>
                         </div>
                     </section>
 
                     <section class="charts-grid" style="grid-template-columns: 1fr;">
                         <div class="table-card">
-                            <div class="chart-header"><span class="chart-title">Acciones Activas del Área</span></div>
+                            <div class="chart-header"><span class="chart-title">Responsables del Área (Owners)</span></div>
                             <div class="table-responsive">
-                                <table id="layout-detail-table">
+                                <table id="layout-owners-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Responsable</th>
+                                            <th>Departamento</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="layout-owners-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- MODAL PARA LISTA DE ACCIONES -->
+                    <div class="modal" id="layout-list-modal">
+                        <div class="modal-content" style="max-width: 800px;">
+                            <div class="modal-header">
+                                <h3 id="layout-list-title">Lista de Acciones</h3>
+                                <button class="btn btn-primary" onclick="closeLayoutListModal()" style="background: transparent; color: var(--color-text); border: none; font-size: 20px;">×</button>
+                            </div>
+                            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                <table id="layout-list-table">
                                     <thead>
                                         <tr>
                                             <th>ID Acción</th>
@@ -1361,11 +1778,11 @@
                                             <th>Estado</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="layout-detail-table-body"></tbody>
+                                    <tbody id="layout-list-table-body"></tbody>
                                 </table>
                             </div>
                         </div>
-                    </section>
+                    </div>
                 </div>
             </div> <!-- END LAYOUT MODULE -->
 
@@ -1474,6 +1891,13 @@
     </div> <!-- END APP LAYOUT -->
 
     <!-- --- CÓDIGO JAVASCRIPT --- -->
+    <!-- --- CÓDIGO JAVASCRIPT --- -->
+    <script>
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            alert("⚠️ ERROR ENCONTRADO:\n" + msg + "\n\nLínea: " + lineNo);
+            return false;
+        };
+    </script>
     <script>
         // Registrar plugin de etiquetas de datos
         Chart.register(ChartDataLabels);
@@ -1485,6 +1909,13 @@
         let arrClosed = [];
         let arrOverdue = [];
         let arrWIP = [];
+
+        // Variables globales de tabla de acciones
+        let tableData = [];
+        let tablePage = 1;
+        let tableRowsPerPage = 10;
+        let tableSortCol = 'actionId';
+        let tableSortAsc = false;
 
         // Modo Top 10 para la gráfica 1 (worst / best)
         let areaTopMode = 'worst';
@@ -1542,17 +1973,39 @@
                 document.getElementById('view-layout-wrapper').classList.remove('hidden');
                 document.getElementById('main-header').classList.add('hidden');
                 initLayoutModule();
+            } else if (tabId === 'calendar') {
+                document.getElementById('view-dashboard').classList.remove('hidden');
+                document.getElementById('dashboard-content').classList.add('hidden');
+                document.getElementById('view-actions-editor').classList.add('hidden');
+                document.getElementById('view-layout-wrapper').classList.add('hidden');
+                document.getElementById('view-under-construction').classList.add('hidden');
+                document.getElementById('view-areas').classList.add('hidden');
+                document.getElementById('view-calendar').classList.remove('hidden');
+                document.getElementById('main-header').classList.add('hidden');
+                initCalendar();
+            } else if (tabId === 'areas') {
+                document.getElementById('view-dashboard').classList.remove('hidden');
+                document.getElementById('dashboard-content').classList.add('hidden');
+                document.getElementById('view-actions-editor').classList.add('hidden');
+                document.getElementById('view-layout-wrapper').classList.add('hidden');
+                document.getElementById('view-under-construction').classList.add('hidden');
+                document.getElementById('view-calendar').classList.add('hidden');
+                document.getElementById('view-areas').classList.remove('hidden');
+                document.getElementById('main-header').classList.add('hidden');
+                initAreasList();
             } else {
-                // Cualquier otra pestaña (audits, calendar, areas)
+                // Cualquier otra pestaña (audits)
+                document.getElementById('view-dashboard').classList.remove('hidden');
+                document.getElementById('dashboard-content').classList.add('hidden');
+                document.getElementById('view-actions-editor').classList.add('hidden');
+                document.getElementById('view-layout-wrapper').classList.add('hidden');
+                document.getElementById('view-calendar').classList.add('hidden');
+                document.getElementById('view-areas').classList.add('hidden');
                 document.getElementById('view-under-construction').classList.remove('hidden');
                 document.getElementById('main-header').classList.remove('hidden');
                 
-                // Actualizar el texto según la sección
                 const titles = {
-                    'layout': 'Layout de Planta',
-                    'audits': 'Gestión de Auditorías',
-                    'calendar': 'Calendario 5S',
-                    'areas': 'Control de Áreas'
+                    'audits': 'Gestión de Auditorías'
                 };
                 document.getElementById('uc-title').textContent = titles[tabId] || 'Sección en Desarrollo';
             }
@@ -1565,18 +2018,76 @@
 
         // Inicializar Aplicación al cargar
         window.addEventListener('DOMContentLoaded', () => {
-            initDropzone();
-            loadFromLocalStorage();
+            checkSession();
         });
 
-        // 1. CARGA DESDE LOCALSTORAGE
-        function loadFromLocalStorage() {
-            const dataStr = localStorage.getItem(STORAGE_KEY);
-            if (dataStr) {
-                allAuditData = JSON.parse(dataStr);
+        let allOwnersDirectory = [];
+
+        // 1. CARGA DESDE SUPABASE Y PUENTE DE MIGRACIÓN
+        async function loadFromSupabase() {
+            // --- A) CARGAR DIRECTORIO DE OWNERS ---
+            const { data: ownersData, error: ownersErr } = await supabaseClient.from('owners_directory').select('*');
+            if (ownersData) {
+                allOwnersDirectory = ownersData;
+            }
+
+            // --- B) CARGAR Y MIGRAR COORDENADAS DEL LAYOUT ---
+            const { data: layoutData, error: layoutErr } = await supabaseClient.from('layout_coords').select('*');
+            
+            const oldLayoutStr = localStorage.getItem('flex_layout_coords_v2');
+            if ((!layoutData || layoutData.length === 0) && oldLayoutStr) {
+                // PUENTE: Migrar Layout de Local a Nube
+                try {
+                    mapCoordinates = JSON.parse(oldLayoutStr);
+                    await saveLayoutCoordinates(); 
+                    localStorage.removeItem('flex_layout_coords_v2'); 
+                } catch(e) { console.error(e); }
+            } else if (layoutData) {
+                // Flujo Normal: Cargar de Nube a Memoria
+                mapCoordinates = { 'b27.png': { areas: [], sectors: [] }, 'b29.png': { areas: [], sectors: [] } };
+                layoutData.forEach(row => {
+                    if (!mapCoordinates[row.map]) mapCoordinates[row.map] = { areas: [], sectors: [] };
+                    if (!mapCoordinates[row.map][row.type]) mapCoordinates[row.map][row.type] = [];
+                    mapCoordinates[row.map][row.type].push({
+                        areaId: row.name,
+                        left: row.x,
+                        top: row.y,
+                        width: row.width,
+                        height: row.height
+                    });
+                });
+            }
+
+            // --- B) CARGAR Y MIGRAR AUDITORÍAS ---
+            const { data, error } = await supabaseClient.from('actions').select('*');
+            
+            if (error) {
+                console.error("Error al descargar datos de Supabase:", error);
+                alert("Hubo un error descargando la información de la nube.");
+                return;
+            }
+
+            const oldDataStr = localStorage.getItem(STORAGE_KEY);
+            if ((!data || data.length === 0) && oldDataStr) {
+                // PUENTE: Migrar Datos de Auditorías de Local a Nube
+                try {
+                    const oldData = JSON.parse(oldDataStr);
+                    if (oldData && oldData.length > 0) {
+                        const upsertResults = await runUpsert(oldData);
+                        localStorage.removeItem(STORAGE_KEY);
+                        alert(`¡Puente de Migración Exitoso!\nSe rescataron ${upsertResults.inserted} acciones y los recuadros de tu Layout y fueron subidos a la Nube de Supabase.`);
+                        return loadFromSupabase(); // Recargar todo limpiamente
+                    }
+                } catch(e) { console.error(e); }
+            }
+
+            // Flujo Normal
+            if (data && data.length > 0) {
+                allAuditData = data;
                 document.getElementById('btn-reset').classList.remove('hidden');
                 updateDashboard();
             } else {
+                allAuditData = [];
                 document.getElementById('dashboard-content').classList.add('hidden');
                 document.getElementById('dashboard-empty-state').classList.remove('hidden');
                 document.getElementById('btn-reset').classList.add('hidden');
@@ -1621,7 +2132,7 @@
             }
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 const text = e.target.result;
                 const parsedRows = parseCSV(text);
                 
@@ -1688,15 +2199,19 @@
                     return;
                 }
 
-                const upsertResults = runUpsert(newItems);
-                
-                const validNew = newItems.filter(item => item.responseScore !== 5 && item.responseScore !== -1).length;
+                // Mostrar status temporal
                 const statusDiv = document.getElementById('upload-status');
                 const statusText = document.getElementById('status-text');
+                statusText.innerHTML = `<strong>Sincronizando con Supabase...</strong> Por favor espera.`;
+                statusDiv.classList.remove('hidden');
+
+                const upsertResults = await runUpsert(newItems);
+                
+                const validNew = newItems.filter(item => item.responseScore !== 5 && item.responseScore !== -1).length;
                 statusText.innerHTML = `<strong>Sincronización exitosa:</strong> Se agregaron <strong>${upsertResults.inserted}</strong> registros y se actualizaron <strong>${upsertResults.updated}</strong>. (Se detectaron ${validNew} acciones correctivas válidas en esta carga).`;
                 statusDiv.classList.remove('hidden');
 
-                loadFromLocalStorage();
+                loadFromSupabase();
             };
             reader.readAsText(file);
         }
@@ -1804,39 +2319,20 @@
             return locStr.trim();
         }
 
-        // LÓGICA DE UPSERT / SINCRONIZACIÓN EN LOCALSTORAGE
-        function runUpsert(newItems) {
-            const existing = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-            const map = new Map();
+        // LÓGICA DE UPSERT / SINCRONIZACIÓN HACIA SUPABASE
+        async function runUpsert(newItems) {
+            const { data, error } = await supabaseClient.from('actions').upsert(newItems, { onConflict: 'actionId' }).select();
             
-            const getItemKey = (item) => `${item.auditId.trim()}_${item.actionId.trim()}`;
-
-            existing.forEach(item => {
-                map.set(getItemKey(item), item);
-            });
-
-            let inserted = 0;
-            let updated = 0;
-
-            newItems.forEach(item => {
-                const key = getItemKey(item);
-                if (map.has(key)) {
-                    const oldItem = map.get(key);
-                    map.set(key, { ...oldItem, ...item });
-                    updated++;
-                } else {
-                    map.set(key, item);
-                    inserted++;
-                }
-            });
-
-            const combined = Array.from(map.values());
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(combined));
+            if (error) {
+                console.error("Error al hacer upsert en Supabase:", error);
+                alert("Hubo un error guardando los datos en Supabase: " + error.message);
+                return { inserted: 0, updated: 0, total: 0 };
+            }
 
             return {
-                inserted,
-                updated,
-                total: combined.length
+                inserted: data ? data.length : newItems.length,
+                updated: 0, // Supabase no desglosa inserts vs updates nativamente sin un payload pesado
+                total: data ? data.length : newItems.length
             };
         }
 
@@ -1880,7 +2376,7 @@
 
             // Filtrar descartes (Excluir -1 y 5 porque 5 no genera accion correctiva real)
             const validActions = globalFilteredData.filter(item => {
-                const s = item.responseScore;
+                const s = parseInt(item.responseScore);
                 return s !== 5 && s !== -1;
             });
 
@@ -1938,10 +2434,10 @@
         // 5. CÁLCULO DE KPIs METRICS
         function calculateKPIs() {
             // KPI 1: Promedio de Score General 5S (Excluye -1) convertido a porcentaje (Promedio / 5) * 100
-            const scoreData = globalFilteredData.filter(item => item.responseScore !== -1);
+            const scoreData = globalFilteredData.filter(item => parseInt(item.responseScore) !== -1);
             let avgPercent = 0;
             if (scoreData.length > 0) {
-                const sum = scoreData.reduce((acc, curr) => acc + curr.responseScore, 0);
+                const sum = scoreData.reduce((acc, curr) => acc + parseInt(curr.responseScore), 0);
                 const rawAvg = sum / scoreData.length;
                 avgPercent = (rawAvg / 5) * 100;
             }
@@ -2773,7 +3269,7 @@
                 arrOverdue = [];
                 arrWIP = [];
                 tableData = [];
-                loadFromLocalStorage();
+                loadFromSupabase();
             }
         }
 
@@ -2831,7 +3327,7 @@
             statusText.innerHTML = `<strong>Modo Demostración:</strong> Se han cargado <strong>${demoData.length}</strong> registros simulados bajo la arquitectura de arrays V6 (Bugfix Aging & WIP).`;
             statusDiv.classList.remove('hidden');
 
-            loadFromLocalStorage();
+            loadFromSupabase();
         }
 
         // 12. DESCARGA DE ARCHIVO CSV DE EJEMPLO
@@ -3218,6 +3714,10 @@
             const statusVal = document.getElementById('editor-filter-status').value;
 
             editorFilteredData = allAuditData.filter(item => {
+                // Excluir Descartes (-1) y Perfectos (5)
+                const score = parseInt(item.responseScore);
+                if (score === 5 || score === -1) return false;
+
                 let match = true;
                 if (ownerVal !== 'All' && (item.owner || 'Sin Asignar') !== ownerVal) match = false;
                 if (statusVal !== 'All' && (item.status || 'Open') !== statusVal) match = false;
@@ -3367,7 +3867,7 @@
             document.getElementById('edit-action-modal').classList.remove('active');
         }
 
-        function saveActionEdit() {
+        async function saveActionEdit() {
             const auditId = document.getElementById('edit-audit-id').value;
             const actionId = document.getElementById('edit-action-id').value;
             const newOwner = document.getElementById('edit-owner').value.trim();
@@ -3378,19 +3878,29 @@
             const idx = allAuditData.findIndex(a => a.auditId === auditId && a.actionId === actionId);
             if (idx === -1) return;
 
-            allAuditData[idx].owner = newOwner || 'Sin Asignar';
-            allAuditData[idx].status = newStatus;
+            const updatedOwner = newOwner || 'Sin Asignar';
+            let updatedDueDate = 'Sin Fecha';
             
             if (newDate) {
                 const d = new Date(newDate + 'T12:00:00');
-                allAuditData[idx].dueDate = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-            } else {
-                allAuditData[idx].dueDate = 'Sin Fecha';
+                updatedDueDate = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
             }
 
-            // Guardar en localStorage
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(allAuditData));
-            
+            allAuditData[idx].owner = updatedOwner;
+            allAuditData[idx].status = newStatus;
+            allAuditData[idx].dueDate = updatedDueDate;
+
+            // Guardar en Supabase
+            const { error } = await supabaseClient
+                .from('actions')
+                .update({ owner: updatedOwner, status: newStatus, dueDate: updatedDueDate })
+                .eq('actionId', actionId);
+                
+            if (error) {
+                console.error("Error al actualizar en Supabase:", error);
+                alert("Hubo un error al actualizar el registro en la nube.");
+            }
+
             // Cerrar modal
             closeEditModal();
             
@@ -3422,19 +3932,11 @@
             'Sector 7': ['RMA VLP', 'RMA GLP', 'MRB', 'MOONSHINE']
         };
 
-        // Coordenadas harcodeadas para que el usuario luego pegue las reales aquí
+        // Coordenadas harcodeadas por defecto (se sobreescriben al cargar desde Supabase)
         let mapCoordinates = {
             'b27.png': { areas: [], sectors: [] },
             'b29.png': { areas: [], sectors: [] }
         };
-
-        // Intentar cargar coordenadas guardadas
-        const savedCoords = localStorage.getItem('flex_layout_coords_v2');
-        if (savedCoords) {
-            try {
-                mapCoordinates = JSON.parse(savedCoords);
-            } catch(e) {}
-        }
 
         function changeLayoutMap() {
             currentMap = document.getElementById('layout-selector').value;
@@ -3490,9 +3992,40 @@
             renderLayoutBoxes();
         }
 
-        function saveLayoutCoordinates() {
-            localStorage.setItem('flex_layout_coords_v2', JSON.stringify(mapCoordinates));
-            alert('¡Coordenadas guardadas exitosamente en tu navegador! Se quedarán guardadas permanentemente.');
+        async function saveLayoutCoordinates() {
+            try {
+                // Borrar todo el layout existente en Supabase (método rápido para sustituir todo el mapa)
+                await supabaseClient.from('layout_coords').delete().neq('id', '00000000-0000-0000-0000-000000000000'); 
+
+                // Aplanar el objeto mapCoordinates en filas SQL
+                const rows = [];
+                for (const mapName in mapCoordinates) {
+                    for (const type in mapCoordinates[mapName]) {
+                        const items = mapCoordinates[mapName][type];
+                        for (const item of items) {
+                            rows.push({
+                                map: mapName,
+                                type: type,
+                                name: item.areaId,
+                                x: item.left,
+                                y: item.top,
+                                width: item.width,
+                                height: item.height
+                            });
+                        }
+                    }
+                }
+
+                if (rows.length > 0) {
+                    const { error } = await supabaseClient.from('layout_coords').insert(rows);
+                    if (error) throw error;
+                }
+                
+                alert('¡Coordenadas de layout guardadas exitosamente en la Nube de Supabase!');
+            } catch(error) {
+                console.error("Error al guardar layout:", error);
+                alert("Error guardando el Layout: " + error.message);
+            }
         }
 
         function renderLayoutBoxes() {
@@ -3542,10 +4075,10 @@
                     const stats = calculateAreaStats(box.areaId);
                     
                     // Colores
-                    if (stats.validCount > 0) {
-                        if (stats.avgScore < 3.5 || stats.overdue > 0) {
+                    if (stats.hasData) {
+                        if (stats.last3Avg < 70 || stats.overdueCount > 0) {
                             div.style.backgroundColor = 'rgba(236, 112, 99, 0.6)'; // Rojo
-                        } else if (stats.avgScore >= 4.5 && stats.overdue === 0 && stats.wip === 0) {
+                        } else if (stats.last3Avg >= 90 && stats.overdueCount === 0 && stats.wipCount === 0) {
                             div.style.backgroundColor = 'rgba(82, 190, 128, 0.6)'; // Verde
                         } else {
                             div.style.backgroundColor = 'rgba(244, 208, 63, 0.6)'; // Amarillo
@@ -3557,12 +4090,12 @@
                     // Hover y Tooltip
                     div.addEventListener('mouseenter', (e) => {
                         const tt = document.getElementById('layout-tooltip-el');
-                        const scoreStr = stats.validCount > 0 ? ((stats.avgScore / 5) * 100).toFixed(1) + '%' : 'N/A';
+                        const scoreStr = stats.hasData ? stats.last3Avg.toFixed(1) + '%' : 'N/A';
                         tt.innerHTML = `
                             <h4>${currentViewMode === 'sectors' ? 'Sector' : 'Área'}: ${box.areaId}</h4>
                             <p><span>Score Promedio:</span> <span>${scoreStr}</span></p>
-                            <p><span>Acciones Open:</span> <span>${stats.wip}</span></p>
-                            <p><span>Acciones Vencidas:</span> <span style="color:#EC7063">${stats.overdue}</span></p>
+                            <p><span>Acciones Open:</span> <span>${stats.wipCount}</span></p>
+                            <p><span>Acciones Vencidas:</span> <span style="color:#EC7063">${stats.overdueCount}</span></p>
                         `;
                         tt.style.display = 'block';
                         const rect = div.getBoundingClientRect();
@@ -3673,11 +4206,6 @@
 
         // --- CÁLCULO DE KPIs PARA LAYOUT ---
         function calculateAreaStats(areaId) {
-            let sumScores = 0;
-            let validCount = 0;
-            let wip = 0;
-            let overdue = 0;
-            
             let targetAreas = [areaId.trim().toLowerCase().replace(/[^a-z0-9]/g, '')];
             if (currentViewMode === 'sectors') {
                 const sectorKey = Object.keys(sectorMapping).find(k => k.trim().toLowerCase() === areaId.trim().toLowerCase());
@@ -3690,88 +4218,557 @@
                 const loc = (a.cleanLocation || '').toLowerCase().replace(/[^a-z0-9]/g, '');
                 return targetAreas.some(target => loc.includes(target));
             });
-            
+
+            // 1. Agrupar por auditoría para calcular "Últimas 3"
+            const auditsMap = {};
             areaActions.forEach(a => {
-                // Para score, valores de 1 a 5, omitir -1
-                if (a.responseScore >= 1 && a.responseScore <= 5) {
-                    sumScores += a.responseScore;
-                    validCount++;
-                }
-                
-                // Conteo de acciones (1 a 4)
-                if (a.responseScore >= 1 && a.responseScore <= 4) {
-                    const status = (a.status || 'open').toLowerCase().replace(/[^a-z0-9]/g, '-');
-                    if (status === 'overdue') {
-                        overdue++;
-                    } else if (status !== 'closed' && status !== 'close') {
-                        wip++;
+                const score = parseInt(a.responseScore);
+                if (score >= 1 && score <= 5) {
+                    if (!auditsMap[a.auditId]) {
+                        auditsMap[a.auditId] = { auditId: a.auditId, openDate: a.openDate, scores: [] };
                     }
+                    auditsMap[a.auditId].scores.push(score);
                 }
             });
 
+            const auditsArray = Object.values(auditsMap).map(audit => {
+                const avg = audit.scores.reduce((sum, s) => sum + s, 0) / audit.scores.length;
+                let d = new Date(0);
+                if (audit.openDate && audit.openDate !== 'Sin Fecha') {
+                    let cleanStr = audit.openDate.replace(/-/g, '/').split(' ')[0];
+                    d = new Date(cleanStr);
+                    if (isNaN(d.getTime())) {
+                        const parts = cleanStr.split('/');
+                        if (parts.length === 3) d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                    }
+                }
+                return { ...audit, avgScore: avg, dateObj: d };
+            });
+
+            // Orden cronológico (las más recientes primero)
+            auditsArray.sort((a, b) => b.dateObj - a.dateObj);
+
+            const last3Audits = auditsArray.slice(0, 3);
+            let last3Avg = 0;
+            if (last3Audits.length > 0) {
+                const totalAvg = last3Audits.reduce((sum, aud) => sum + aud.avgScore, 0) / last3Audits.length;
+                last3Avg = (totalAvg / 5) * 100;
+            }
+
+            // Mejora (Más reciente vs 3ra más antigua o 2da)
+            let improvement = 0;
+            let hasImprovement = false;
+            if (last3Audits.length >= 2) {
+                const newest = (last3Audits[0].avgScore / 5) * 100;
+                const oldest = (last3Audits[last3Audits.length - 1].avgScore / 5) * 100;
+                improvement = newest - oldest;
+                hasImprovement = true;
+            }
+
+            // 2. WIP, Overdue y On-Time Closure
+            let wip = 0;
+            let overdue = 0;
+            let closed = 0;
+            
+            const wipActions = [];
+            const overdueActions = [];
+            const ownersMap = {};
+
+            // Llenar con el Directorio Oficial de Supabase
+            if (typeof allOwnersDirectory !== 'undefined' && allOwnersDirectory.length > 0) {
+                allOwnersDirectory.forEach(official => {
+                    const offLoc = (official.area_id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                    // Usar includes bidireccional para ser flexibles con espacios/formatos
+                    if (targetAreas.some(target => offLoc.includes(target) || target.includes(offLoc))) {
+                        const ownerName = official.owner_name || 'Sin Nombre';
+                        const deptName = official.department || 'Sin Dept';
+                        const key = ownerName + '|' + deptName;
+                        ownersMap[key] = { owner: ownerName, dept: deptName };
+                    }
+                });
+            }
+
+            areaActions.forEach(a => {
+                const score = parseInt(a.responseScore);
+                if (score >= 1 && score <= 4) {
+                    const status = (a.status || 'open').toLowerCase().replace(/[^a-z0-9]/g, '-');
+                    if (status === 'overdue' || status === 'vencida') {
+                        overdue++;
+                        overdueActions.push(a);
+                    } else if (status === 'closed' || status === 'close' || status === 'cerrada' || status === 'cerrado') {
+                        closed++;
+                    } else {
+                        wip++;
+                        wipActions.push(a);
+                    }
+                }
+
+                // Recolectar Owners y Depts (omitir sin asignar)
+                const ownerName = (a.owner && a.owner !== 'Sin Asignar') ? a.owner : null;
+                if (ownerName) {
+                    const deptName = a.department || 'Sin Dept';
+                    const key = ownerName + '|' + deptName;
+                    ownersMap[key] = { owner: ownerName, dept: deptName };
+                }
+            });
+
+            const onTimeClosure = (closed + overdue) > 0 ? (closed / (closed + overdue)) * 100 : 0;
+            const ownersList = Object.values(ownersMap);
+
             return {
-                avgScore: validCount > 0 ? (sumScores / validCount) : 0,
-                validCount: validCount,
-                wip: wip,
-                overdue: overdue,
-                actions: areaActions
+                last3Avg: last3Avg,
+                improvement: improvement,
+                hasImprovement: hasImprovement,
+                wipCount: wip,
+                overdueCount: overdue,
+                onTimeClosure: onTimeClosure,
+                wipActions: wipActions,
+                overdueActions: overdueActions,
+                owners: ownersList,
+                hasData: last3Audits.length > 0
             };
         }
 
         // --- DEEP DIVE (DETALLE DEL ÁREA) ---
-        function openLayoutDetail(areaId, stats) {
-            document.getElementById('view-layout-main').classList.add('hidden');
+        // Variable global temporal para guardar las listas activas
+        let currentLayoutLists = { wip: [], overdue: [] };
+
+        let layoutDetailOrigin = 'layout';
+
+        function openLayoutDetail(areaId, stats, origin = 'layout') {
+            layoutDetailOrigin = origin;
+            
+            if (origin === 'layout') {
+                document.getElementById('view-layout-main').classList.add('hidden');
+            } else if (origin === 'areas') {
+                document.getElementById('view-areas').classList.add('hidden');
+                document.getElementById('view-layout-wrapper').classList.remove('hidden');
+                document.getElementById('view-layout-main').classList.add('hidden'); // Ocultar el mapa explícitamente
+            }
+
             document.getElementById('view-layout-detail').classList.remove('hidden');
             
+            // Cambiar texto del botón Atrás
+            document.getElementById('btn-back-deepdive').textContent = origin === 'layout' ? '◀ Volver al Mapa' : '◀ Volver a la Lista';
+            
             const labelStr = currentViewMode === 'sectors' ? 'Sector' : 'Área';
-            document.getElementById('layout-detail-title').textContent = `Detalle de ${labelStr}: ${areaId}`;
-            document.getElementById('layout-detail-score').textContent = stats.validCount > 0 ? ((stats.avgScore / 5) * 100).toFixed(1) + '%' : 'N/A';
-            document.getElementById('layout-detail-wip').textContent = stats.wip;
-            document.getElementById('layout-detail-overdue').textContent = stats.overdue;
+            document.getElementById('layout-detail-title').textContent = `Detalle Ejecutivo: ${areaId} (${labelStr})`;
+            
+            // Llenar KPIs
+            document.getElementById('ld-kpi-score').textContent = stats.hasData ? stats.last3Avg.toFixed(1) + '%' : 'N/A';
+            document.getElementById('ld-kpi-wip').textContent = stats.wipCount;
+            document.getElementById('ld-kpi-overdue').textContent = stats.overdueCount;
+            document.getElementById('ld-kpi-ontime').textContent = stats.hasData ? stats.onTimeClosure.toFixed(1) + '%' : 'N/A';
 
-            // Llenar tabla de WIP y Overdue
-            const activeActions = stats.actions.filter(a => {
-                if (a.responseScore < 1 || a.responseScore > 4) return false;
-                const status = (a.status || 'open').toLowerCase().replace(/[^a-z0-9]/g, '-');
-                return status !== 'closed' && status !== 'close';
-            });
-
-            const tbody = document.getElementById('layout-detail-table-body');
-            tbody.innerHTML = '';
-
-            if (activeActions.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px;">No hay acciones activas. ¡Excelente!</td></tr>`;
+            // Llenar Mejora Continua
+            const impCard = document.getElementById('ld-kpi-improvement-card');
+            const impValue = document.getElementById('ld-kpi-improvement');
+            if (stats.hasImprovement) {
+                const isPositive = stats.improvement >= 0;
+                impValue.textContent = (isPositive ? '+' : '') + stats.improvement.toFixed(1) + '%';
+                impCard.style.background = isPositive ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
             } else {
-                activeActions.forEach(item => {
-                    const row = document.createElement('tr');
-                    
-                    const tdId = document.createElement('td');
-                    tdId.textContent = item.actionId;
-                    
-                    const tdComments = document.createElement('td');
-                    tdComments.textContent = item.comments || 'Sin comentarios';
-                    
-                    const tdOwner = document.createElement('td');
-                    tdOwner.textContent = item.owner || 'Sin Asignar';
-                    
-                    const tdStatus = document.createElement('td');
-                    const span = document.createElement('span');
-                    span.className = `status-badge status-${item.status ? item.status.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'open'}`;
-                    span.textContent = item.status || 'Open';
-                    tdStatus.appendChild(span);
-                    
-                    row.appendChild(tdId);
-                    row.appendChild(tdComments);
-                    row.appendChild(tdOwner);
-                    row.appendChild(tdStatus);
-                    tbody.appendChild(row);
+                impValue.textContent = 'Insuficientes Audits';
+                impCard.style.background = 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)';
+            }
+
+            // Llenar Tabla de Owners
+            const tbodyOwners = document.getElementById('layout-owners-table-body');
+            tbodyOwners.innerHTML = '';
+            if (stats.owners.length === 0) {
+                tbodyOwners.innerHTML = `<tr><td colspan="2" style="text-align: center;">No hay responsables asignados en esta área.</td></tr>`;
+            } else {
+                stats.owners.forEach(o => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${o.owner}</td><td>${o.dept}</td>`;
+                    tbodyOwners.appendChild(tr);
                 });
             }
+
+            // Guardar para el modal
+            currentLayoutLists.wip = stats.wipActions;
+            currentLayoutLists.overdue = stats.overdueActions;
+        }
+
+        // Lógica de Modals de Layout
+        function openLayoutListModal(type) {
+            const list = type === 'wip' ? currentLayoutLists.wip : currentLayoutLists.overdue;
+            const title = type === 'wip' ? 'Acciones en Proceso (WIP)' : 'Acciones Vencidas (Overdue)';
+            
+            document.getElementById('layout-list-title').textContent = title;
+            const tbody = document.getElementById('layout-list-table-body');
+            tbody.innerHTML = '';
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px;">No hay acciones de este tipo. ¡Excelente!</td></tr>`;
+            } else {
+                list.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${item.actionId}</td>
+                        <td>${item.comments || 'Sin comentarios'}</td>
+                        <td>${item.owner || 'Sin Asignar'}</td>
+                        <td><span class="status-badge status-${item.status ? item.status.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'open'}">${item.status || 'Open'}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('layout-list-modal').classList.add('active');
+        }
+
+        function closeLayoutListModal() {
+            document.getElementById('layout-list-modal').classList.remove('active');
         }
 
         function closeLayoutDetail() {
             document.getElementById('view-layout-detail').classList.add('hidden');
-            document.getElementById('view-layout-main').classList.remove('hidden');
+            if (layoutDetailOrigin === 'layout') {
+                document.getElementById('view-layout-main').classList.remove('hidden');
+            } else if (layoutDetailOrigin === 'areas') {
+                document.getElementById('view-layout-wrapper').classList.add('hidden');
+                document.getElementById('view-areas').classList.remove('hidden');
+            }
+        }
+
+        // --- LÓGICA DE AUTENTICACIÓN (SUPABASE) ---
+        
+        // INSTRUCCIÓN: Pega aquí tus credenciales de Supabase
+        const TU_SUPABASE_URL = 'https://sfwjaetqufgjgfxqucjm.supabase.co';
+        const TU_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmd2phZXRxdWZnamdmeHF1Y2ptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMjcxMzEsImV4cCI6MjA5ODcwMzEzMX0.LUXt1oFSAI1w7LVheU32Hctq32J0ClZK_BjiKeLXTIM';
+        
+        let supabaseClient = null;
+        try {
+            if (!window.supabase) throw new Error("La librería de Supabase no se pudo descargar por un bloqueo de red.");
+            supabaseClient = window.supabase.createClient(TU_SUPABASE_URL, TU_SUPABASE_ANON_KEY);
+        } catch(err) {
+            console.error(err);
+        }
+
+        async function checkSession() {
+            if (!supabaseClient) {
+                document.getElementById('login-error-msg').textContent = 'Error crítico: La red de tu empresa bloquea la conexión a Supabase. No se puede iniciar sesión.';
+                document.getElementById('login-error-msg').style.display = 'block';
+                return;
+            }
+            const { data, error } = await supabaseClient.auth.getSession();
+            if (data && data.session) {
+                // Usuario autenticado
+                document.getElementById('login-overlay').style.display = 'none';
+                document.querySelector('.app-layout').style.display = 'flex';
+                // Cargar aplicación normal
+                initDropzone();
+                loadFromSupabase();
+            } else {
+                // No autenticado
+                document.getElementById('login-overlay').style.display = 'flex';
+                document.querySelector('.app-layout').style.display = 'none';
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('login-submit-btn');
+            const errorMsg = document.getElementById('login-error-msg');
+
+            if (!supabaseClient) {
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = 'Error crítico: La red de tu empresa bloquea la conexión a Supabase. No se puede iniciar sesión.';
+                return;
+            }
+            
+            btn.textContent = 'Iniciando sesión...';
+            btn.disabled = true;
+            errorMsg.style.display = 'none';
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = error.message === 'Invalid login credentials' ? 'Credenciales incorrectas. Intenta de nuevo.' : error.message;
+                btn.textContent = 'Entrar';
+                btn.disabled = false;
+            } else {
+                // Login exitoso
+                document.getElementById('login-overlay').style.display = 'none';
+                document.querySelector('.app-layout').style.display = 'flex';
+                initDropzone();
+                loadFromSupabase();
+            }
+        }
+
+        async function handleLogout() {
+            if (confirm("¿Estás seguro que deseas cerrar sesión?")) {
+                await supabaseClient.auth.signOut();
+                window.location.reload();
+            }
+        }
+        // --- CALENDARIO 5S LÓGICA ---
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let calendarEvents = [];
+
+        async function initCalendar() {
+            await loadCalendarEvents();
+            renderCalendar(currentMonth, currentYear);
+        }
+
+        async function loadCalendarEvents() {
+            if (!supabaseClient) return;
+            const { data, error } = await supabaseClient.from('calendar_events').select('*');
+            if (!error && data) {
+                calendarEvents = data;
+            }
+        }
+
+        function renderCalendar(month, year) {
+            const container = document.getElementById('calendar-grid-container');
+            const monthYearLabel = document.getElementById('calendar-month-year');
+            
+            const headers = Array.from(container.querySelectorAll('.cal-day-header'));
+            container.innerHTML = '';
+            headers.forEach(h => container.appendChild(h));
+
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            monthYearLabel.textContent = `${monthNames[month]} ${year}`;
+
+            const firstDay = new Date(year, month, 1).getDay(); // 0 is Sunday
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            const today = new Date();
+            const isCurrentMonth = today.getMonth() === month && today.getFullYear() === year;
+
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'cal-day empty';
+                container.appendChild(emptyDiv);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'cal-day';
+                if (isCurrentMonth && day === today.getDate()) {
+                    dayDiv.classList.add('today');
+                }
+
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+                const topBar = document.createElement('div');
+                topBar.className = 'cal-date-number';
+                
+                const dayNum = document.createElement('span');
+                dayNum.textContent = day;
+                topBar.appendChild(dayNum);
+
+                const addBtn = document.createElement('span');
+                addBtn.className = 'cal-add-btn';
+                addBtn.innerHTML = '+';
+                addBtn.onclick = () => openCalendarModal(dateStr);
+                topBar.appendChild(addBtn);
+
+                dayDiv.appendChild(topBar);
+
+                const dayEvents = calendarEvents.filter(e => e.audit_date === dateStr);
+                dayEvents.forEach(ev => {
+                    const evDiv = document.createElement('div');
+                    const statusClass = ev.status.toLowerCase().replace(/[^a-z]/g, '');
+                    evDiv.className = `cal-event status-${statusClass}`;
+                    evDiv.textContent = `${ev.area_name}`;
+                    evDiv.title = `${ev.area_name} (${ev.status})`;
+                    evDiv.onclick = () => openCalendarModal(dateStr, ev);
+                    dayDiv.appendChild(evDiv);
+                });
+
+                container.appendChild(dayDiv);
+            }
+        }
+
+        function changeMonth(step) {
+            currentMonth += step;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            initCalendar();
+        }
+
+        function openCalendarModal(dateStr, eventObj = null) {
+            document.getElementById('cal-event-date').value = dateStr;
+            const modal = document.getElementById('calendar-event-modal');
+            const title = document.getElementById('cal-modal-title');
+            const btnDelete = document.getElementById('btn-delete-event');
+
+            if (eventObj) {
+                title.textContent = 'Editar Auditoría';
+                document.getElementById('cal-event-id').value = eventObj.id;
+                document.getElementById('cal-event-area').value = eventObj.area_name;
+                document.getElementById('cal-event-status').value = eventObj.status;
+                btnDelete.style.display = 'block';
+            } else {
+                title.textContent = 'Programar Auditoría';
+                document.getElementById('cal-event-id').value = '';
+                document.getElementById('cal-event-area').value = '';
+                document.getElementById('cal-event-status').value = 'Programada';
+                btnDelete.style.display = 'none';
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeCalendarModal() {
+            document.getElementById('calendar-event-modal').classList.remove('active');
+        }
+
+        async function saveCalendarEvent() {
+            if (!supabaseClient) {
+                alert("Debes iniciar sesión para guardar eventos.");
+                return;
+            }
+
+            const id = document.getElementById('cal-event-id').value;
+            const date = document.getElementById('cal-event-date').value;
+            const area = document.getElementById('cal-event-area').value.trim();
+            const status = document.getElementById('cal-event-status').value;
+
+            if (!date || !area) {
+                alert("Por favor completa la fecha y el área.");
+                return;
+            }
+
+            const payload = {
+                audit_date: date,
+                area_name: area,
+                status: status
+            };
+
+            let error = null;
+            if (id) {
+                const res = await supabaseClient.from('calendar_events').update(payload).eq('id', id);
+                error = res.error;
+            } else {
+                const res = await supabaseClient.from('calendar_events').insert([payload]);
+                error = res.error;
+            }
+
+            if (error) {
+                console.error(error);
+                alert("Error al guardar: " + error.message);
+            } else {
+                closeCalendarModal();
+                initCalendar();
+            }
+        }
+
+        async function deleteCalendarEvent() {
+            if (!supabaseClient) return;
+            const id = document.getElementById('cal-event-id').value;
+            if (!id) return;
+
+            if (confirm("¿Estás seguro de que deseas eliminar esta auditoría del calendario?")) {
+                const { error } = await supabaseClient.from('calendar_events').delete().eq('id', id);
+                if (error) {
+                    console.error(error);
+                    alert("Error al eliminar: " + error.message);
+                } else {
+                    closeCalendarModal();
+                    initCalendar();
+                }
+            }
+        }
+        // --- LÓGICA DE CONTROL DE ÁREAS ---
+        function initAreasList() {
+            const container = document.getElementById('areas-grid-container');
+            container.innerHTML = '';
+            
+            const uniqueAreas = new Set();
+            allAuditData.forEach(row => {
+                if (row.cleanLocation && row.cleanLocation.trim() !== '') {
+                    uniqueAreas.add(row.cleanLocation.trim());
+                }
+            });
+
+            const areasArray = Array.from(uniqueAreas).sort();
+
+            if (areasArray.length === 0) {
+                container.innerHTML = '<p style="color: var(--color-text-muted); grid-column: 1 / -1; text-align: center;">No hay áreas disponibles. Por favor carga datos de auditorías primero.</p>';
+                return;
+            }
+
+            areasArray.forEach(areaName => {
+                const stats = calculateAreaStats(areaName);
+                
+                let borderColor = 'var(--color-border)';
+                let badgeColor = 'var(--color-text-muted)';
+                let badgeText = 'Sin Datos';
+                
+                if (stats.hasData) {
+                    if (stats.last3Avg < 70 || stats.overdueCount > 0) {
+                        borderColor = '#ef4444';
+                        badgeColor = '#ef4444';
+                        badgeText = 'Atención';
+                    } else if (stats.last3Avg >= 90 && stats.overdueCount === 0 && stats.wipCount === 0) {
+                        borderColor = '#10b981';
+                        badgeColor = '#10b981';
+                        badgeText = 'Excelente';
+                    } else {
+                        borderColor = '#f59e0b';
+                        badgeColor = '#f59e0b';
+                        badgeText = 'Regular';
+                    }
+                }
+
+                const scoreStr = stats.hasData ? stats.last3Avg.toFixed(1) + '%' : 'N/A';
+
+                const card = document.createElement('div');
+                card.className = 'area-card';
+                card.style.borderTop = `4px solid ${borderColor}`;
+                card.dataset.areaName = areaName.toLowerCase();
+                
+                card.innerHTML = `
+                    <div class="area-card-header">
+                        <h3 class="area-card-title">${areaName}</h3>
+                        <span class="area-card-badge" style="background-color: ${badgeColor};">${badgeText}</span>
+                    </div>
+                    <div class="area-card-stats">
+                        <div class="area-card-stat">
+                            <span>Score (Top 3)</span>
+                            <span class="area-card-stat-val">${scoreStr}</span>
+                        </div>
+                        <div class="area-card-stat">
+                            <span>Vencidas</span>
+                            <span class="area-card-stat-val" style="color: ${stats.overdueCount > 0 ? '#ef4444' : 'inherit'};">${stats.overdueCount}</span>
+                        </div>
+                    </div>
+                `;
+
+                card.onclick = () => {
+                    openLayoutDetail(areaName, stats, 'areas');
+                };
+
+                container.appendChild(card);
+            });
+        }
+
+        function filterAreasList() {
+            const query = document.getElementById('search-areas-input').value.toLowerCase();
+            const cards = document.querySelectorAll('.area-card');
+            
+            cards.forEach(card => {
+                if (card.dataset.areaName.includes(query)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
         }
     </script>
 
