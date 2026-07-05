@@ -35,6 +35,22 @@
             --transition: all 0.3s ease;
         }
 
+        [data-theme="competition"] {
+            --color-primary: #008000; /* Verde bandera */
+            --color-primary-hover: #006600;
+            --color-secondary: #ff0000; /* Rojo */
+            --color-bg-light: #111111; /* Fondo negro */
+            --color-bg-white: #222222; /* Tarjetas grises muy oscuras */
+            --color-text: #FFFFFF; /* Texto blanco */
+            --color-text-muted: #AAAAAA;
+            --color-border: #333333;
+            
+            /* Los colores de estado pueden ser más vibrantes en modo oscuro */
+            --color-success: #00ff00;
+            --color-warning: #ffcc00;
+            --color-danger: #ff3333;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -1221,6 +1237,90 @@
             font-weight: bold;
             color: var(--color-text);
         }
+        /* --- COMPETITION RACETRACK --- */
+        .racetrack-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            background-color: var(--color-bg-white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-top: 20px;
+            padding: 20px;
+            overflow: hidden;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        [data-theme="competition"] .racetrack-container {
+            display: flex;
+            background-color: #333333; /* Asfalto oscuro */
+        }
+
+        [data-theme="competition"] .kpis-grid,
+        [data-theme="competition"] .charts-grid,
+        [data-theme="competition"] .top-worst-grid {
+            display: none !important;
+        }
+
+        .track-path {
+            position: relative;
+            width: 90%;
+            height: 200px;
+            margin: 0 auto;
+            background: #555555;
+            border-radius: 100px;
+            border: 5px dashed #ffffff;
+            display: flex;
+            align-items: center;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .track-start, .track-finish {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 50px;
+            background: repeating-conic-gradient(#fff 0 90deg, #000 0 180deg) 50% / 20px 20px;
+            z-index: 2;
+        }
+
+        .track-start { left: 0; border-radius: 100px 0 0 100px; }
+        .track-finish { right: 0; border-radius: 0 100px 100px 0; }
+
+        .racer-circle {
+            position: absolute;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: var(--color-primary);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+            transition: left 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 10;
+            transform: translate(-50%, -50%);
+            border: 3px solid #fff;
+        }
+
+        .racer-label {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            border: 1px solid var(--color-primary);
+        }
     </style>
 </head>
 <body>
@@ -1334,6 +1434,9 @@
                                 <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
                             </svg>
                             Cargar Datos Demo
+                        </button>
+                        <button class="btn btn-secondary" id="btn-competition-mode" onclick="toggleCompetitionMode()" style="background-color: #ff0000; color: white; border: none; font-weight: bold;">
+                            🏁 Modo Competencia
                         </button>
                         <button id="btn-reset" class="btn btn-danger hidden" onclick="resetDatabase()">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-right:4px;">
@@ -1529,6 +1632,17 @@
                                     <input type="date" id="global-date-end" class="filter-select" style="width: auto; padding: 6px;" onchange="updateDashboard()">
                                     <button class="btn btn-secondary" onclick="clearGlobalDateFilter()" style="padding: 6px 12px; font-size: 13px;">Limpiar</button>
                                 </div>
+                            </div>
+                        </section>
+
+                        <!-- PISTA DE CARRERAS (MODO COMPETENCIA) -->
+                        <section class="racetrack-container" id="competition-track-container">
+                            <h2 style="color: white; text-align: center; margin-bottom: 20px; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;">Copa 5S Flex</h2>
+                            <div class="track-path">
+                                <div class="track-start"></div>
+                                <div class="track-finish"></div>
+                                <!-- Los corredores se inyectarán aquí vía JS -->
+                                <div id="track-racers-container"></div>
                             </div>
                         </section>
 
@@ -2443,6 +2557,77 @@
 
             // Actualizar datos de la tabla
             applyFilters();
+            
+            if (isCompetitionMode) {
+                renderCompetitionRace();
+            }
+        }
+
+        // --- MODO COMPETENCIA ---
+        let isCompetitionMode = false;
+
+        function toggleCompetitionMode() {
+            isCompetitionMode = !isCompetitionMode;
+            if (isCompetitionMode) {
+                document.body.setAttribute('data-theme', 'competition');
+                if (window.currentTab === 'dashboard' || !window.currentTab) {
+                    // Force refresh layout if already in dashboard
+                    updateDashboard();
+                }
+            } else {
+                document.body.removeAttribute('data-theme');
+            }
+        }
+
+        function renderCompetitionRace() {
+            const container = document.getElementById('track-racers-container');
+            container.innerHTML = '';
+            
+            // Extraer áreas únicas
+            const areaNames = [...new Set(globalFilteredData.map(item => item.area))].filter(Boolean);
+            
+            areaNames.forEach((areaName, index) => {
+                const stats = calculateAreaStats(areaName);
+                if (stats.last3Avg === 0) return; // Ignorar áreas vacías
+                
+                // Calcular score base
+                const areaActions = globalFilteredData.filter(item => item.area === areaName && item.actionId);
+                const onTimeClosed = areaActions.filter(item => item.status && item.status.toLowerCase() === 'closed on time').length;
+                const overdue = areaActions.filter(item => item.status && item.status.toLowerCase() === 'overdue').length;
+                
+                // Formula solicitada
+                let competitionScore = stats.last3Avg + onTimeClosed - overdue;
+                competitionScore = Math.max(0, Math.min(competitionScore, 100)); // Limitar entre 0 y 100
+                
+                const racer = document.createElement('div');
+                racer.className = 'racer-circle';
+                racer.textContent = (index + 1); // Número temporal antes de poner a Mario Kart
+                
+                const colors = ['#e74c3c', '#3498db', '#f1c40f', '#9b59b6', '#e67e22', '#1abc9c', '#34495e'];
+                racer.style.backgroundColor = colors[index % colors.length];
+                
+                // Iniciar en 0 y hacer transición CSS
+                racer.style.left = '0%'; 
+                racer.style.top = (25 + (index * 45)) + 'px'; // Separación vertical para evitar empalmes
+                
+                const label = document.createElement('div');
+                label.className = 'racer-label';
+                label.textContent = areaName;
+                racer.appendChild(label);
+                
+                container.appendChild(racer);
+                
+                // Animar hacia la posición final usando setTimeout para que el navegador procese el render inicial
+                setTimeout(() => {
+                    racer.style.left = competitionScore + '%';
+                }, 150);
+            });
+            
+            // Ajustar altura de la pista para que quepan todos los competidores
+            const trackPath = document.querySelector('.track-path');
+            if (trackPath) {
+                trackPath.style.height = Math.max(200, (areaNames.length * 45) + 50) + 'px';
+            }
         }
 
         // 5. CÁLCULO DE KPIs METRICS
