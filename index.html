@@ -4459,6 +4459,22 @@
             console.error(err);
         }
 
+        async function startApplication() {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('password-change-modal').style.display = 'none';
+            document.querySelector('.app-layout').style.display = 'flex';
+            
+            initDropzone();
+            loadFromSupabase();
+            applyRBAC();
+            
+            if (window.currentUserRole === 'Auditor') {
+                switchTab('dashboard');
+            } else {
+                switchTab('data');
+            }
+        }
+
         async function checkSession() {
             if (!supabaseClient) {
                 document.getElementById('login-error-msg').textContent = 'Error crítico: La red de tu empresa bloquea la conexión a Supabase. No se puede iniciar sesión.';
@@ -4467,12 +4483,26 @@
             }
             const { data, error } = await supabaseClient.auth.getSession();
             if (data && data.session) {
-                // Usuario autenticado
-                document.getElementById('login-overlay').style.display = 'none';
-                document.querySelector('.app-layout').style.display = 'flex';
-                // Cargar aplicación normal
-                initDropzone();
-                loadFromSupabase();
+                // Usuario autenticado en F5
+                window.currentUserId = data.session.user.id;
+                const { data: perfilData, error: perfilError } = await supabaseClient.from('perfiles').select('*').eq('id', window.currentUserId).single();
+                
+                let userRole = 'Auditor'; 
+                let isFirstLogin = false;
+                
+                if (perfilData && !perfilError) {
+                    userRole = perfilData.rol;
+                    isFirstLogin = perfilData.primer_ingreso;
+                }
+                
+                window.currentUserRole = userRole;
+
+                if (isFirstLogin) {
+                    document.getElementById('login-overlay').style.display = 'none';
+                    document.getElementById('password-change-modal').style.display = 'flex';
+                } else {
+                    startApplication();
+                }
             } else {
                 // No autenticado
                 document.getElementById('login-overlay').style.display = 'flex';
@@ -4527,11 +4557,7 @@
                     document.getElementById('login-overlay').style.display = 'none';
                     document.getElementById('password-change-modal').style.display = 'flex';
                 } else {
-                    document.getElementById('login-overlay').style.display = 'none';
-                    document.querySelector('.app-layout').style.display = 'flex';
-                    initDropzone();
-                    loadFromSupabase();
-                    applyRBAC();
+                    startApplication();
                 }
             }
         }
@@ -4564,11 +4590,7 @@
                     await supabaseClient.from('perfiles').update({ primer_ingreso: false }).eq('id', window.currentUserId);
                 }
                 
-                document.getElementById('password-change-modal').style.display = 'none';
-                document.querySelector('.app-layout').style.display = 'flex';
-                initDropzone();
-                loadFromSupabase();
-                applyRBAC();
+                startApplication();
             }
         }
 
