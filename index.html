@@ -1634,6 +1634,14 @@
 
                 <!-- CONTENIDO DEL DASHBOARD (SOLO GRÁFICAS) -->
                 <div id="view-dashboard" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
+                    
+                    <!-- BOTÓN DE COMPETENCIA PROMINENTE (VISIBLE PARA TODOS LOS ROLES EN EL DASHBOARD) -->
+                    <div style="display: flex; justify-content: flex-end; width: 100%; padding: 0 10px;">
+                        <button id="btn-competition-mode" onclick="toggleCompetitionMode()" style="background-color: #ff0000; color: white; border: none; font-weight: bold; padding: 12px 24px; font-size: 16px; border-radius: 8px; box-shadow: 0 4px 10px rgba(255,0,0,0.4); cursor: pointer; transition: transform 0.2s;">
+                            🏁 ACTIVAR MODO COMPETENCIA
+                        </button>
+                    </div>
+
                     <main id="dashboard-content" style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
             
                         <!-- FILTRO GLOBAL DE FECHAS PARA DASHBOARD -->
@@ -1646,9 +1654,6 @@
                                     <label for="global-date-end" style="font-size: 13px; color: var(--color-text-light);">Hasta:</label>
                                     <input type="date" id="global-date-end" class="filter-select" style="width: auto; padding: 6px;" onchange="updateDashboard()">
                                     <button class="btn btn-secondary" onclick="clearGlobalDateFilter()" style="padding: 6px 12px; font-size: 13px;">Limpiar</button>
-                                    <button class="btn btn-secondary" id="btn-competition-mode" onclick="toggleCompetitionMode()" style="background-color: #ff0000; color: white; border: none; font-weight: bold; padding: 6px 12px; margin-left: 15px;">
-                                        🏁 Modo Competencia
-                                    </button>
                                 </div>
                             </div>
                         </section>
