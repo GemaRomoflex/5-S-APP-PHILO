@@ -1239,6 +1239,20 @@
         </div>
     </div>
 
+    <!-- MODAL CAMBIO DE CONTRASEÑA OBLIGATORIO -->
+    <div id="password-change-modal" class="login-overlay" style="display: none; z-index: 9999;">
+        <div class="login-card" style="border-top: 5px solid #f59e0b;">
+            <h2 style="color: #f59e0b; margin-bottom: 10px;">¡Bienvenido!</h2>
+            <p style="margin-bottom: 20px; font-size: 14px; color: var(--color-text-muted);">Por seguridad, debes cambiar tu contraseña predeterminada antes de poder acceder al sistema.</p>
+            <form id="password-change-form" onsubmit="event.preventDefault(); changePasswordOnFirstLogin(); return false;">
+                <input type="password" id="new-password" class="login-input" placeholder="Nueva Contraseña" required minlength="6">
+                <input type="password" id="confirm-new-password" class="login-input" placeholder="Confirmar Nueva Contraseña" required minlength="6">
+                <button type="submit" id="password-change-btn" class="login-btn" style="background-color: #f59e0b;">Guardar y Continuar</button>
+                <div id="password-change-error" class="login-error">Las contraseñas no coinciden.</div>
+            </form>
+        </div>
+    </div>
+
     <div class="app-layout">
         
         <!-- SIDEBAR DE NAVEGACIÓN -->
@@ -1690,8 +1704,8 @@
                         <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%;">
                             <h2 style="margin: 0; font-size: 20px; color: var(--color-text);">Layout Interactivo 5S</h2>
                             <select id="layout-selector" class="filter-select" onchange="changeLayoutMap()">
-                                <option value="b27.png">Planta - Edificio B27</option>
-                                <option value="b29.png">Planta - Edificio B29</option>
+                                <option value="B27.png">Planta - Edificio B27</option>
+                                <option value="B29.png">Planta - Edificio B29</option>
                             </select>
                             <select id="layout-view-mode" class="filter-select" onchange="changeLayoutMap()">
                                 <option value="areas">Modo: Áreas</option>
@@ -2044,7 +2058,7 @@
                 } catch(e) { console.error(e); }
             } else if (layoutData) {
                 // Flujo Normal: Cargar de Nube a Memoria
-                mapCoordinates = { 'b27.png': { areas: [], sectors: [] }, 'b29.png': { areas: [], sectors: [] } };
+                mapCoordinates = { 'B27.png': { areas: [], sectors: [] }, 'B29.png': { areas: [], sectors: [] } };
                 layoutData.forEach(row => {
                     if (!mapCoordinates[row.map]) mapCoordinates[row.map] = { areas: [], sectors: [] };
                     if (!mapCoordinates[row.map][row.type]) mapCoordinates[row.map][row.type] = [];
@@ -3786,7 +3800,7 @@
                 const tdEdit = document.createElement('td');
                 tdEdit.style.textAlign = 'center';
                 const btnEdit = document.createElement('button');
-                btnEdit.className = 'btn-icon';
+                btnEdit.className = 'btn-icon btn-edit-action';
                 btnEdit.title = 'Editar Acción';
                 btnEdit.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>';
                 btnEdit.onclick = () => openEditModal(item.auditId, item.actionId);
@@ -3918,7 +3932,7 @@
         // --- MÓDULO DE LAYOUT INTERACTIVO ---
         let isLayoutEditMode = false;
         let layoutBoxes = []; 
-        let currentMap = 'b27.png';
+        let currentMap = 'B27.png';
         let currentViewMode = 'areas';
 
         // Diccionario de Sectores
@@ -3934,8 +3948,8 @@
 
         // Coordenadas harcodeadas por defecto (se sobreescriben al cargar desde Supabase)
         let mapCoordinates = {
-            'b27.png': { areas: [], sectors: [] },
-            'b29.png': { areas: [], sectors: [] }
+            'B27.png': { areas: [], sectors: [] },
+            'B29.png': { areas: [], sectors: [] }
         };
 
         function changeLayoutMap() {
@@ -4496,10 +4510,89 @@
                 btn.disabled = false;
             } else {
                 // Login exitoso
-                document.getElementById('login-overlay').style.display = 'none';
+                window.currentUserId = data.user.id;
+                const { data: perfilData, error: perfilError } = await supabaseClient.from('perfiles').select('*').eq('id', data.user.id).single();
+                
+                let userRole = 'Auditor'; // Default seguro
+                let isFirstLogin = false;
+                
+                if (perfilData && !perfilError) {
+                    userRole = perfilData.rol;
+                    isFirstLogin = perfilData.primer_ingreso;
+                }
+                
+                window.currentUserRole = userRole;
+                
+                if (isFirstLogin) {
+                    document.getElementById('login-overlay').style.display = 'none';
+                    document.getElementById('password-change-modal').style.display = 'flex';
+                } else {
+                    document.getElementById('login-overlay').style.display = 'none';
+                    document.querySelector('.app-layout').style.display = 'flex';
+                    initDropzone();
+                    loadFromSupabase();
+                    applyRBAC();
+                }
+            }
+        }
+
+        async function changePasswordOnFirstLogin() {
+            const pass1 = document.getElementById('new-password').value;
+            const pass2 = document.getElementById('confirm-new-password').value;
+            const errorMsg = document.getElementById('password-change-error');
+            const btn = document.getElementById('password-change-btn');
+            
+            if (pass1 !== pass2) {
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = 'Las contraseñas no coinciden.';
+                return;
+            }
+            
+            btn.textContent = 'Guardando...';
+            btn.disabled = true;
+            errorMsg.style.display = 'none';
+            
+            const { error } = await supabaseClient.auth.updateUser({ password: pass1 });
+            
+            if (error) {
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = error.message;
+                btn.textContent = 'Guardar y Continuar';
+                btn.disabled = false;
+            } else {
+                if (window.currentUserId) {
+                    await supabaseClient.from('perfiles').update({ primer_ingreso: false }).eq('id', window.currentUserId);
+                }
+                
+                document.getElementById('password-change-modal').style.display = 'none';
                 document.querySelector('.app-layout').style.display = 'flex';
                 initDropzone();
                 loadFromSupabase();
+                applyRBAC();
+            }
+        }
+
+        function applyRBAC() {
+            if (window.currentUserRole === 'Auditor') {
+                // 1. Ocultar Pestaña de Data
+                const navData = document.getElementById('nav-data');
+                if (navData) navData.style.display = 'none';
+                
+                // 2. Ocultar Botones Layout
+                const btnAdd = document.getElementById('btn-layout-add');
+                if (btnAdd) btnAdd.style.display = 'none';
+                const btnEdit = document.getElementById('btn-layout-edit');
+                if (btnEdit) btnEdit.style.display = 'none';
+
+                // 3. Estilos globales para ocultar botones de modificación y edición en el UI
+                const style = document.createElement('style');
+                style.innerHTML = `
+                    .btn-edit-action { display: none !important; }
+                    #btn-save-action { display: none !important; }
+                    #btn-delete-event { display: none !important; }
+                    .cal-add-btn { display: none !important; } /* Calendario: Sin añadir eventos */
+                `;
+                document.head.appendChild(style);
             }
         }
 
