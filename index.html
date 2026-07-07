@@ -2610,17 +2610,13 @@
             const oldLanes = container.querySelectorAll('.track-lane');
             oldLanes.forEach(lane => lane.remove());
             
-            // Iterar sobre las áreas válidas para calcular sus puntos y ver si participan
-            const areaNames = Object.keys(sectorMapping).flatMap(sector => sectorMapping[sector]);
+            // Extraer las locaciones (áreas) únicas directamente de los datos (ej. L12, L13, Control Tower)
+            const areaNames = [...new Set(globalFilteredData.map(item => item.cleanLocation))].filter(Boolean);
             
             let racersData = [];
 
             areaNames.forEach((areaName) => {
-                const targetArea = areaName.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-                const areaActions = globalFilteredData.filter(item => {
-                    const loc = (item.cleanLocation || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-                    return loc.includes(targetArea);
-                });
+                const areaActions = globalFilteredData.filter(item => item.cleanLocation === areaName);
 
                 if (areaActions.length === 0) return;
                 
