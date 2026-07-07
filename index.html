@@ -1713,20 +1713,6 @@
                         <canvas id="chartAreaScores"></canvas>
                     </div>
                 </div>
-
-                <!-- Gráfica 2 (Barras Apiladas): Acciones Activas (En Proceso + Vencidas) por Depto/Responsable con Toggle -->
-                <div class="chart-card" style="cursor: pointer; transition: transform 0.2s; position: relative;" onclick="openDetailView('active')" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
-                    <div class="chart-header">
-                        <span class="chart-title" id="actions-chart-title">Acciones Activas por Departamento</span>
-                        <div class="chart-controls" onclick="event.stopPropagation()">
-                            <button id="btn-toggle-dept" class="btn-toggle active-toggle" onclick="setActionsGroupBy('dept')">Depto</button>
-                            <button id="btn-toggle-owner" class="btn-toggle" onclick="setActionsGroupBy('owner')">Responsable</button>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="chartDeptActions"></canvas>
-                    </div>
-                </div>
             </section>
 
             <!-- SECCIÓN DE GRÁFICAS FILA 2 -->
@@ -1742,20 +1728,6 @@
                     </div>
                     <div class="chart-container" style="min-height: 250px;">
                         <canvas id="chartDeptOverdue"></canvas>
-                    </div>
-                </div>
-
-                <!-- Gráfica 4 (Barras Apiladas): Aging de Acciones en Proceso por Buckets (Toggle Depto/Owner) -->
-                <div class="chart-card" style="cursor: pointer; transition: transform 0.2s; position: relative;" onclick="openDetailView('aging_open')" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
-                    <div class="chart-header">
-                        <span class="chart-title" id="aging-open-chart-title">Antigüedad Acciones en Proceso</span>
-                        <div class="chart-controls" onclick="event.stopPropagation()">
-                            <button id="btn-toggle-aging-open-dept" class="btn-toggle active-toggle" onclick="setAgingOpenGroupBy('dept')">Depto</button>
-                            <button id="btn-toggle-aging-open-owner" class="btn-toggle" onclick="setAgingOpenGroupBy('owner')">Responsable</button>
-                        </div>
-                    </div>
-                    <div class="chart-container" style="min-height: 250px;">
-                        <canvas id="chartAgingOpen"></canvas>
                     </div>
                 </div>
 
