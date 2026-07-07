@@ -2088,46 +2088,41 @@
         function switchTab(tabId) {
             // Quitar clase activa de nav items
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById('nav-' + tabId).classList.add('active');
+            const navItem = document.getElementById('nav-' + tabId);
+            if (navItem) navItem.classList.add('active');
 
-            // Ocultar todas las vistas
-            document.getElementById('view-data').classList.add('hidden');
-            document.getElementById('view-dashboard').classList.add('hidden');
-            document.getElementById('history-view').classList.add('hidden');
-            document.getElementById('detail-view').classList.add('hidden');
-            document.getElementById('view-under-construction').classList.add('hidden');
-            document.getElementById('view-layout-wrapper').classList.add('hidden');
+            // Ocultar TODAS las vistas (Lista Maestra)
+            const allViews = [
+                'view-data', 'view-dashboard', 'history-view', 
+                'detail-view', 'view-under-construction', 
+                'view-layout-wrapper', 'view-actions-editor',
+                'view-calendar', 'view-areas', 'dashboard-content'
+            ];
+            
+            allViews.forEach(v => {
+                const el = document.getElementById(v);
+                if (el) el.classList.add('hidden');
+            });
+            
+            document.getElementById('main-header').classList.add('hidden');
 
             if (tabId === 'data') {
                 document.getElementById('view-data').classList.remove('hidden');
                 document.getElementById('main-header').classList.remove('hidden');
             } else if (tabId === 'dashboard') {
                 document.getElementById('view-dashboard').classList.remove('hidden');
-                document.getElementById('main-header').classList.add('hidden');
                 document.getElementById('dashboard-content').classList.remove('hidden');
-                document.getElementById('view-actions-editor').classList.add('hidden');
             } else if (tabId === 'actions') {
                 document.getElementById('view-dashboard').classList.remove('hidden');
-                document.getElementById('dashboard-content').classList.add('hidden');
                 document.getElementById('view-actions-editor').classList.remove('hidden');
-                document.getElementById('main-header').classList.add('hidden');
                 initActionsEditor();
             } else if (tabId === 'layout') {
                 document.getElementById('view-dashboard').classList.remove('hidden');
-                document.getElementById('dashboard-content').classList.add('hidden');
-                document.getElementById('view-actions-editor').classList.add('hidden');
                 document.getElementById('view-layout-wrapper').classList.remove('hidden');
-                document.getElementById('main-header').classList.add('hidden');
                 initLayoutModule();
             } else if (tabId === 'calendar') {
                 document.getElementById('view-dashboard').classList.remove('hidden');
-                document.getElementById('dashboard-content').classList.add('hidden');
-                document.getElementById('view-actions-editor').classList.add('hidden');
-                document.getElementById('view-layout-wrapper').classList.add('hidden');
-                document.getElementById('view-under-construction').classList.add('hidden');
-                document.getElementById('view-areas').classList.add('hidden');
                 document.getElementById('view-calendar').classList.remove('hidden');
-                document.getElementById('main-header').classList.add('hidden');
                 initCalendar();
             } else if (tabId === 'areas') {
                 document.getElementById('view-dashboard').classList.remove('hidden');
@@ -2568,9 +2563,7 @@
 
             // Renderizar Gráficas
             renderChartAreaScores();
-            renderChartDeptActions();
             renderChartDeptOverdue();
-            renderChartAgingOpen();
             renderChartAgingOverdue();
 
             // Actualizar datos de la tabla
@@ -2609,12 +2602,44 @@
             let racersData = [];
             
             areaNames.forEach((areaName) => {
-                const stats = calculateAreaStats(areaName);
-                if (stats.last3Avg === 0) return; // Ignorar áreas vacías
+                const areaActions = globalFilteredData.filter(item => item.area === areaName);
+                if (areaActions.length === 0) return;
                 
-                const areaActions = globalFilteredData.filter(item => item.area === areaName && item.actionId);
-                const onTimeClosed = areaActions.filter(item => item.status && item.status.toLowerCase() === 'closed on time').length;
-                const overdue = areaActions.filter(item => item.status && item.status.toLowerCase() === 'overdue').length;
+                // Calcular "Últimas 3 auditorías" para esta área específicamente
+                const auditsMap = {};
+                areaActions.forEach(a => {
+                    const score = parseInt(a.responseScore);
+                    if (score >= 1 && score <= 5) {
+                        if (!auditsMap[a.auditId]) {
+                            auditsMap[a.auditId] = { auditId: a.auditId, openDate: a.openDate, scores: [] };
+                        }
+                        auditsMap[a.auditId].scores.push(score);
+                    }
+                });
+                
+                const auditsArray = Object.values(auditsMap).map(audit => {
+                    const avg = audit.scores.reduce((sum, s) => sum + s, 0) / audit.scores.length;
+                    let d = new Date(0);
+                    if (audit.openDate && audit.openDate !== 'Sin Fecha') {
+                        let cleanStr = audit.openDate.replace(/-/g, '/').split(' ')[0];
+                        d = new Date(cleanStr);
+                    }
+                    return { ...audit, avg, dateObj: d };
+                });
+                
+                auditsArray.sort((a, b) => b.dateObj - a.dateObj);
+                const last3 = auditsArray.slice(0, 3);
+                
+                let last3Avg = 0;
+                if (last3.length > 0) {
+                    const avgRaw = last3.reduce((sum, a) => sum + a.avg, 0) / last3.length;
+                    last3Avg = (avgRaw / 5) * 100;
+                }
+                
+                if (last3Avg === 0) return; // Ignorar si no hay data calificable
+                
+                const onTimeClosed = areaActions.filter(item => item.actionId && item.status && item.status.toLowerCase() === 'closed on time').length;
+                const overdue = areaActions.filter(item => item.actionId && item.status && item.status.toLowerCase() === 'overdue').length;
                 
                 let competitionScore = stats.last3Avg + onTimeClosed - overdue;
                 competitionScore = Math.max(0, Math.min(competitionScore, 100)); // Limitar entre 0 y 100
