@@ -2612,6 +2612,8 @@
             
             // Iterar sobre las áreas válidas para calcular sus puntos y ver si participan
             const areaNames = Object.keys(sectorMapping).flatMap(sector => sectorMapping[sector]);
+            
+            let racersData = [];
 
             areaNames.forEach((areaName) => {
                 const targetArea = areaName.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
