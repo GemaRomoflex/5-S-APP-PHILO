@@ -1241,13 +1241,13 @@
         .racetrack-container {
             position: relative;
             width: 100%;
-            height: 500px;
+            min-height: 600px;
+            height: auto;
             background-color: var(--color-bg-white);
             border-radius: var(--border-radius);
             box-shadow: var(--box-shadow);
             margin-top: 20px;
             padding: 20px;
-            overflow: hidden;
             display: none; /* Hidden by default */
             flex-direction: column;
             justify-content: center;
@@ -2611,7 +2611,10 @@
             oldLanes.forEach(lane => lane.remove());
             
             // Extraer las locaciones (áreas) únicas directamente de los datos (ej. L12, L13, Control Tower)
-            const areaNames = [...new Set(globalFilteredData.map(item => item.cleanLocation))].filter(Boolean);
+            const excludedAreas = ['lobby', 'office', 'oficina', 'monitores', 'test room 1', 'test room 2', 'control tower'];
+            const areaNames = [...new Set(globalFilteredData.map(item => item.cleanLocation))]
+                .filter(Boolean)
+                .filter(area => !excludedAreas.some(excluded => area.toLowerCase().includes(excluded)));
             
             let racersData = [];
 
