@@ -2028,7 +2028,7 @@
     <!-- --- CÓDIGO JAVASCRIPT --- -->
     <script>
         window.onerror = function(msg, url, lineNo, columnNo, error) {
-            alert("⚠️ ERROR ENCONTRADO:\n" + msg + "\n\nLínea: " + lineNo);
+            alert("El chismoso dice:\n\n⚠️ ERROR ENCONTRADO:\n" + msg + "\n\nLínea: " + lineNo);
             return false;
         };
     </script>
@@ -2658,7 +2658,7 @@
                 const onTimeClosed = areaActions.filter(item => item.actionId && item.status && item.status.toLowerCase() === 'closed on time').length;
                 const overdue = areaActions.filter(item => item.actionId && item.status && item.status.toLowerCase() === 'overdue').length;
                 
-                let competitionScore = stats.last3Avg + onTimeClosed - overdue;
+                let competitionScore = last3Avg + onTimeClosed - overdue;
                 competitionScore = Math.max(0, Math.min(competitionScore, 100)); // Limitar entre 0 y 100
                 
                 racersData.push({
