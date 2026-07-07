@@ -473,7 +473,7 @@
         /* --- DASHBOARD CHARTS --- */
         .charts-grid {
             display: grid;
-            grid-template-columns: 2fr 1fr;
+            grid-template-columns: 1fr;
             gap: 20px;
         }
 
@@ -1713,6 +1713,20 @@
                         <canvas id="chartAreaScores"></canvas>
                     </div>
                 </div>
+
+                <!-- Gráfica NUEVA: Acciones Próximas a Vencer -->
+                <div class="chart-card" style="cursor: pointer; transition: transform 0.2s; position: relative;" onclick="openDetailView('upcoming')" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
+                    <div class="chart-header">
+                        <span class="chart-title" id="upcoming-chart-title">Acciones Próximas a Vencer (<= 2 días) por Departamento</span>
+                        <div class="chart-controls" onclick="event.stopPropagation()">
+                            <button id="btn-toggle-upcoming-dept" class="btn-toggle active-toggle" onclick="setUpcomingGroupBy('dept')">Depto</button>
+                            <button id="btn-toggle-upcoming-owner" class="btn-toggle" onclick="setUpcomingGroupBy('owner')">Responsable</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chartUpcomingDue"></canvas>
+                    </div>
+                </div>
             </section>
 
             <!-- SECCIÓN DE GRÁFICAS FILA 2 -->
@@ -2051,6 +2065,9 @@
         let chartInstanceOverdue = null;
         let chartInstanceAgingOpen = null;
         let chartInstanceAgingOverdue = null;
+        let chartInstanceUpcomingDue = null;
+        let upcomingGroupBy = 'dept';
+        let arrUpcoming = [];
 
         // NAVEGACIÓN SIDEBAR
         function toggleSidebar() {
@@ -2494,9 +2511,10 @@
             });
 
             // Generar y poblar tres arrays independientes
-            arrClosed = [];
             arrOverdue = [];
+            arrClosed = [];
             arrWIP = [];
+            arrUpcoming = [];
             
             const today = new Date();
             today.setHours(0,0,0,0);
@@ -2522,8 +2540,28 @@
                         }
                     }
 
-                    if (isOverdue) arrOverdue.push(item);
-                    else arrWIP.push(item);
+                    if (isOverdue) {
+                        arrOverdue.push(item);
+                    } else {
+                        arrWIP.push(item);
+                        // Verificar si está próxima a vencer (0 a 2 días)
+                        if (item.dueDate && item.dueDate !== 'Sin Fecha') {
+                            let cleanStr = item.dueDate.replace(/-/g, '/').split(' ')[0];
+                            let d = new Date(cleanStr);
+                            if (isNaN(d.getTime())) {
+                                const parts = cleanStr.split('/');
+                                if (parts.length === 3) d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                            }
+                            if (!isNaN(d.getTime())) {
+                                d.setHours(0,0,0,0);
+                                const diffTime = d - today;
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                if (diffDays >= 0 && diffDays <= 2) {
+                                    arrUpcoming.push(item);
+                                }
+                            }
+                        }
+                    }
                 }
             });
 
@@ -2535,6 +2573,7 @@
 
             // Renderizar Gráficas
             renderChartAreaScores();
+            renderChartUpcomingDue();
             renderChartDeptOverdue();
             renderChartAgingOverdue();
 
@@ -2985,6 +3024,73 @@
             }
 
             renderChartDeptOverdue();
+        }
+
+        // --- CHART: ACCIONES PRÓXIMAS A VENCER ---
+        function setUpcomingGroupBy(type) {
+            upcomingGroupBy = type;
+            document.getElementById('btn-toggle-upcoming-dept').classList.toggle('active-toggle', type === 'dept');
+            document.getElementById('btn-toggle-upcoming-owner').classList.toggle('active-toggle', type === 'owner');
+            document.getElementById('upcoming-chart-title').textContent = type === 'dept' ? 'Acciones Próximas a Vencer por Departamento' : 'Acciones Próximas a Vencer por Responsable';
+            renderChartUpcomingDue();
+        }
+
+        function renderChartUpcomingDue() {
+            const counts = {};
+            arrUpcoming.forEach(item => {
+                const key = (upcomingGroupBy === 'dept') ? (item.department || 'Sin Departamento') : (item.owner || 'Sin Asignar');
+                counts[key] = (counts[key] || 0) + 1;
+            });
+
+            const sortedUpcoming = Object.keys(counts).map(key => {
+                return { name: key, count: counts[key] };
+            }).sort((a, b) => b.count - a.count);
+
+            const labels = sortedUpcoming.map(d => d.name);
+            const data = sortedUpcoming.map(d => d.count);
+
+            const ctx = document.getElementById('chartUpcomingDue').getContext('2d');
+            if (chartInstanceUpcomingDue) chartInstanceUpcomingDue.destroy();
+
+            chartInstanceUpcomingDue = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: 'rgba(243, 156, 18, 0.75)',
+                        borderColor: '#F39C12',
+                        borderWidth: 1.5,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#EAEAEA' },
+                            ticks: { precision: 0 }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 13 },
+                            bodyFont: { size: 13 },
+                            padding: 10,
+                            callbacks: {
+                                label: function(context) { return ` ${context.raw} próximas a vencer`; }
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         function renderChartDeptOverdue() {
@@ -3761,6 +3867,9 @@
             } else if (type === 'aging_open') {
                 title = 'Detalle de Acciones en Proceso';
                 dataToShow = arrWIP;
+            } else if (type === 'upcoming') {
+                title = 'Detalle de Acciones Próximas a Vencer (<= 2 días)';
+                dataToShow = arrUpcoming;
             }
 
             document.getElementById('detail-view-title').textContent = title;
