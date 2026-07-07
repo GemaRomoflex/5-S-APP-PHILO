@@ -1731,19 +1731,7 @@
                     </div>
                 </div>
 
-                <!-- Gráfica NUEVA (Centro): Acciones Próximas a Vencer -->
-                <div class="chart-card" style="cursor: pointer; transition: transform 0.2s; position: relative;" onclick="openDetailView('upcoming')" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
-                    <div class="chart-header">
-                        <span class="chart-title" id="upcoming-chart-title">Próximas a Vencer (<= 2 días)</span>
-                        <div class="chart-controls" onclick="event.stopPropagation()">
-                            <button id="btn-toggle-upcoming-dept" class="btn-toggle active-toggle" onclick="setUpcomingGroupBy('dept')">Depto</button>
-                            <button id="btn-toggle-upcoming-owner" class="btn-toggle" onclick="setUpcomingGroupBy('owner')">Responsable</button>
-                        </div>
-                    </div>
-                    <div class="chart-container" style="min-height: 250px;">
-                        <canvas id="chartUpcomingDue"></canvas>
-                    </div>
-                </div>
+
 
                 <!-- Gráfica 5 (Barras Apiladas): Aging de Acciones Vencidas por Buckets (Toggle Depto/Owner) -->
                 <div class="chart-card" style="cursor: pointer; transition: transform 0.2s; position: relative;" onclick="openDetailView('aging_overdue')" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
@@ -1756,6 +1744,20 @@
                     </div>
                     <div class="chart-container" style="min-height: 250px;">
                         <canvas id="chartAgingOverdue"></canvas>
+                    </div>
+                </div>
+
+                <!-- Gráfica NUEVA (Derecha): Acciones Próximas a Vencer -->
+                <div class="chart-card" style="cursor: pointer; transition: transform 0.2s; position: relative;" onclick="openDetailView('upcoming')" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
+                    <div class="chart-header">
+                        <span class="chart-title" id="upcoming-chart-title">Próximas a Vencer (<= 2 días)</span>
+                        <div class="chart-controls" onclick="event.stopPropagation()">
+                            <button id="btn-toggle-upcoming-dept" class="btn-toggle active-toggle" onclick="setUpcomingGroupBy('dept')">Depto</button>
+                            <button id="btn-toggle-upcoming-owner" class="btn-toggle" onclick="setUpcomingGroupBy('owner')">Responsable</button>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="min-height: 250px;">
+                        <canvas id="chartUpcomingDue"></canvas>
                     </div>
                 </div>
             </section>
