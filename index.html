@@ -2610,12 +2610,16 @@
             const oldLanes = container.querySelectorAll('.track-lane');
             oldLanes.forEach(lane => lane.remove());
             
-            const areaNames = [...new Set(globalFilteredData.map(item => item.area))].filter(Boolean);
-            
-            let racersData = [];
-            
+            // Iterar sobre las áreas válidas para calcular sus puntos y ver si participan
+            const areaNames = Object.keys(sectorMapping).flatMap(sector => sectorMapping[sector]);
+
             areaNames.forEach((areaName) => {
-                const areaActions = globalFilteredData.filter(item => item.area === areaName);
+                const targetArea = areaName.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+                const areaActions = globalFilteredData.filter(item => {
+                    const loc = (item.cleanLocation || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                    return loc.includes(targetArea);
+                });
+
                 if (areaActions.length === 0) return;
                 
                 // Calcular "Últimas 3 auditorías" para esta área específicamente
