@@ -2453,6 +2453,16 @@
 
         // LÓGICA DE UPSERT / SINCRONIZACIÓN HACIA SUPABASE
         async function runUpsert(newItems) {
+            let insertedCount = 0;
+            let updatedCount = 0;
+            
+            // Simular el conteo exacto contra la base actual para regresarle al usuario su reporte
+            newItems.forEach(item => {
+                const exists = allAuditData.some(existing => existing.actionId === item.actionId);
+                if (exists) updatedCount++;
+                else insertedCount++;
+            });
+
             const { data, error } = await supabaseClient.from('actions').upsert(newItems, { onConflict: 'actionId' }).select();
             
             if (error) {
@@ -2462,9 +2472,9 @@
             }
 
             return {
-                inserted: data ? data.length : newItems.length,
-                updated: 0, // Supabase no desglosa inserts vs updates nativamente sin un payload pesado
-                total: data ? data.length : newItems.length
+                inserted: insertedCount,
+                updated: updatedCount, 
+                total: insertedCount + updatedCount
             };
         }
 
@@ -2479,7 +2489,7 @@
             if (allAuditData.length === 0) return;
 
             document.getElementById('dashboard-empty-state').classList.add('hidden');
-            document.getElementById('dashboard-content').classList.remove('hidden');
+            // La visibilidad de dashboard-content ahora es controlada exclusivamente por switchView() para evitar traslapes.
 
             // FILTRO GLOBAL DE FECHAS
             globalFilteredData = allAuditData;
