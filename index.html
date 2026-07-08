@@ -2619,7 +2619,25 @@
             let racersData = [];
 
             areaNames.forEach((areaName) => {
-                const areaActions = globalFilteredData.filter(item => item.cleanLocation === areaName);
+                let areaActions = globalFilteredData.filter(item => item.cleanLocation === areaName);
+
+                // Filtrar para incluir solo auditorías a partir del 3 de julio de 2026 (mes 6 en índice cero)
+                areaActions = areaActions.filter(item => {
+                    if (!item.openDate || item.openDate === 'Sin Fecha') return false;
+                    let cleanStr = item.openDate.replace(/-/g, '/').split(' ')[0];
+                    let d = new Date(cleanStr);
+                    if (isNaN(d.getTime())) {
+                        const parts = cleanStr.split('/');
+                        if (parts.length === 3) d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                    }
+                    if (isNaN(d.getTime())) return false;
+                    
+                    const compStart = new Date(2026, 6, 3); // 3 de Julio de 2026
+                    compStart.setHours(0,0,0,0);
+                    d.setHours(0,0,0,0);
+                    
+                    return d >= compStart;
+                });
 
                 if (areaActions.length === 0) return;
                 
