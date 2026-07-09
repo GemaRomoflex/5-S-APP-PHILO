@@ -1390,29 +1390,29 @@
                     <span class="nav-icon">📁</span>
                     <span>Data</span>
                 </a>
-                <a class="nav-item" id="nav-dashboard" onclick="switchTab('dashboard')">
+                <a class="nav-item" id="nav-dashboard" onclick="switchTab('dashboard')" title="Visualiza métricas, gráficas y el estado general de las auditorías">
                     <span class="nav-icon">📊</span>
                     <span>Dashboard</span>
                 </a>
                 <!-- ACTIONS EDITOR -->
-                <a class="nav-item" id="nav-actions" onclick="switchTab('actions')">
+                <a class="nav-item" id="nav-actions" onclick="switchTab('actions')" title="Administra, edita y cierra las acciones correctivas">
                     <span class="nav-icon">✏️</span>
                     <span>Actions Editor</span>
                 </a>
                 <!-- NUEVAS SECCIONES EN DESARROLLO -->
-                <a class="nav-item" id="nav-layout" onclick="switchTab('layout')">
+                <a class="nav-item" id="nav-layout" onclick="switchTab('layout')" title="Visualiza el mapa interactivo de la planta (Heatmap) con puntuaciones">
                     <span class="nav-icon">🗺️</span>
                     <span>Layout</span>
                 </a>
-                <a class="nav-item" id="nav-audits" onclick="switchTab('audits')">
+                <a class="nav-item" id="nav-audits" onclick="switchTab('audits')" title="Formulario interactivo para registrar una nueva Auditoría Cruzada">
                     <span class="nav-icon">📋</span>
                     <span>Audits</span>
                 </a>
-                <a class="nav-item" id="nav-calendar" onclick="switchTab('calendar')">
+                <a class="nav-item" id="nav-calendar" onclick="switchTab('calendar')" title="Programa y visualiza el calendario de eventos y auditorías">
                     <span class="nav-icon">📅</span>
                     <span>Calendar</span>
                 </a>
-                <a class="nav-item" id="nav-areas" onclick="switchTab('areas')">
+                <a class="nav-item" id="nav-areas" onclick="switchTab('areas')" title="Revisa el control y estatus detallado desglosado por cada área">
                     <span class="nav-icon">🏭</span>
                     <span>Areas</span>
                 </a>
@@ -1679,8 +1679,8 @@
 
                     <main id="dashboard-content" style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
             
-                        <!-- FILTRO GLOBAL DE FECHAS PARA DASHBOARD -->
-                        <section class="chart-card" style="padding: 15px 24px; flex-direction: row; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <!-- FILTRO GLOBAL DE FECHAS Y ORIGEN PARA DASHBOARD -->
+                        <section class="chart-card" style="padding: 15px 24px; flex-direction: row; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 15px;">
                             <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                                 <strong style="color: var(--color-text); font-size: 14px;">Filtrar Dashboard por Fecha de Auditoría:</strong>
                                 <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
@@ -1690,6 +1690,15 @@
                                     <input type="date" id="global-date-end" class="filter-select" style="width: auto; padding: 6px;" onchange="updateDashboard()">
                                     <button class="btn btn-secondary" onclick="clearGlobalDateFilter()" style="padding: 6px 12px; font-size: 13px;">Limpiar</button>
                                 </div>
+                            </div>
+                            
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <strong style="color: var(--color-text); font-size: 14px;">Origen de Datos:</strong>
+                                <select id="global-source-filter" class="filter-select" style="padding: 6px; font-size: 13px; width: auto;" onchange="updateDashboard()">
+                                    <option value="official" selected>Auditorías Oficiales (Lean)</option>
+                                    <option value="cross">Auditorías Cruzadas (App)</option>
+                                    <option value="all">Todas (Combinadas)</option>
+                                </select>
                             </div>
                         </section>
 
@@ -2176,10 +2185,6 @@
                     initCrossAuditForm();
                 }
                 
-                const titles = {
-                    'audits': 'Gestión de Auditorías'
-                };
-                document.getElementById('uc-title').textContent = titles[tabId] || 'Sección en Desarrollo';
             }
             
             // Re-renderizar si es dashboard
@@ -2533,6 +2538,20 @@
 
             // FILTRO GLOBAL DE FECHAS
             globalFilteredData = allAuditData;
+            
+            // FILTRO DE ORIGEN DE DATOS (Oficiales vs Cruzadas)
+            const sourceFilter = document.getElementById('global-source-filter').value;
+            if (sourceFilter === 'official') {
+                globalFilteredData = globalFilteredData.filter(item => !item.source || item.source !== 'app_cruzada');
+            } else if (sourceFilter === 'cross') {
+                globalFilteredData = globalFilteredData.filter(item => item.source === 'app_cruzada');
+            }
+            
+            // FILTRO DE SEGURIDAD (RBAC - Auditor Cruzado encerrado en su área)
+            if (window.currentUserRole === 'Auditor Cruzado' && window.currentUserArea) {
+                globalFilteredData = globalFilteredData.filter(item => item.cleanLocation === window.currentUserArea);
+            }
+
             const startVal = document.getElementById('global-date-start').value;
             const endVal = document.getElementById('global-date-end').value;
             
@@ -4329,6 +4348,31 @@
         }
 
         // --- MÓDULO DE AUDITORÍAS CRUZADAS ---
+        const styleCrossAudit = document.createElement('style');
+        styleCrossAudit.innerHTML = `
+            .score-btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+            .score-btn { flex: 1; padding: 10px; border: 1px solid #ccc; background: white; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; min-width: 40px; text-align: center; font-size: 16px; }
+            .score-btn:hover { background: #f0f0f0; }
+            .score-btn.selected-1 { background: #ff4d4d !important; color: white; border-color: #ff4d4d; }
+            .score-btn.selected-2 { background: #ff9933 !important; color: white; border-color: #ff9933; }
+            .score-btn.selected-3 { background: #ffcc00 !important; color: black; border-color: #ffcc00; }
+            .score-btn.selected-4 { background: #99cc33 !important; color: white; border-color: #99cc33; }
+            .score-btn.selected-5 { background: #33cc33 !important; color: white; border-color: #33cc33; }
+        `;
+        document.head.appendChild(styleCrossAudit);
+
+        window.selectScore = function(qId, val) {
+            document.getElementById('ca-score-' + qId).value = val;
+            const group = document.getElementById('ca-group-' + qId);
+            const buttons = group.querySelectorAll('.score-btn');
+            buttons.forEach(btn => {
+                btn.className = 'score-btn'; // Limpiar clases
+                if (parseInt(btn.getAttribute('data-val')) === val) {
+                    btn.classList.add('selected-' + val);
+                }
+            });
+        };
+
         const crossAuditQuestions = [
             { id: 'q1', category: 'S1 - Clasificar (Seiri)', text: '¿Existe algún material, herramienta, equipo o mueble que no se utilice y permanezca dentro del área?' },
             { id: 'q2', category: 'S1 - Clasificar (Seiri)', text: '¿Los artículos innecesarios están identificados y colocados en un área de Red Tag?' },
@@ -4410,14 +4454,14 @@
                         <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 10px;">
                             <div>
                                 <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #555;">Calificación (1-5):</label>
-                                <select id="ca-score-${q.id}" required class="form-input" style="width: 100px; padding: 8px;">
-                                    <option value="">--</option>
-                                    <option value="5">5 (Excelente)</option>
-                                    <option value="4">4 (Bueno)</option>
-                                    <option value="3">3 (Regular)</option>
-                                    <option value="2">2 (Malo)</option>
-                                    <option value="1">1 (Crítico)</option>
-                                </select>
+                                <input type="hidden" id="ca-score-${q.id}" required>
+                                <div class="score-btn-group" id="ca-group-${q.id}">
+                                    <button type="button" class="score-btn" data-val="1" onclick="selectScore('${q.id}', 1)">1</button>
+                                    <button type="button" class="score-btn" data-val="2" onclick="selectScore('${q.id}', 2)">2</button>
+                                    <button type="button" class="score-btn" data-val="3" onclick="selectScore('${q.id}', 3)">3</button>
+                                    <button type="button" class="score-btn" data-val="4" onclick="selectScore('${q.id}', 4)">4</button>
+                                    <button type="button" class="score-btn" data-val="5" onclick="selectScore('${q.id}', 5)">5</button>
+                                </div>
                             </div>
                             
                             <div>
@@ -5178,6 +5222,7 @@
                 if (perfilData && !perfilError) {
                     userRole = perfilData.rol;
                     isFirstLogin = perfilData.primer_ingreso;
+                    window.currentUserArea = perfilData.area || null;
                 }
                 
                 window.currentUserRole = userRole;
@@ -5234,6 +5279,7 @@
                 if (perfilData && !perfilError) {
                     userRole = perfilData.rol;
                     isFirstLogin = perfilData.primer_ingreso;
+                    window.currentUserArea = perfilData.area || null;
                 }
                 
                 window.currentUserRole = userRole;
@@ -5275,23 +5321,67 @@
                     await supabaseClient.from('perfiles').update({ primer_ingreso: false }).eq('id', window.currentUserId);
                 }
                 
-                startApplication();
+                // Si es Auditor Cruzado, obligarlo a seleccionar su área
+                if (window.currentUserRole === 'Auditor Cruzado') {
+                    document.getElementById('password-change-modal').style.display = 'none';
+                    
+                    // Crear un mini modal inyectado para elegir el área
+                    const areaModal = document.createElement('div');
+                    areaModal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:9999;';
+                    
+                    const areas = Object.keys(sectorMapping).flatMap(s => sectorMapping[s]).sort();
+                    const optionsHTML = areas.map(a => `<option value="${a}">${a}</option>`).join('');
+                    
+                    areaModal.innerHTML = `
+                        <div style="background:white; padding:30px; border-radius:10px; text-align:center; max-width:400px; width:90%;">
+                            <h2 style="margin-top:0;">Selecciona tu Área</h2>
+                            <p style="color:#666; font-size:14px; margin-bottom:20px;">Como Auditor Cruzado, esta será tu área definitiva. No podrás cambiarla después.</p>
+                            <select id="ca-first-area" class="form-input" style="width:100%; padding:10px; margin-bottom:20px;">
+                                <option value="">-- Elige tu área --</option>
+                                ${optionsHTML}
+                            </select>
+                            <button id="btn-save-area" class="btn btn-primary" style="width:100%; padding:10px;">Guardar y Entrar</button>
+                            <p id="area-error" style="color:red; display:none; margin-top:10px;">Debes elegir un área.</p>
+                        </div>
+                    `;
+                    document.body.appendChild(areaModal);
+                    
+                    document.getElementById('btn-save-area').addEventListener('click', async () => {
+                        const selectedArea = document.getElementById('ca-first-area').value;
+                        if (!selectedArea) {
+                            document.getElementById('area-error').style.display = 'block';
+                            return;
+                        }
+                        
+                        document.getElementById('btn-save-area').textContent = 'Guardando...';
+                        document.getElementById('btn-save-area').disabled = true;
+                        
+                        // Guardar en Supabase (requiere columna 'area' en tabla perfiles)
+                        await supabaseClient.from('perfiles').update({ area: selectedArea }).eq('id', window.currentUserId);
+                        
+                        window.currentUserArea = selectedArea;
+                        areaModal.remove();
+                        startApplication();
+                    });
+                } else {
+                    startApplication();
+                }
             }
         }
 
         function applyRBAC() {
-            if (window.currentUserRole === 'Auditor') {
-                // 1. Ocultar Pestaña de Data
+            if (window.currentUserRole === 'Auditor' || window.currentUserRole === 'Auditor Cruzado') {
+                // 1. Ocultar Pestaña de Data (Subida de CSV)
                 const navData = document.getElementById('nav-data');
                 if (navData) navData.style.display = 'none';
                 
-                // 2. Ocultar Botones Layout
+                // 2. Ocultar Botones Layout y Ediciones Maestras
                 const btnAdd = document.getElementById('btn-layout-add');
                 if (btnAdd) btnAdd.style.display = 'none';
                 const btnEdit = document.getElementById('btn-layout-edit');
                 if (btnEdit) btnEdit.style.display = 'none';
 
-                // 3. Estilos globales para ocultar botones de modificación y edición en el UI
+                // 3. Estilos globales para ocultar botones
                 const style = document.createElement('style');
                 style.innerHTML = `
                     .btn-edit-action { display: none !important; }
@@ -5300,6 +5390,22 @@
                     .cal-add-btn { display: none !important; } /* Calendario: Sin añadir eventos */
                 `;
                 document.head.appendChild(style);
+            }
+            
+            // Restricción Extrema para Auditor Cruzado
+            if (window.currentUserRole === 'Auditor Cruzado') {
+                // Solo dejar ver Dashboard y Auditoría Cruzada
+                const navEditor = document.getElementById('nav-actions');
+                if (navEditor) navEditor.style.display = 'none';
+                
+                const navLayout = document.getElementById('nav-layout');
+                if (navLayout) navLayout.style.display = 'none';
+                
+                const navAreas = document.getElementById('nav-areas');
+                if (navAreas) navAreas.style.display = 'none';
+                
+                const navCalendar = document.getElementById('nav-calendar');
+                if (navCalendar) navCalendar.style.display = 'none';
             }
         }
 
