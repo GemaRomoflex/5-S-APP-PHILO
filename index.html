@@ -1540,13 +1540,48 @@
                     </section>
                 </div>
 
-                <!-- VISTA SECCIÓN EN DESARROLLO -->
-                <div id="view-under-construction" class="hidden" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 70vh; text-align: center; color: var(--color-text-muted);">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width: 80px; height: 80px; margin-bottom: 20px; color: var(--color-primary);">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.492-3.053 5.084 1.695-1.354-2.709 2.709-1.354-1.695-5.084-3.053 2.492M11.42 15.17l-4.939 4.939c-.58.58-1.52.58-2.1 0-.58-.58-.58-1.52 0-2.1l4.939-4.939m0 0L6.75 9.75 3 10.5l2.25-2.25L4.5 6l2.25.75L9.75 4.5l-.75 3.75 2.42 2.57" />
-                    </svg>
-                    <h2 id="uc-title" style="color: var(--color-text-main); font-size: 24px; margin-bottom: 10px;">Sección en Desarrollo</h2>
-                    <p style="max-width: 400px; line-height: 1.6;">Estamos construyendo esta funcionalidad para la próxima versión de LeanView 5'S. ¡Vuelve pronto!</p>
+                <!-- VISTA AUDITORÍAS CRUZADAS -->
+                <div id="view-cross-audit" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
+                    <div class="chart-header" style="border-bottom: 1px solid var(--color-border); padding-bottom: 10px; margin-bottom: 20px;">
+                        <h2 style="margin: 0; font-size: 24px; color: var(--color-text);">Auditoría Cruzada 5S</h2>
+                        <p style="margin: 5px 0 0 0; color: var(--color-text-muted);">Completa las preguntas obligatorias con su evidencia fotográfica al momento.</p>
+                    </div>
+
+                    <form id="cross-audit-form" style="display: flex; flex-direction: column; gap: 20px; background: var(--color-bg-white); padding: 20px; border-radius: var(--border-radius); box-shadow: var(--box-shadow);">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div>
+                                <label style="display: block; font-weight: bold; margin-bottom: 5px; color: var(--color-text);">Fecha:</label>
+                                <input type="date" id="ca-date" required class="form-input" style="width: 100%; padding: 10px;" readonly>
+                            </div>
+                            <div>
+                                <label style="display: block; font-weight: bold; margin-bottom: 5px; color: var(--color-text);">Turno:</label>
+                                <select id="ca-shift" required class="form-input" style="width: 100%; padding: 10px;">
+                                    <option value="">Seleccionar turno</option>
+                                    <option value="1">Turno 1</option>
+                                    <option value="2">Turno 2</option>
+                                    <option value="3">Turno 3</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-weight: bold; margin-bottom: 5px; color: var(--color-text);">Área (Locación Limpia):</label>
+                                <select id="ca-area" required class="form-input" style="width: 100%; padding: 10px;">
+                                    <option value="">Cargando áreas...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Preguntas Dinámicas Generadas por JS -->
+                        <div id="ca-questions-container" style="display: flex; flex-direction: column; gap: 25px; margin-top: 10px;">
+                            <!-- Inyectadas por JS -->
+                        </div>
+                        
+                        <!-- Contenedor invisible para comprimir imágenes por canvas -->
+                        <canvas id="ca-compress-canvas" style="display: none;"></canvas>
+
+                        <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                            <button type="submit" id="btn-submit-ca" class="btn btn-primary" style="padding: 12px 30px; font-size: 16px;">Subir Auditoría a la Nube</button>
+                        </div>
+                    </form>
                 </div>
                 
                 <!-- VISTA CALENDARIO 5S -->
@@ -2085,7 +2120,7 @@
             // Ocultar TODAS las vistas (Lista Maestra)
             const allViews = [
                 'view-data', 'view-dashboard', 'history-view', 
-                'detail-view', 'view-under-construction', 
+                'detail-view', 'view-cross-audit', 
                 'view-layout-wrapper', 'view-actions-editor',
                 'view-calendar', 'view-areas', 'dashboard-content'
             ];
@@ -2120,7 +2155,7 @@
                 document.getElementById('dashboard-content').classList.add('hidden');
                 document.getElementById('view-actions-editor').classList.add('hidden');
                 document.getElementById('view-layout-wrapper').classList.add('hidden');
-                document.getElementById('view-under-construction').classList.add('hidden');
+                document.getElementById('view-cross-audit').classList.add('hidden');
                 document.getElementById('view-calendar').classList.add('hidden');
                 document.getElementById('view-areas').classList.remove('hidden');
                 document.getElementById('main-header').classList.add('hidden');
@@ -2133,8 +2168,13 @@
                 document.getElementById('view-layout-wrapper').classList.add('hidden');
                 document.getElementById('view-calendar').classList.add('hidden');
                 document.getElementById('view-areas').classList.add('hidden');
-                document.getElementById('view-under-construction').classList.remove('hidden');
+                document.getElementById('view-cross-audit').classList.remove('hidden');
                 document.getElementById('main-header').classList.remove('hidden');
+                
+                // Si la función ya está definida, iniciar el formulario
+                if (typeof initCrossAuditForm === 'function') {
+                    initCrossAuditForm();
+                }
                 
                 const titles = {
                     'audits': 'Gestión de Auditorías'
@@ -4286,6 +4326,293 @@
             setTimeout(() => {
                 document.querySelector('#nav-actions span:last-child').textContent = originalText;
             }, 1500);
+        }
+
+        // --- MÓDULO DE AUDITORÍAS CRUZADAS ---
+        const crossAuditQuestions = [
+            { id: 'q1', category: 'S1 - Clasificar (Seiri)', text: '¿Existe algún material, herramienta, equipo o mueble que no se utilice y permanezca dentro del área?' },
+            { id: 'q2', category: 'S1 - Clasificar (Seiri)', text: '¿Los artículos innecesarios están identificados y colocados en un área de Red Tag?' },
+            { id: 'q3', category: 'S1 - Clasificar (Seiri)', text: '¿Se observan acumulaciones de material obsoleto, dañado o sin uso definido?' },
+            { id: 'q4', category: 'S1 - Clasificar (Seiri)', text: '¿Los pasillos y zonas de trabajo están libres de objetos que no agregan valor al proceso?' },
+            
+            { id: 'q5', category: 'S2 - Ordenar (Seiton)', text: '¿Cada herramienta, equipo, rack, mesa o carro tiene una ubicación claramente definida?' },
+            { id: 'q6', category: 'S2 - Ordenar (Seiton)', text: '¿Los materiales y componentes están identificados correctamente y son fáciles de localizar?' },
+            { id: 'q7', category: 'S2 - Ordenar (Seiton)', text: '¿Los marcajes de piso reflejan la ubicación real de los equipos y materiales?' },
+            { id: 'q8', category: 'S2 - Ordenar (Seiton)', text: '¿Los operadores pueden encontrar y regresar los artículos a su lugar sin dificultad?' },
+            { id: 'q9', category: 'S2 - Ordenar (Seiton)', text: '¿Existen materiales o equipos colocados fuera de su ubicación establecida?' },
+            
+            { id: 'q10', category: 'S3 - Limpiar (Seiso)', text: '¿Las estaciones de trabajo se encuentran limpias y libres de polvo, residuos o derrames?' },
+            { id: 'q11', category: 'S3 - Limpiar (Seiso)', text: '¿Los equipos, mesas, racks y gabinetes están en buen estado y sin suciedad visible?' },
+            { id: 'q12', category: 'S3 - Limpiar (Seiso)', text: '¿Los pasillos y áreas de tránsito están limpios y libres de obstrucciones?' },
+            { id: 'q13', category: 'S3 - Limpiar (Seiso)', text: '¿Los contenedores de basura tienen capacidad disponible y no están sobrellenados?' },
+            { id: 'q14', category: 'S3 - Limpiar (Seiso)', text: '¿Se observan condiciones que indiquen falta de limpieza o mantenimiento?' },
+            
+            { id: 'q15', category: 'S4 - Estandarizar (Seiketsu)', text: '¿Las identificaciones, etiquetas y ayudas visuales son claras, visibles y están actualizadas?' },
+            { id: 'q16', category: 'S4 - Estandarizar (Seiketsu)', text: '¿La distribución de materiales y equipos sigue un estándar consistente dentro del área?' },
+            { id: 'q17', category: 'S4 - Estandarizar (Seiketsu)', text: '¿Los estándares visuales permiten detectar fácilmente una condición fuera de lugar?' },
+            { id: 'q18', category: 'S4 - Estandarizar (Seiketsu)', text: '¿El personal conoce dónde consultar los estándares aplicables a su área?' },
+            { id: 'q19', category: 'S4 - Estandarizar (Seiketsu)', text: '¿Las condiciones observadas coinciden con los estándares definidos?' },
+            
+            { id: 'q20', category: 'S5 - Sostener (Shitsuke)', text: '¿Las acciones generadas en auditorías anteriores fueron cerradas o muestran avance?' },
+            { id: 'q21', category: 'S5 - Sostener (Shitsuke)', text: '¿Las auditorías 5S se realizan conforme a la frecuencia establecida?' },
+            { id: 'q22', category: 'S5 - Sostener (Shitsuke)', text: '¿Los operadores demuestran conocimiento básico de las prácticas 5S?' },
+            { id: 'q23', category: 'S5 - Sostener (Shitsuke)', text: '¿Se observan hábitos que ayuden a mantener el orden y la limpieza diariamente?' },
+            
+            { id: 'q24', category: 'S+1 - Seguridad', text: '¿Las rutas de evacuación y equipos de emergencia están visibles y libres de obstrucciones?' },
+            { id: 'q25', category: 'S+1 - Seguridad', text: '¿Los operadores utilizan el EPP requerido para sus actividades?' },
+            { id: 'q26', category: 'S+1 - Seguridad', text: '¿Las máquinas cuentan con guardas, señalamientos y dispositivos de paro de emergencia funcionales?' }
+        ];
+
+        function initCrossAuditForm() {
+            // Set date
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('ca-date').value = `${yyyy}-${mm}-${dd}`;
+            
+            // Si el usuario tiene su área bloqueada en su perfil, forzarla
+            const areaSelect = document.getElementById('ca-area');
+            const areas = Object.keys(sectorMapping).flatMap(s => sectorMapping[s]);
+            
+            let optionsHTML = '<option value="">Seleccionar área...</option>';
+            areas.sort().forEach(a => {
+                optionsHTML += `<option value="${a}">${a}</option>`;
+            });
+            areaSelect.innerHTML = optionsHTML;
+            
+            // Si tiene área predefinida, bloquearla (Se define en login)
+            if (window.currentUserArea) {
+                areaSelect.value = window.currentUserArea;
+                areaSelect.disabled = true; // Bloquea la selección para que no hagan auditorias de otras áreas
+            } else {
+                areaSelect.disabled = false;
+            }
+                
+            renderCrossAuditQuestions();
+        }
+
+        function renderCrossAuditQuestions() {
+            const container = document.getElementById('ca-questions-container');
+            let html = '';
+            let currentCategory = '';
+            
+            crossAuditQuestions.forEach((q, index) => {
+                if (q.category !== currentCategory) {
+                    html += `<h3 style="margin-top: 15px; margin-bottom: 5px; color: var(--color-primary); border-bottom: 2px solid var(--color-primary); padding-bottom: 5px;">${q.category}</h3>`;
+                    currentCategory = q.category;
+                }
+                
+                html += `
+                    <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+                        <p style="font-weight: bold; margin: 0 0 10px 0; color: #333;">${index + 1}. ${q.text}</p>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 10px;">
+                            <div>
+                                <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #555;">Calificación (1-5):</label>
+                                <select id="ca-score-${q.id}" required class="form-input" style="width: 100px; padding: 8px;">
+                                    <option value="">--</option>
+                                    <option value="5">5 (Excelente)</option>
+                                    <option value="4">4 (Bueno)</option>
+                                    <option value="3">3 (Regular)</option>
+                                    <option value="2">2 (Malo)</option>
+                                    <option value="1">1 (Crítico)</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #555;">Evidencia Fotográfica (Obligatoria):</label>
+                                <!-- capture="environment" fuerza a usar la cámara trasera en móviles y bloquea carrete -->
+                                <input type="file" id="ca-photo-${q.id}" accept="image/*" capture="environment" required class="form-input" style="width: 100%; padding: 8px;">
+                                <div id="ca-preview-${q.id}" style="margin-top: 10px; display: none;">
+                                    <img src="" style="max-width: 150px; max-height: 150px; border-radius: 4px; border: 1px solid #ccc; object-fit: cover;">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #555;">Comentarios / Hallazgo:</label>
+                                <input type="text" id="ca-comment-${q.id}" class="form-input" style="width: 100%; padding: 8px;" placeholder="Opcional. Describe la anomalía si existe.">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            
+            // Add image preview listeners
+            crossAuditQuestions.forEach(q => {
+                const input = document.getElementById(`ca-photo-${q.id}`);
+                input.addEventListener('change', function(e) {
+                    if (e.target.files && e.target.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(evt) {
+                            const previewDiv = document.getElementById(`ca-preview-${q.id}`);
+                            previewDiv.style.display = 'block';
+                            previewDiv.querySelector('img').src = evt.target.result;
+                        };
+                        reader.readAsDataURL(e.target.files[0]);
+                    }
+                });
+            });
+        }
+
+        document.getElementById('cross-audit-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!supabaseClient) {
+                alert("Debes iniciar sesión primero.");
+                return;
+            }
+
+            const area = document.getElementById('ca-area').value;
+            const shift = document.getElementById('ca-shift').value;
+            const openDateRaw = document.getElementById('ca-date').value;
+            
+            if (!area) {
+                alert("Debes seleccionar un área válida.");
+                return;
+            }
+            
+            // Format to match csv: YYYY-MM-DD to YYYY/MM/DD HH:MM:SS
+            const now = new Date();
+            const openDate = `${openDateRaw.replace(/-/g, '/')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:00`;
+            
+            const btnSubmit = document.getElementById('btn-submit-ca');
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = 'Subiendo fotos y datos (Por favor espera)...';
+            
+            try {
+                // Generate a unique Audit ID
+                const auditId = 'CA-' + Date.now();
+                const actionsToInsert = [];
+                
+                for (let i = 0; i < crossAuditQuestions.length; i++) {
+                    const q = crossAuditQuestions[i];
+                    const score = document.getElementById(`ca-score-${q.id}`).value;
+                    const comment = document.getElementById(`ca-comment-${q.id}`).value;
+                    const fileInput = document.getElementById(`ca-photo-${q.id}`);
+                    const file = fileInput.files[0];
+                    
+                    if (!file) {
+                        throw new Error(`Falta tomar fotografía en la pregunta ${i + 1}`);
+                    }
+                    
+                    // Comprimir imagen usando canvas
+                    const compressedBlob = await compressImage(file);
+                    
+                    // Subir a Supabase Storage
+                    const ext = file.name.split('.').pop() || 'jpg';
+                    const fileName = `${auditId}_${q.id}.${ext}`;
+                    
+                    const { data: uploadData, error: uploadErr } = await supabaseClient
+                        .storage
+                        .from('audit_evidence')
+                        .upload(fileName, compressedBlob, {
+                            cacheControl: '3600',
+                            upsert: false
+                        });
+                        
+                    if (uploadErr) throw uploadErr;
+                    
+                    // Obtener URL Pública
+                    const { data: publicUrlData } = supabaseClient
+                        .storage
+                        .from('audit_evidence')
+                        .getPublicUrl(fileName);
+                        
+                    const photoUrl = publicUrlData.publicUrl;
+                    const actionId = `${auditId}-${q.id}`;
+                    
+                    // Mismo formato de location que usas: Flex -> Building -> Area
+                    const fullLocation = `Flex -> Cross Audit -> ${area}`;
+                    
+                    actionsToInsert.push({
+                        actionId: actionId,
+                        auditId: auditId,
+                        area: area, 
+                        location: fullLocation,
+                        cleanLocation: area,
+                        department: 'Cross Audit',
+                        owner: window.currentUserEmail || 'Auditor Cruzado',
+                        status: 'Open',
+                        openDate: openDate,
+                        dueDate: 'Sin Fecha',
+                        responseScore: parseInt(score),
+                        comments: `[${q.category}] ${q.text} \nNotas: ${comment}`,
+                        source: 'app_cruzada',
+                        evidence_url: photoUrl,
+                        shift: shift
+                    });
+                }
+                
+                // Inyectar en tabla actions
+                const { error: dbError } = await supabaseClient.from('actions').upsert(actionsToInsert, { onConflict: 'actionId' });
+                
+                if (dbError) throw dbError;
+                
+                alert("¡Auditoría cruzada subida exitosamente! La evidencia fotográfica ha sido guardada en la nube.");
+                
+                // Limpiar form
+                document.getElementById('cross-audit-form').reset();
+                document.querySelectorAll('[id^="ca-preview-"]').forEach(el => el.style.display = 'none');
+                
+                // Refrescar data global
+                loadFromSupabase();
+                
+            } catch (err) {
+                console.error(err);
+                alert("Error al enviar la auditoría: " + err.message);
+            } finally {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = 'Subir Auditoría a la Nube';
+            }
+        });
+        
+        // MOTOR DE COMPRESIÓN DE IMÁGENES (Evita que el Storage de Supabase se llene rápido)
+        function compressImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = event => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.getElementById('ca-compress-canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        const MAX_WIDTH = 800;
+                        const MAX_HEIGHT = 800;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Convierte a JPG calidad 0.7
+                        canvas.toBlob(blob => {
+                            if (blob) resolve(blob);
+                            else reject(new Error('Fallo al comprimir la imagen'));
+                        }, 'image/jpeg', 0.7);
+                    };
+                    img.onerror = error => reject(error);
+                };
+                reader.onerror = error => reject(error);
+            });
         }
         // --- MÓDULO DE LAYOUT INTERACTIVO ---
         let isLayoutEditMode = false;
