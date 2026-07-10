@@ -9,6 +9,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <!-- Importar Supabase Auth desde unpkg (bypass firewall) -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- Importar librerías para exportación (PDF e Imágenes) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* --- DISEÑO DE UI/UX - PALETA DE COLORES Y TIPOGRAFÍA --- */
         :root {
@@ -1542,46 +1545,82 @@
 
                 <!-- VISTA AUDITORÍAS CRUZADAS -->
                 <div id="view-cross-audit" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
-                    <div class="chart-header" style="border-bottom: 1px solid var(--color-border); padding-bottom: 10px; margin-bottom: 20px;">
-                        <h2 style="margin: 0; font-size: 24px; color: var(--color-text);">Auditoría Cruzada 5S</h2>
-                        <p style="margin: 5px 0 0 0; color: var(--color-text-muted);">Completa las preguntas obligatorias con su evidencia fotográfica al momento.</p>
-                    </div>
-
-                    <form id="cross-audit-form" style="display: flex; flex-direction: column; gap: 20px; background: var(--color-bg-white); padding: 20px; border-radius: var(--border-radius); box-shadow: var(--box-shadow);">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <!-- LANDING PAGE DE AUDITORÍAS -->
+                    <div id="ca-landing" style="display: flex; flex-direction: column; gap: 20px;">
+                        <div class="chart-header" style="border-bottom: 1px solid var(--color-border); padding-bottom: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
                             <div>
-                                <label style="display: block; font-weight: bold; margin-bottom: 5px; color: var(--color-text);">Fecha:</label>
-                                <input type="date" id="ca-date" required class="form-input" style="width: 100%; padding: 10px;" readonly>
+                                <h2 style="margin: 0; font-size: 24px; color: var(--color-text);">Auditorías Cruzadas 5S</h2>
+                                <p style="margin: 5px 0 0 0; color: var(--color-text-muted);">Gestiona tus auditorías y descarga reportes en PDF.</p>
                             </div>
-                            <div>
-                                <label style="display: block; font-weight: bold; margin-bottom: 5px; color: var(--color-text);">Turno:</label>
-                                <select id="ca-shift" required class="form-input" style="width: 100%; padding: 10px;">
-                                    <option value="">Seleccionar turno</option>
-                                    <option value="1">Turno 1</option>
-                                    <option value="2">Turno 2</option>
-                                    <option value="3">Turno 3</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style="display: block; font-weight: bold; margin-bottom: 5px; color: var(--color-text);">Área (Locación Limpia):</label>
-                                <select id="ca-area" required class="form-input" style="width: 100%; padding: 10px;">
-                                    <option value="">Cargando áreas...</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Preguntas Dinámicas Generadas por JS -->
-                        <div id="ca-questions-container" style="display: flex; flex-direction: column; gap: 25px; margin-top: 10px;">
-                            <!-- Inyectadas por JS -->
+                            <button class="btn btn-primary" onclick="showCrossAuditForm()" style="font-size: 16px; padding: 12px 24px;">➕ Nueva Auditoría</button>
                         </div>
                         
-                        <!-- Contenedor invisible para comprimir imágenes por canvas -->
-                        <canvas id="ca-compress-canvas" style="display: none;"></canvas>
-
-                        <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
-                            <button type="submit" id="btn-submit-ca" class="btn btn-primary" style="padding: 12px 30px; font-size: 16px;">Subir Auditoría a la Nube</button>
+                        <div class="chart-card" style="padding: 20px;">
+                            <h3 style="margin-top: 0; margin-bottom: 15px;">Auditorías Anteriores</h3>
+                            <div style="overflow-x: auto;">
+                                <table class="data-table" style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                        <tr style="background-color: #f8f9fa;">
+                                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">ID Auditoría</th>
+                                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Área</th>
+                                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Fecha</th>
+                                            <th style="padding: 12px; text-align: center; border-bottom: 1px solid #ddd;">Descargar PDF</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ca-past-audits-body">
+                                        <!-- Inyectado por JS -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </form>
+                    </div>
+
+                    <!-- FORMULARIO DE NUEVA AUDITORÍA -->
+                    <div id="ca-form-container" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
+                        <div class="chart-header" style="border-bottom: 1px solid var(--color-border); padding-bottom: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
+                            <button class="btn btn-secondary" onclick="hideCrossAuditForm()">◀ Volver</button>
+                            <div>
+                                <h2 style="margin: 0; font-size: 24px; color: var(--color-text);">Nueva Auditoría</h2>
+                                <p style="margin: 5px 0 0 0; color: var(--color-text-muted);">Completa las preguntas obligatorias con su evidencia fotográfica al momento.</p>
+                            </div>
+                        </div>
+
+                        <form id="cross-audit-form" style="display: flex; flex-direction: column; gap: 20px; background: var(--color-bg-white); padding: 20px; border-radius: var(--border-radius); box-shadow: var(--box-shadow);">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                <div>
+                                    <label style="display: block; font-weight: bold; margin-bottom: 5px; color: var(--color-text);">Fecha:</label>
+                                    <input type="date" id="ca-date" required class="form-input" style="width: 100%; padding: 10px;" readonly>
+                                </div>
+                                <div>
+                                    <label style="display: block; font-weight: bold; margin-bottom: 5px; color: var(--color-text);">Turno:</label>
+                                    <select id="ca-shift" required class="form-input" style="width: 100%; padding: 10px;">
+                                        <option value="">Seleccionar turno</option>
+                                        <option value="1">Turno 1</option>
+                                        <option value="2">Turno 2</option>
+                                        <option value="3">Turno 3</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; font-weight: bold; margin-bottom: 5px; color: var(--color-text);">Área (Locación Limpia):</label>
+                                    <select id="ca-area" required class="form-input" style="width: 100%; padding: 10px;">
+                                        <option value="">Cargando áreas...</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Preguntas Dinámicas Generadas por JS -->
+                            <div id="ca-questions-container" style="display: flex; flex-direction: column; gap: 25px; margin-top: 10px;">
+                                <!-- Inyectadas por JS -->
+                            </div>
+                            
+                            <!-- Contenedor invisible para comprimir imágenes por canvas -->
+                            <canvas id="ca-compress-canvas" style="display: none;"></canvas>
+
+                            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                                <button type="submit" id="btn-submit-ca" class="btn btn-primary" style="padding: 12px 30px; font-size: 16px;">Enviar</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
                 
                 <!-- VISTA CALENDARIO 5S -->
@@ -2021,7 +2060,44 @@
                         ◀ Volver al Dashboard
                     </button>
                     <h2 id="detail-view-title" style="margin: 0; font-size: 20px; color: var(--color-text);">Detalle de Acciones</h2>
+                    <button class="btn btn-secondary" onclick="downloadDetailSnapshot(this)" style="margin-left: auto;">📸 Descargar Imagen</button>
                 </div>
+
+                <script>
+                    async function downloadDetailSnapshot(btnElement) {
+                        const container = document.getElementById('detail-view');
+                        
+                        const originalText = btnElement.innerHTML;
+                        btnElement.innerHTML = '⏳ Capturando...';
+                        btnElement.disabled = true;
+                        
+                        // Ocultar temporalmente los botones para que no salgan en la foto
+                        const btnClose = container.querySelector('button[onclick="closeDetailView()"]');
+                        if (btnClose) btnClose.style.display = 'none';
+                        btnElement.style.display = 'none';
+                        
+                        try {
+                            const canvas = await html2canvas(container, {
+                                scale: 2,
+                                useCORS: true,
+                                backgroundColor: '#ffffff'
+                            });
+                            
+                            const link = document.createElement('a');
+                            link.download = `acciones_${new Date().getTime()}.png`;
+                            link.href = canvas.toDataURL('image/png');
+                            link.click();
+                        } catch(e) {
+                            console.error(e);
+                            alert('Hubo un error tomando la captura de la tabla.');
+                        } finally {
+                            if (btnClose) btnClose.style.display = 'block';
+                            btnElement.style.display = 'block';
+                            btnElement.innerHTML = originalText;
+                            btnElement.disabled = false;
+                        }
+                    }
+                </script>
 
                 <div style="display: flex; gap: 15px; padding: 15px; background: var(--color-bg-white); border-radius: var(--border-radius); box-shadow: var(--box-shadow); flex-wrap: wrap;">
                     <div style="display: flex; align-items: center; gap: 8px;">
@@ -2180,9 +2256,11 @@
                 document.getElementById('view-cross-audit').classList.remove('hidden');
                 document.getElementById('main-header').classList.remove('hidden');
                 
-                // Si la función ya está definida, iniciar el formulario
+                // Si la función ya está definida, iniciar el formulario y el landing
                 if (typeof initCrossAuditForm === 'function') {
                     initCrossAuditForm();
+                    loadPastAudits();
+                    hideCrossAuditForm();
                 }
                 
             }
@@ -4291,11 +4369,53 @@
             }
             sel.value = s;
 
+            if (item.source === 'app_cruzada') {
+                document.getElementById('btn-delete-action').classList.remove('hidden');
+            } else {
+                document.getElementById('btn-delete-action').classList.add('hidden');
+            }
+
             document.getElementById('edit-action-modal').classList.add('active');
         }
 
         function closeEditModal() {
             document.getElementById('edit-action-modal').classList.remove('active');
+        }
+
+        async function deleteAction() {
+            const auditId = document.getElementById('edit-audit-id').value;
+            const actionId = document.getElementById('edit-action-id').value;
+            
+            if (confirm(`¿Estás completamente seguro de que deseas borrar esta acción (${actionId}) de la base de datos?\nEsta acción no se puede deshacer.`)) {
+                
+                const btn = document.getElementById('btn-delete-action');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '⏳ Borrando...';
+                btn.disabled = true;
+                
+                const { error } = await supabaseClient
+                    .from('actions')
+                    .delete()
+                    .eq('actionId', actionId)
+                    .eq('auditId', auditId);
+                    
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                
+                if (error) {
+                    console.error('Error borrando acción:', error);
+                    alert('Hubo un error borrando la acción en la nube.');
+                    return;
+                }
+                
+                // Remover localmente
+                allAuditData = allAuditData.filter(a => !(a.auditId === auditId && a.actionId === actionId));
+                
+                closeEditModal();
+                applyEditorFilters(); // Refrescar la tabla del editor
+                updateDashboard(); // Refrescar el dashboard global si es necesario
+                alert('La acción ha sido borrada exitosamente.');
+            }
         }
 
         async function saveActionEdit() {
@@ -4467,7 +4587,11 @@
                             <div>
                                 <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #555;">Evidencia Fotográfica (Obligatoria):</label>
                                 <!-- capture="environment" fuerza a usar la cámara trasera en móviles y bloquea carrete -->
-                                <input type="file" id="ca-photo-${q.id}" accept="image/*" capture="environment" required class="form-input" style="width: 100%; padding: 8px;">
+                                <input type="file" id="ca-photo-${q.id}" accept="image/*" capture="environment" required style="display: none;">
+                                <label for="ca-photo-${q.id}" style="display: inline-flex; align-items: center; gap: 8px; background: #e0e0e0; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #333; transition: 0.2s;">
+                                    <span style="font-size: 20px;">📸</span> Tomar Foto
+                                </label>
+                                <span id="ca-photo-name-${q.id}" style="margin-left: 10px; font-size: 12px; color: #666;">Sin foto</span>
                                 <div id="ca-preview-${q.id}" style="margin-top: 10px; display: none;">
                                     <img src="" style="max-width: 150px; max-height: 150px; border-radius: 4px; border: 1px solid #ccc; object-fit: cover;">
                                 </div>
@@ -4494,11 +4618,149 @@
                             const previewDiv = document.getElementById(`ca-preview-${q.id}`);
                             previewDiv.style.display = 'block';
                             previewDiv.querySelector('img').src = evt.target.result;
+                            document.getElementById(`ca-photo-name-${q.id}`).textContent = '✅ Foto capturada';
                         };
                         reader.readAsDataURL(e.target.files[0]);
                     }
                 });
             });
+        }
+
+        function showCrossAuditForm() {
+            document.getElementById('ca-landing').classList.add('hidden');
+            document.getElementById('ca-form-container').classList.remove('hidden');
+        }
+
+        function hideCrossAuditForm() {
+            document.getElementById('ca-landing').classList.remove('hidden');
+            document.getElementById('ca-form-container').classList.add('hidden');
+        }
+
+        function loadPastAudits() {
+            const audits = {};
+            allAuditData.forEach(item => {
+                if (item.source === 'app_cruzada' && item.auditId) {
+                    if (!audits[item.auditId]) {
+                        audits[item.auditId] = {
+                            id: item.auditId,
+                            area: item.cleanLocation,
+                            date: item.openDate,
+                            items: []
+                        };
+                    }
+                    audits[item.auditId].items.push(item);
+                }
+            });
+
+            // Si es Auditor Cruzado, solo mostrar los de su área
+            let auditList = Object.values(audits);
+            if (window.currentUserRole === 'Auditor Cruzado' && window.currentUserArea) {
+                auditList = auditList.filter(a => a.area === window.currentUserArea);
+            }
+            
+            // Ordenar de la más nueva a la más vieja
+            auditList.sort((a, b) => b.id.localeCompare(a.id));
+
+            const tbody = document.getElementById('ca-past-audits-body');
+            tbody.innerHTML = '';
+            
+            if (auditList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">No hay auditorías registradas aún.</td></tr>';
+                return;
+            }
+
+            auditList.forEach(audit => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="padding: 12px; border-bottom: 1px solid #ddd;">${audit.id}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #ddd;">${audit.area}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #ddd;">${audit.date}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #ddd; text-align: center;">
+                        <button class="btn btn-primary" onclick="downloadAuditPDF('${audit.id}', this)" style="padding: 5px 10px; font-size: 12px;">📄 PDF</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        async function downloadAuditPDF(auditId, btnElement) {
+            const items = allAuditData.filter(item => item.auditId === auditId);
+            if (items.length === 0) return;
+            
+            const firstItem = items[0];
+            const area = firstItem.cleanLocation;
+            const date = firstItem.openDate;
+            const shift = firstItem.shift || 'N/A';
+            const owner = firstItem.owner;
+            
+            let htmlContent = `
+                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                    <h1 style="color: #005486; border-bottom: 2px solid #009ADD; padding-bottom: 10px;">Reporte de Auditoría Cruzada 5S</h1>
+                    <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 5px;"><strong>ID:</strong> ${auditId}</td>
+                            <td style="padding: 5px;"><strong>Área:</strong> ${area}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px;"><strong>Fecha:</strong> ${date}</td>
+                            <td style="padding: 5px;"><strong>Turno:</strong> ${shift}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px;"><strong>Auditor:</strong> ${owner}</td>
+                            <td></td>
+                        </tr>
+                    </table>
+            `;
+            
+            let currentCategory = '';
+            
+            crossAuditQuestions.forEach((q, index) => {
+                if (q.category !== currentCategory) {
+                    htmlContent += `<h2 style="background: #009ADD; color: white; padding: 10px; margin-top: 20px; font-size: 16px;">${q.category}</h2>`;
+                    currentCategory = q.category;
+                }
+                
+                const matchingAction = items.find(act => act.actionId === \`\${auditId}-\${q.id}\`);
+                const score = matchingAction ? matchingAction.responseScore : 'N/A';
+                const comments = matchingAction ? matchingAction.comments.split('\\nNotas: ')[1] || 'Sin comentarios' : 'N/A';
+                const photoUrl = matchingAction ? matchingAction.evidence_url : null;
+                
+                htmlContent += \`
+                    <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee; page-break-inside: avoid;">
+                        <p style="margin: 0 0 5px 0; font-weight: bold; font-size: 14px;">\${index + 1}. \${q.text}</p>
+                        <p style="margin: 0 0 5px 0; font-size: 13px;"><strong>Calificación:</strong> \${score}/5</p>
+                        <p style="margin: 0 0 10px 0; font-size: 13px;"><strong>Comentarios:</strong> \${comments}</p>
+                        \${photoUrl ? \`<img src="\${photoUrl}" style="max-height: 150px; border-radius: 4px;" crossorigin="anonymous">\` : '<p style="font-size:12px; color:red;">Sin evidencia</p>'}
+                    </div>
+                \`;
+            });
+            
+            htmlContent += '</div>';
+            
+            const element = document.createElement('div');
+            element.innerHTML = htmlContent;
+            
+            const opt = {
+                margin:       10,
+                filename:     \`Auditoria_\${auditId}.pdf\`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            const originalText = btnElement.innerHTML;
+            btnElement.innerHTML = '⏳...';
+            btnElement.disabled = true;
+            
+            try {
+                await html2pdf().set(opt).from(element).save();
+            } catch (err) {
+                console.error(err);
+                alert('Error al generar PDF: ' + err.message);
+            } finally {
+                btnElement.innerHTML = originalText;
+                btnElement.disabled = false;
+            }
         }
 
         document.getElementById('cross-audit-form').addEventListener('submit', async function(e) {
@@ -5716,9 +5978,12 @@
                     </select>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeEditModal()">Cancelar</button>
-                <button class="btn btn-primary" onclick="saveActionEdit()">Guardar Cambios</button>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; width: 100%;">
+                <button id="btn-delete-action" class="btn hidden" style="background-color: #EC7063; color: white;" onclick="deleteAction()">🗑️ Borrar Acción</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-secondary" onclick="closeEditModal()">Cancelar</button>
+                    <button class="btn btn-primary" onclick="saveActionEdit()">Guardar Cambios</button>
+                </div>
             </div>
         </div>
     </div>
