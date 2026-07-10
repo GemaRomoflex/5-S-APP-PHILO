@@ -4720,19 +4720,19 @@
                     currentCategory = q.category;
                 }
                 
-                const matchingAction = items.find(act => act.actionId === \`\${auditId}-\${q.id}\`);
+                const matchingAction = items.find(act => act.actionId === `${auditId}-${q.id}`);
                 const score = matchingAction ? matchingAction.responseScore : 'N/A';
                 const comments = matchingAction ? matchingAction.comments.split('\\nNotas: ')[1] || 'Sin comentarios' : 'N/A';
                 const photoUrl = matchingAction ? matchingAction.evidence_url : null;
                 
-                htmlContent += \`
+                htmlContent += `
                     <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee; page-break-inside: avoid;">
-                        <p style="margin: 0 0 5px 0; font-weight: bold; font-size: 14px;">\${index + 1}. \${q.text}</p>
-                        <p style="margin: 0 0 5px 0; font-size: 13px;"><strong>Calificación:</strong> \${score}/5</p>
-                        <p style="margin: 0 0 10px 0; font-size: 13px;"><strong>Comentarios:</strong> \${comments}</p>
-                        \${photoUrl ? \`<img src="\${photoUrl}" style="max-height: 150px; border-radius: 4px;" crossorigin="anonymous">\` : '<p style="font-size:12px; color:red;">Sin evidencia</p>'}
+                        <p style="margin: 0 0 5px 0; font-weight: bold; font-size: 14px;">${index + 1}. ${q.text}</p>
+                        <p style="margin: 0 0 5px 0; font-size: 13px;"><strong>Calificación:</strong> ${score}/5</p>
+                        <p style="margin: 0 0 10px 0; font-size: 13px;"><strong>Comentarios:</strong> ${comments}</p>
+                        ${photoUrl ? `<img src="${photoUrl}" style="max-height: 150px; border-radius: 4px;" crossorigin="anonymous">` : '<p style="font-size:12px; color:red;">Sin evidencia</p>'}
                     </div>
-                \`;
+                `;
             });
             
             htmlContent += '</div>';
@@ -4742,7 +4742,7 @@
             
             const opt = {
                 margin:       10,
-                filename:     \`Auditoria_\${auditId}.pdf\`,
+                filename:     `Auditoria_${auditId}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
