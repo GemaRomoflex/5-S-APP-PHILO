@@ -1351,7 +1351,7 @@
             <h2>LeanView 5´S</h2>
             <p>Ingresa tus credenciales para acceder</p>
             <form id="login-form" onsubmit="event.preventDefault(); handleLogin(event); return false;">
-                <input type="email" id="login-email" class="login-input" placeholder="Correo Electrónico" required>
+                <input type="text" id="login-email" class="login-input" placeholder="Correo o Número de Empleado" required>
                 <input type="password" id="login-password" class="login-input" placeholder="Contraseña" required>
                 <button type="submit" id="login-submit-btn" class="login-btn">Entrar</button>
                 <div id="login-error-msg" class="login-error">Credenciales incorrectas. Intenta de nuevo.</div>
@@ -5505,7 +5505,11 @@
         async function handleLogin(e) {
             e.preventDefault();
             
-            const email = document.getElementById('login-email').value;
+            let email = document.getElementById('login-email').value.trim();
+            
+            if (email !== '' && !email.includes('@')) {
+                email = email + '@flex.local';
+            }
             const password = document.getElementById('login-password').value;
             const btn = document.getElementById('login-submit-btn');
             const errorMsg = document.getElementById('login-error-msg');
