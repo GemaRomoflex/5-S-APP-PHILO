@@ -1271,32 +1271,37 @@
             position: relative;
             width: 100%;
             height: 70px;
-            background: #555555;
-            border-bottom: 2px dashed #ffffff;
-            display: flex;
-            align-items: center;
+            background: linear-gradient(to bottom, #444 0%, #666 100%);
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-image: repeating-linear-gradient(45deg, #ff0000, #ff0000 15px, #ffffff 15px, #ffffff 30px) 1;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
-            margin-bottom: 5px;
+            margin-bottom: 15px;
+            overflow: visible; /* Para que se vean los labels */
         }
         
-        .track-lane:first-child { border-top: 2px solid #ffffff; margin-top: 10px; }
-        .track-lane:last-child { border-bottom: 2px solid #ffffff; }
+        .track-lane::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 0; right: 0;
+            height: 2px;
+            background: repeating-linear-gradient(to right, #ffd700, #ffd700 20px, transparent 20px, transparent 40px);
+            transform: translateY(-50%);
+        }
 
         .track-start, .track-finish {
             position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 40px;
-            background: repeating-conic-gradient(#fff 0 90deg, #000 0 180deg) 50% / 20px 20px;
+            top: 0; bottom: 0;
+            width: 30px;
+            background: repeating-conic-gradient(#000 0% 25%, #fff 0% 50%) 50% / 15px 15px;
             z-index: 2;
         }
-
         .track-start { left: 0; }
         .track-finish { right: 0; }
         
         .progress-trail {
             position: absolute;
-            left: 40px;
+            left: 30px;
             top: 50%;
             height: 8px;
             transform: translateY(-50%);
@@ -1306,8 +1311,8 @@
             transition: width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
             width: 0%;
         }
-        .progress-trail.trail-good { background-color: #00ff00; box-shadow: 0 0 10px #00ff00; }
-        .progress-trail.trail-bad { background-color: #ff3333; box-shadow: 0 0 10px #ff3333; }
+        .progress-trail.trail-good { background: linear-gradient(to right, rgba(0,255,0,0.2), rgba(0,255,0,0.8)); box-shadow: 0 0 10px #00ff00; }
+        .progress-trail.trail-bad { background: linear-gradient(to right, rgba(255,51,51,0.2), rgba(255,51,51,0.8)); box-shadow: 0 0 10px #ff3333; }
 
         .racer-circle {
             position: absolute;
@@ -1316,39 +1321,111 @@
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            background-color: white;
-            border: 3px solid #ff4d4d;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            background-color: transparent;
+            border: none;
+            box-shadow: none;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
             font-size: 16px;
-            color: #ff4d4d;
+            color: transparent;
             z-index: 10;
             transition: left 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-            background-size: var(--zoom-x, 750%) var(--zoom-y, 950%); 
-            background-image: none;
-        }
-
-        .racer-circle.has-sprite {
-            color: transparent; /* Ocultar el numero si tiene imagen */
-            background-image: url('iconos.webp');
+            background-size: contain; 
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
         }
 
         .racer-label {
             position: absolute;
-            top: -25px;
+            bottom: -22px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.9);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 12px;
             font-size: 11px;
             white-space: nowrap;
-            border: 1px solid var(--color-border);
+            border: 1px solid rgba(255,255,255,0.2);
+            text-shadow: 1px 1px 1px #000;
         }
+
+        /* PODIUM STYLES */
+        .podium-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 20px;
+            margin: 0 auto 40px auto;
+            padding: 30px;
+            background: linear-gradient(to bottom, #4CA1AF, #2C3E50);
+            border-radius: 15px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.4), 0 10px 20px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .podium-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 120px;
+            position: relative;
+        }
+
+        .podium-racer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 10px;
+            animation: floatKart 3s ease-in-out infinite;
+        }
+
+        @keyframes floatKart {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .podium-racer img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+        }
+
+        .podium-label {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 5px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .podium-base {
+            width: 100%;
+            text-align: center;
+            font-size: 36px;
+            font-weight: 900;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.4);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-bottom: none;
+        }
+
+        .step-gold .podium-base { height: 140px; background: linear-gradient(to bottom, #FFD700, #B8860B); border-radius: 12px 12px 0 0; }
+        .step-silver .podium-base { height: 100px; background: linear-gradient(to bottom, #E0E0E0, #A9A9A9); border-radius: 12px 12px 0 0; }
+        .step-bronze .podium-base { height: 70px; background: linear-gradient(to bottom, #CD7F32, #8B4513); border-radius: 12px 12px 0 0; }
     </style>
 </head>
 <body>
@@ -2809,14 +2886,34 @@
             'usis': 'Wendy', 'rma vlp': 'Dixie Kong', 'rma glp': 'Roy', 'mrb': 'Shy Guy', 'moonshine': 'Toad'
         };
 
+        const charToNumberMap = {
+            'mario': 1, 'luigi': 2, 'peach': 3, 'daisy': 4, 'rosalina': 5, 'pauline': 6,
+            'yoshi': 7, 'birdo': 8, 'toad': 9, 'toadette': 10, 'captain toad': 11, 'peachette': 12,
+            'koopa troopa': 13, 'dry bones': 14, 'hammer bro': 15, 'lakitu': 16, 'chargin chuck': 17, 'shy guy': 18,
+            'wario': 19, 'waluigi': 20, 'petey piranha': 21, 'king bob-omb': 22, 'king boo': 23, 'kamek': 24,
+            'donkey kong': 25, 'diddy kong': 26, 'dixie kong': 27, 'funky kong': 28, 'pauline classic': 29, 'nabbit': 30,
+            'baby mario': 31, 'baby luigi': 32, 'baby peach': 33, 'baby daisy': 34, 'baby rosalina': 35, 'monty mole': 36,
+            'bowser': 37, 'bowser jr.': 38, 'lemmy': 39, 'ludwig': 40, 'wendy': 41, 'roy': 42,
+            'iggy': 43, 'morton': 44, 'larry': 45, 'dry bowser': 46
+        };
+
+        function getCharImage(charName) {
+            if (!charName) return 'iconos/1.png'; // Por defecto Mario
+            const key = charName.toLowerCase().trim();
+            const num = charToNumberMap[key];
+            return num ? `iconos/${num}.png` : 'iconos/1.png';
+        }
+
         function renderCompetitionRace() {
             const container = document.getElementById('competition-track-container');
             
-            // Limpiar carriles anteriores manteniendo el título
+            // Limpiar carriles y podium anteriores
             const oldLanes = container.querySelectorAll('.track-lane');
             oldLanes.forEach(lane => lane.remove());
+            const oldPodium = container.querySelector('.podium-container');
+            if (oldPodium) oldPodium.remove();
             
-            // Extraer las locaciones (áreas) únicas directamente de los datos (ej. L12, L13, Control Tower)
+            // Extraer las locaciones (áreas) únicas directamente de los datos
             const excludedAreas = ['lobby', 'office', 'oficina', 'monitores', 'test room 1', 'test room 2', 'control tower'];
             const areaNames = [...new Set(globalFilteredData.map(item => item.cleanLocation))]
                 .filter(Boolean)
@@ -2896,28 +2993,62 @@
             // Ordenar de mayor a menor puntaje (Posiciones de la carrera)
             racersData.sort((a, b) => b.score - a.score);
             
+            // RENDERIZAR PÓDIUM (Top 3)
+            if (racersData.length >= 3) {
+                const r1 = racersData[0];
+                const r2 = racersData[1];
+                const r3 = racersData[2];
+                const c1 = areaCharacterMap[r1.name.toLowerCase().trim()];
+                const c2 = areaCharacterMap[r2.name.toLowerCase().trim()];
+                const c3 = areaCharacterMap[r3.name.toLowerCase().trim()];
+                
+                let podiumHtml = `
+                <div class="podium-container">
+                    <!-- PLATA (2do Lugar) -->
+                    <div class="podium-step step-silver">
+                        <div class="podium-racer" style="animation-delay: 0.2s;">
+                            <img src="${getCharImage(c2)}" onerror="this.src='mario.png'" />
+                            <div class="podium-label">${r2.name}</div>
+                        </div>
+                        <div class="podium-base">2</div>
+                    </div>
+                    <!-- ORO (1er Lugar) -->
+                    <div class="podium-step step-gold">
+                        <div class="podium-racer" style="animation-delay: 0s;">
+                            <img src="${getCharImage(c1)}" onerror="this.src='mario.png'" />
+                            <div class="podium-label">👑<br>${r1.name}</div>
+                        </div>
+                        <div class="podium-base">1</div>
+                    </div>
+                    <!-- BRONCE (3er Lugar) -->
+                    <div class="podium-step step-bronze">
+                        <div class="podium-racer" style="animation-delay: 0.4s;">
+                            <img src="${getCharImage(c3)}" onerror="this.src='mario.png'" />
+                            <div class="podium-label">${r3.name}</div>
+                        </div>
+                        <div class="podium-base">3</div>
+                    </div>
+                </div>`;
+                
+                container.insertAdjacentHTML('beforeend', podiumHtml);
+            }
+
+            // RENDERIZAR PISTA DE CARRERAS
             let html = '';
             racersData.forEach((racer, index) => {
                 const isGood = racer.overdueCount === 0;
                 const trailClass = isGood ? 'trail-good' : 'trail-bad';
                 
-                // Buscar el personaje que le toca a esta area
+                // Buscar el personaje que le toca a esta area y construir la URL
                 let charName = areaCharacterMap[racer.name.toLowerCase().trim()];
-                let bgPos = '';
-                let hasSprite = '';
-                if (charName && kartSprites[charName]) {
-                    const pos = kartSprites[charName];
-                    bgPos = `background-position: ${pos.x}% ${pos.y}%;`;
-                    hasSprite = 'has-sprite';
-                }
+                let bgImg = `background-image: url('${getCharImage(charName)}');`;
                 
                 html += `
                     <div class="track-lane">
                         <div class="track-start"></div>
                         <div class="track-finish"></div>
                         <div class="progress-trail ${trailClass}" id="trail-${index}"></div>
-                        <div class="racer-circle ${hasSprite}" id="racer-${index}" style="${bgPos}">
-                            ${index + 1}
+                        <div class="racer-circle" id="racer-${index}" style="${bgImg}">
                             <div class="racer-label">${racer.name} ${charName ? '('+charName+')' : ''}</div>
                         </div>
                     </div>
