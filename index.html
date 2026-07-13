@@ -1311,22 +1311,29 @@
 
         .racer-circle {
             position: absolute;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background-color: #ffffff; /* Blanco como solicitaste */
-            color: #000000;
-            font-weight: bold;
-            font-size: 14px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.8);
-            transition: left 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-            z-index: 10;
-            transform: translate(-50%, -50%);
-            border: 3px solid #333;
             top: 50%;
+            transform: translateY(-50%) translateX(-25px); /* Offset para centrar visualmente en el porcentaje */
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: white;
+            border: 3px solid #ff4d4d;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            color: #ff4d4d;
+            z-index: 10;
+            transition: left 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background-size: 600% 800%; /* Sprites de Mario Kart (6x8 grid) */
+            background-image: none; /* Por defecto sin imagen */
+        }
+
+        .racer-circle.has-sprite {
+            color: transparent; /* Ocultar el numero si tiene imagen */
+            background-image: url('iconos.webp');
         }
 
         .racer-label {
@@ -2758,6 +2765,30 @@
             }
         }
 
+        // DICCIONARIOS DE MARIO KART (SPRITES)
+        const kartSprites = {
+            'Mario': { x: 0, y: 0 }, 'Luigi': { x: 20, y: 0 }, 'Peach': { x: 40, y: 0 }, 'Daisy': { x: 60, y: 0 }, 'Rosalina': { x: 80, y: 0 }, 'Pauline': { x: 100, y: 0 },
+            'Yoshi': { x: 0, y: 14.285 }, 'Birdo': { x: 20, y: 14.285 }, 'Toad': { x: 40, y: 14.285 }, 'Toadette': { x: 60, y: 14.285 }, 'Captain Toad': { x: 80, y: 14.285 }, 'Peachette': { x: 100, y: 14.285 },
+            'Koopa Troopa': { x: 0, y: 28.571 }, 'Dry Bones': { x: 20, y: 28.571 }, 'Hammer Bro': { x: 40, y: 28.571 }, 'Lakitu': { x: 60, y: 28.571 }, 'Chargin Chuck': { x: 80, y: 28.571 }, 'Shy Guy': { x: 100, y: 28.571 },
+            'Wario': { x: 0, y: 42.857 }, 'Waluigi': { x: 20, y: 42.857 }, 'Petey Piranha': { x: 40, y: 42.857 }, 'King Bob-omb': { x: 60, y: 42.857 }, 'King Boo': { x: 80, y: 42.857 }, 'Kamek': { x: 100, y: 42.857 },
+            'Donkey Kong': { x: 0, y: 57.142 }, 'Diddy Kong': { x: 20, y: 57.142 }, 'Dixie Kong': { x: 40, y: 57.142 }, 'Funky Kong': { x: 60, y: 57.142 }, 'Pauline Classic': { x: 80, y: 57.142 }, 'Nabbit': { x: 100, y: 57.142 },
+            'Baby Mario': { x: 0, y: 71.428 }, 'Baby Luigi': { x: 20, y: 71.428 }, 'Baby Peach': { x: 40, y: 71.428 }, 'Baby Daisy': { x: 60, y: 71.428 }, 'Baby Rosalina': { x: 80, y: 71.428 }, 'Monty Mole': { x: 100, y: 71.428 },
+            'Bowser': { x: 0, y: 85.714 }, 'Bowser Jr.': { x: 20, y: 85.714 }, 'Lemmy': { x: 40, y: 85.714 }, 'Ludwig': { x: 60, y: 85.714 }, 'Wendy': { x: 80, y: 85.714 }, 'Roy': { x: 100, y: 85.714 },
+            'Iggy': { x: 0, y: 100 }, 'Morton': { x: 20, y: 100 }, 'Larry': { x: 40, y: 100 }, 'Dry Bowser': { x: 60, y: 100 }
+        };
+
+        const areaCharacterMap = {
+            'linea 15': 'Lemmy', 'linea 16': 'Kamek', 'equipment room': 'Larry', 'test room 1': 'Mario', 'tool room': 'Yoshi',
+            'critical repair 1': 'Wario', 'critical repair 2': 'Mario', 'critical repair 3': 'Bowser', 'linea 11 top': 'Baby Mario',
+            'l11 bottom': 'Baby Rosalina', 'linea 12 bottom': 'Birdo', 'l12 top': 'Bowser Jr.', 'linea 13': 'Toadette',
+            'linea 14 bottom': 'Toadette', 'l14 top': 'Peachette', 'ict': 'Daisy', 'control tower': 'Iggy', 'bonepile': 'Koopa Troopa',
+            'ensamble 1': 'Donkey Kong', 'ensamble 2': 'King Bob-omb', 'desensamble': 'Baby Luigi', 'debug': 'Baby Peach',
+            'ist': 'Peach', 'cuarto limpio (scp)': 'Diddy Kong', 'empaque': 'Funky Kong', 'conteos internos': 'Luigi',
+            'embarque': 'Waluigi', 'fresh market': 'King Boo', 'hv alto valor': 'Baby Daisy', 'incoming': 'Luigi',
+            'receipt': 'Petey Piranha', 'smkt backend': 'Lakitu', 'smkt smt': 'Dry Bones', 'surtido de material': 'Pauline',
+            'usis': 'Wendy', 'rma vlp': 'Peach', 'rma glp': 'Roy', 'mrb': 'Shy Guy', 'moonshine': 'Toad'
+        };
+
         function renderCompetitionRace() {
             const container = document.getElementById('competition-track-container');
             
@@ -2850,14 +2881,24 @@
                 const isGood = racer.overdueCount === 0;
                 const trailClass = isGood ? 'trail-good' : 'trail-bad';
                 
+                // Buscar el personaje que le toca a esta area
+                let charName = areaCharacterMap[racer.name.toLowerCase().trim()];
+                let bgPos = '';
+                let hasSprite = '';
+                if (charName && kartSprites[charName]) {
+                    const pos = kartSprites[charName];
+                    bgPos = `background-position: ${pos.x}% ${pos.y}%;`;
+                    hasSprite = 'has-sprite';
+                }
+                
                 html += `
                     <div class="track-lane">
                         <div class="track-start"></div>
                         <div class="track-finish"></div>
                         <div class="progress-trail ${trailClass}" id="trail-${index}"></div>
-                        <div class="racer-circle" id="racer-${index}">
+                        <div class="racer-circle ${hasSprite}" id="racer-${index}" style="${bgPos}">
                             ${index + 1}
-                            <div class="racer-label">${racer.name}</div>
+                            <div class="racer-label">${racer.name} ${charName ? '('+charName+')' : ''}</div>
                         </div>
                     </div>
                 `;
