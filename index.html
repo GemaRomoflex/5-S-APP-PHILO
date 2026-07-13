@@ -1327,7 +1327,8 @@
             color: #ff4d4d;
             z-index: 10;
             transition: left 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-            background-size: 600% 800%; /* Sprites de Mario Kart (6x8 grid) */
+            /* Zoom a los Sprites para ocultar a los vecinos (original 600% 800%) */
+            background-size: 750% 950%; 
             background-image: none; /* Por defecto sin imagen */
         }
 
@@ -2778,15 +2779,15 @@
         };
 
         const areaCharacterMap = {
-            'linea 15': 'Lemmy', 'linea 16': 'Kamek', 'equipment room': 'Larry', 'test room 1': 'Mario', 'tool room': 'Yoshi',
-            'critical repair 1': 'Wario', 'critical repair 2': 'Mario', 'critical repair 3': 'Bowser', 'linea 11 top': 'Baby Mario',
-            'l11 bottom': 'Baby Rosalina', 'linea 12 bottom': 'Birdo', 'l12 top': 'Bowser Jr.', 'linea 13': 'Toadette',
-            'linea 14 bottom': 'Toadette', 'l14 top': 'Peachette', 'ict': 'Daisy', 'control tower': 'Iggy', 'bonepile': 'Koopa Troopa',
-            'ensamble 1': 'Donkey Kong', 'ensamble 2': 'King Bob-omb', 'desensamble': 'Baby Luigi', 'debug': 'Baby Peach',
-            'ist': 'Peach', 'cuarto limpio (scp)': 'Diddy Kong', 'empaque': 'Funky Kong', 'conteos internos': 'Luigi',
+            'linea 15': 'Lemmy', 'linea 16': 'Kamek', 'equipment room': 'Larry', 'test room 1': 'Captain Toad', 'tool room': 'Yoshi',
+            'critical repair 1': 'Wario', 'critical repair 2': 'Mario', 'critical repair 3': 'Bowser', 'l11 top': 'Baby Mario',
+            'l11 bottom': 'Baby Rosalina', 'l12 bottom': 'Birdo', 'l12 top': 'Bowser Jr.', 'l13': 'Chargin Chuck',
+            'l14 bottom': 'Toadette', 'l14 top': 'Peachette', 'ict': 'Daisy', 'control tower': 'Iggy', 'bonepile': 'Koopa Troopa',
+            'assembly 1': 'Donkey Kong', 'assembly 2': 'King Bob-omb', 'dissasembly': 'Baby Luigi', 'debug': 'Baby Peach',
+            'ist': 'Peach', 'cuarto limpio': 'Diddy Kong', 'pack': 'Funky Kong', 'conteos internos': 'Hammer Bro',
             'embarque': 'Waluigi', 'fresh market': 'King Boo', 'hv alto valor': 'Baby Daisy', 'incoming': 'Luigi',
             'receipt': 'Petey Piranha', 'smkt backend': 'Lakitu', 'smkt smt': 'Dry Bones', 'surtido de material': 'Pauline',
-            'usis': 'Wendy', 'rma vlp': 'Peach', 'rma glp': 'Roy', 'mrb': 'Shy Guy', 'moonshine': 'Toad'
+            'usis': 'Wendy', 'rma vlp': 'Dixie Kong', 'rma glp': 'Roy', 'mrb': 'Shy Guy', 'moonshine': 'Toad'
         };
 
         function renderCompetitionRace() {

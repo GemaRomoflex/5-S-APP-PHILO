@@ -7,23 +7,23 @@ Tool room,Inkling Chico
 Critical repair 1,Metal Mario 
 Critical repair 2,Mario
 Critical repair 3,Bowser
-Linea 11 TOP,Baby Mario
+L11 TOP,Baby Mario
 L11 BOTTOM,Baby Rosalina 
-Linea 12 BOTTOM,Peach Oro Rosa
+L12 BOTTOM,Peach Oro Rosa
 L12 TOP,Bowser Jr.
-Linea 13,Canela (Isabelle) 
-Linea 14 BOTTOM,Toadette
+L13,Canela (Isabelle) 
+L14 BOTTOM,Toadette
 L14 TOP,Peachette
 ICT,Daisy
 Control tower,Iggy
 Bonepile,Koopa Troopa
-Ensamble 1,Donkey Kong
-Ensamble 2,Wiggler
-Desensamble,Baby Luigi
+Assembly 1,Donkey Kong
+Assembly 2,Wiggler
+Dissasembly,Baby Luigi
 Debug,Baby Peach
 IST,Peach 
-Cuarto limpio (SCP),Diddy Kong
-Empaque,Funky Kong
+Cuarto limpio,Diddy Kong
+Pack,Funky Kong
 Conteos internos,Mario Mapache
 Embarque,Waluigi
 Fresh market,Rey Boo
