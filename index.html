@@ -6042,7 +6042,8 @@
                 // Función auxiliar para formatear la fecha
                 const formatD = (dStr) => {
                     if (!dStr) return 'Sin fecha';
-                    const [y, m, d] = dStr.split('-');
+                    const dateOnly = dStr.split('T')[0].split(' ')[0];
+                    const [y, m, d] = dateOnly.split('-');
                     return `${d}/${m}/${y}`;
                 };
                 
@@ -6052,7 +6053,9 @@
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
                     
-                    const dueDate = new Date(action.dueDate + 'T00:00:00');
+                    // Aseguramos capturar solo YYYY-MM-DD para evitar Invalid Date
+                    const dateStringOnly = action.dueDate.split('T')[0].split(' ')[0];
+                    const dueDate = new Date(dateStringOnly + 'T00:00:00');
                     dueDate.setHours(0, 0, 0, 0);
                     
                     // Diferencia en ms y luego a días
