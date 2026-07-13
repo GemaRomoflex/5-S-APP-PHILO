@@ -1485,6 +1485,14 @@
                         </div>
                     </section>
                     
+                    <!-- SECCIÓN DE ENVÍO DE CORREOS AUTOMATIZADO -->
+                    <section class="upload-section" id="admin-email-section" style="background-color: #f0f9ff; border-color: #0ea5e9; padding: 20px; text-align: center;">
+                        <h3 style="color: #0284c7; margin-bottom: 10px;">Sincronización de Notificaciones 5S (Power Automate)</h3>
+                        <p style="color: #334155; margin-bottom: 15px;">Calcula los atrasos de las acciones abiertas y envía las notificaciones a los responsables correspondientes.</p>
+                        <button id="btn-sync-emails" class="btn btn-primary" onclick="sendAutomatedEmails()" style="font-size: 16px; padding: 10px 20px;">📩 Sincronizar y Enviar Alertas 5S</button>
+                        <div id="email-sync-status" class="alert-info hidden" style="margin-top: 15px;"></div>
+                    </section>
+                    
                     <!-- TABLA DE ACCIONES (Movida a view-data) -->
                     <section class="table-card hidden" id="data-table-section">
                         <div class="chart-header" style="border-bottom: none; padding-bottom: 0;">
@@ -2060,7 +2068,7 @@
                         ◀ Volver al Dashboard
                     </button>
                     <h2 id="detail-view-title" style="margin: 0; font-size: 20px; color: var(--color-text);">Detalle de Acciones</h2>
-                    <button class="btn btn-secondary" onclick="downloadDetailSnapshot(this)" style="margin-left: auto;">📸 Descargar Imagen</button>
+                    <button class="btn btn-primary" onclick="downloadDetailSnapshot(this)" style="margin-left: auto;">📸 Descargar Imagen</button>
                 </div>
 
                 <script>
@@ -5537,6 +5545,10 @@
             } else {
                 // Login exitoso
                 window.currentUserId = data.user.id;
+                
+                // Autoguardar el correo en la tabla perfiles para que se llene sola
+                await supabaseClient.from('perfiles').update({ email: email }).eq('id', data.user.id);
+                
                 const { data: perfilData, error: perfilError } = await supabaseClient.from('perfiles').select('*').eq('id', data.user.id).single();
                 
                 let userRole = 'Auditor'; // Default seguro
@@ -5990,6 +6002,207 @@
                 </div>
             </div>
         </div>
-    </div>
+        // ==========================================
+        // INTEGRACIÓN POWER AUTOMATE (CORREOS)
+        // ==========================================
+        async function sendAutomatedEmails() {
+            const btn = document.getElementById('btn-sync-emails');
+            const statusDiv = document.getElementById('email-sync-status');
+            
+            if (!confirm('¿Deseas calcular y enviar las alertas de correo a los responsables atrasados ahora?')) return;
+            
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Procesando y Enviando (no cierres la página)...';
+            statusDiv.classList.add('hidden');
+            
+            try {
+                // 1. Obtener acciones abiertas
+                const { data: actionsData, error: actionsError } = await supabaseClient
+                    .from('actions')
+                    .select('*')
+                    .eq('status', 'Open');
+                    
+                if (actionsError) throw actionsError;
+                
+                // 2. Obtener el directorio de responsables
+                const { data: directoryData, error: directoryError } = await supabaseClient
+                    .from('owners_directory')
+                    .select('*');
+                    
+                if (directoryError) throw directoryError;
+                
+                // URL DE MAKE (Reemplazo de Power Automate)
+                const WEBHOOK_URL = 'https://hook.us2.make.com/8jnfui9847pdjuebjt469bqtuhfbelu7';
+                
+                let correosEnviados = 0;
+                
+                // Función auxiliar para formatear la fecha
+                const formatD = (dStr) => {
+                    if (!dStr) return 'Sin fecha';
+                    const [y, m, d] = dStr.split('-');
+                    return `${d}/${m}/${y}`;
+                };
+                
+                for (let action of actionsData) {
+                    if (!action.dueDate) continue;
+                    
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    
+                    const dueDate = new Date(action.dueDate + 'T00:00:00');
+                    dueDate.setHours(0, 0, 0, 0);
+                    
+                    // Diferencia en ms y luego a días
+                    const diffTime = dueDate.getTime() - today.getTime();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    // Buscar al responsable en el directorio
+                    const ownerRow = directoryData.find(o => 
+                        o.owner_name && action.owner && 
+                        o.owner_name.trim().toLowerCase() === action.owner.trim().toLowerCase()
+                    );
+                    
+                    if (!ownerRow || !ownerRow.correo_responsable) continue;
+                    
+                    let destinatarios = ownerRow.correo_responsable;
+                    let con_copia = '';
+                    let asunto = '';
+                    let htmlTemplate = '';
+                    let enviar = false;
+                    
+                    // LOGICA DE ESCALAMIENTO
+                    if (diffDays === 2 || diffDays === 1) {
+                        asunto = `Recordatorio Preventivo 5S: ${action.actionId}`;
+                        htmlTemplate = `
+                        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                            <div style="background-color: #009ADD; padding: 20px; text-align: center;">
+                                <h2 style="color: white; margin: 0;">Recordatorio Preventivo 5S</h2>
+                            </div>
+                            <div style="padding: 20px; color: #333;">
+                                <p>Hola <strong>${ownerRow.owner_name}</strong>,</p>
+                                <p>Este es un recordatorio amable de que tienes una acción de mejora 5S próxima a vencer en <strong>${diffDays} día(s)</strong>.</p>
+                                <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #009ADD; margin: 20px 0;">
+                                    <p style="margin: 0 0 10px 0;"><strong>ID Acción:</strong> ${action.actionId}</p>
+                                    <p style="margin: 0 0 10px 0;"><strong>Área:</strong> ${action.area || 'N/A'}</p>
+                                    <p style="margin: 0;"><strong>Comentarios:</strong> ${action.comments || ''}</p>
+                                    <p style="margin: 10px 0 0 0;"><strong>Fecha Límite:</strong> ${formatD(action.dueDate)}</p>
+                                </div>
+                                <p>Por favor, asegura el cierre de esta acción en piso y actualiza el sistema para mantener nuestras áreas al estándar.</p>
+                                <p>Saludos cordiales,<br><em>Departamento de Lean</em></p>
+                            </div>
+                        </div>`;
+                        enviar = true;
+                    } 
+                    else if (diffDays === 0 || diffDays === -3) {
+                        asunto = `ACCIÓN VENCIDA 5S: ${action.actionId}`;
+                        htmlTemplate = `
+                        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                            <div style="background-color: #f59e0b; padding: 20px; text-align: center;">
+                                <h2 style="color: white; margin: 0;">Acción 5S Vencida (Overdue)</h2>
+                            </div>
+                            <div style="padding: 20px; color: #333;">
+                                <p>Hola <strong>${ownerRow.owner_name}</strong>,</p>
+                                <p>El sistema detecta que la siguiente acción de 5S ha superado su fecha compromiso y se encuentra <strong>vencida${diffDays === -3 ? ' por 3 días' : ''}</strong>.</p>
+                                <div style="background-color: #fffbeb; padding: 15px; border-left: 4px solid #f59e0b; margin: 20px 0;">
+                                    <p style="margin: 0 0 10px 0;"><strong>ID Acción:</strong> ${action.actionId}</p>
+                                    <p style="margin: 0 0 10px 0;"><strong>Área:</strong> ${action.area || 'N/A'}</p>
+                                    <p style="margin: 0;"><strong>Comentarios:</strong> ${action.comments || ''}</p>
+                                </div>
+                                <p>Es importante dar cierre a este hallazgo a la brevedad para no impactar las métricas de tu departamento.</p>
+                                <p>Saludos cordiales,<br><em>Departamento de Lean</em></p>
+                            </div>
+                        </div>`;
+                        enviar = true;
+                    }
+                    else if (diffDays === -7 || diffDays === -14) {
+                        if (diffDays === -7 && ownerRow.correo_ingeniero) {
+                            con_copia = ownerRow.correo_ingeniero;
+                        } else if (diffDays === -14) {
+                            const ccs = [];
+                            if (ownerRow.correo_ingeniero) ccs.push(ownerRow.correo_ingeniero);
+                            if (ownerRow.correo_manager) ccs.push(ownerRow.correo_manager);
+                            con_copia = ccs.join(';');
+                        }
+                        
+                        asunto = `ESCALAMIENTO NIVEL ${diffDays === -7 ? '1' : '2'} - Acción 5S Atrasada: ${action.actionId}`;
+                        htmlTemplate = `
+                        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                            <div style="background-color: #ef4444; padding: 20px; text-align: center;">
+                                <h2 style="color: white; margin: 0;">Escalamiento: Acción 5S Muy Atrasada</h2>
+                            </div>
+                            <div style="padding: 20px; color: #333;">
+                                <p>Hola equipo,</p>
+                                <p>Este es un mensaje automático de escalamiento. La acción asignada a <strong>${ownerRow.owner_name}</strong> tiene <strong>${Math.abs(diffDays)} días de atraso</strong>.</p>
+                                <div style="background-color: #fef2f2; padding: 15px; border-left: 4px solid #ef4444; margin: 20px 0;">
+                                    <p style="margin: 0 0 10px 0;"><strong>ID Acción:</strong> ${action.actionId}</p>
+                                    <p style="margin: 0 0 10px 0;"><strong>Área:</strong> ${action.area || 'N/A'}</p>
+                                    <p style="margin: 0;"><strong>Comentarios:</strong> ${action.comments || ''}</p>
+                                </div>
+                                <p>Se solicita el apoyo del liderazgo del área para resolver este hallazgo y prevenir la recurrencia de acciones estancadas.</p>
+                                <p>Saludos cordiales,<br><em>Departamento de Lean</em></p>
+                            </div>
+                        </div>`;
+                        enviar = true;
+                    }
+                    else if (diffDays <= -21) {
+                        const ccs = [];
+                        if (ownerRow.correo_ingeniero) ccs.push(ownerRow.correo_ingeniero);
+                        if (ownerRow.correo_manager) ccs.push(ownerRow.correo_manager);
+                        con_copia = ccs.join(';');
+                        
+                        asunto = `CRÍTICO: Acción 5S sin resolver (${action.actionId}) - Solicitud de Reunión`;
+                        htmlTemplate = `
+                        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 2px solid #7f1d1d; border-radius: 8px; overflow: hidden;">
+                            <div style="background-color: #7f1d1d; padding: 20px; text-align: center;">
+                                <h2 style="color: white; margin: 0;">ACCIÓN CRÍTICA: Se requiere revisión</h2>
+                            </div>
+                            <div style="padding: 20px; color: #333;">
+                                <p>Estimados líderes,</p>
+                                <p>La siguiente acción ha permanecido abierta sin resolución por <strong>${Math.abs(diffDays)} días</strong> tras su vencimiento.</p>
+                                <div style="background-color: #fef2f2; padding: 15px; border-left: 4px solid #7f1d1d; margin: 20px 0;">
+                                    <p style="margin: 0 0 10px 0;"><strong>Responsable:</strong> ${ownerRow.owner_name}</p>
+                                    <p style="margin: 0 0 10px 0;"><strong>Área:</strong> ${action.area || 'N/A'}</p>
+                                    <p style="margin: 0;"><strong>Hallazgo:</strong> ${action.comments || ''}</p>
+                                </div>
+                                <p><strong>Siguientes pasos:</strong> Por favor, envíen disponibilidad para agendar una reunión en piso y analizar por qué este hallazgo crítico no ha sido abordado, así como los recursos que les hacen falta para cerrarlo.</p>
+                                <p>Atentamente,<br><em>Departamento de Lean</em></p>
+                            </div>
+                        </div>`;
+                        enviar = true;
+                    }
+                    
+                    if (enviar) {
+                        const payload = {
+                            destinatarios: destinatarios,
+                            con_copia: con_copia,
+                            asunto: asunto,
+                            cuerpo_html: htmlTemplate
+                        };
+                        
+                        await fetch(WEBHOOK_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        
+                        correosEnviados++;
+                        // Pausa de 1 segundo para no saturar Power Automate
+                        await new Promise(r => setTimeout(r, 1000));
+                    }
+                }
+                
+                statusDiv.innerHTML = `<strong>Éxito:</strong> Se enviaron ${correosEnviados} correo(s) a través de Power Automate.`;
+                statusDiv.classList.remove('hidden');
+                
+            } catch (err) {
+                console.error(err);
+                statusDiv.innerHTML = `<strong>Error:</strong> No se pudo procesar el envío de correos. ${err.message || ''}`;
+                statusDiv.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '📩 Sincronizar y Enviar Alertas 5S';
+            }
+        }
+    </script>
 </body>
 </html>
