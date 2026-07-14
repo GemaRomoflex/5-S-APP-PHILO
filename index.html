@@ -1462,6 +1462,34 @@
         </div>
     </div>
 
+    <!-- MODAL GENERADOR DE REPORTES (CANVA) -->
+    <div id="report-modal" class="login-overlay" style="display: none; z-index: 9999;">
+        <div class="login-card" style="border-top: 5px solid #0284c7; min-width: 400px;">
+            <h2 style="color: #0284c7; margin-bottom: 10px;">Generador de Reportes</h2>
+            <p style="margin-bottom: 20px; font-size: 14px; color: var(--color-text-muted);">Selecciona el tipo de reporte para descargar la imagen PNG.</p>
+            
+            <div style="margin-bottom: 15px; text-align: left;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Tipo de Reporte:</label>
+                <select id="report-type-select" class="login-input" onchange="toggleReportDate()" style="cursor: pointer;">
+                    <option value="daily">Reporte Diario</option>
+                    <option value="weekly">Reporte Semanal</option>
+                    <option value="due_soon">Acciones Por Vencer</option>
+                    <option value="overdue">Acciones Vencidas</option>
+                </select>
+            </div>
+            
+            <div id="report-date-container" style="margin-bottom: 20px; text-align: left;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Fecha de Corte:</label>
+                <input type="date" id="report-date-input" class="login-input">
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="button" class="login-btn" style="background-color: #64748b;" onclick="document.getElementById('report-modal').style.display='none'">Cancelar</button>
+                <button type="button" id="btn-generate-report" class="login-btn" style="background-color: #0ea5e9;" onclick="generateVisualReport()">Generar PNG</button>
+            </div>
+        </div>
+    </div>
+
     <div class="app-layout">
         
         <!-- SIDEBAR DE NAVEGACIÓN -->
@@ -1507,6 +1535,10 @@
                     <span class="nav-icon">🏭</span>
                     <span>Areas</span>
                 </a>
+                <a class="nav-item" id="nav-reports" onclick="openReportModal()" title="Genera reportes fotográficos automáticos para correo">
+                    <span class="nav-icon" style="color: #0ea5e9;">📸</span>
+                    <span style="color: #0ea5e9; font-weight: bold;">Export PNG</span>
+                </a>
             </nav>
 
             <div style="margin-top: auto; padding-bottom: 20px;">
@@ -1518,6 +1550,32 @@
                 </nav>
             </div>
         </aside>
+
+        <!-- CONTENEDOR OCULTO PARA HTML2CANVAS -->
+        <div id="hidden-report-container" style="position: absolute; left: -9999px; top: 0; width: 800px; background: white; z-index: -1;">
+            <div id="visual-report" style="padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; background-color: #fff; background-image: url('plantilla de comunicados.png'); background-size: 100% auto; background-repeat: repeat-y; background-position: top center; width: 800px; min-height: 1200px;">
+                <!-- Espaciado superior para no escribir encima del banner impreso en tu imagen -->
+                <div style="width: 100%; height: 230px;"></div>
+                
+                <!-- Greeting -->
+                <div style="padding: 0 50px 20px 50px; font-size: 16px; line-height: 1.5;">
+                    <p style="margin-top: 0;">Buen día equipo,</p>
+                    <p id="report-greeting-text">Les comparto la información correspondiente a las auditorías realizadas el día de hoy.<br>Agradeceré su pronta colaboración en la atención de las acciones generadas. Como recordatorio, se cuenta con un plazo de 7 días para su cierre antes de que pasen a estatus overdue.</p>
+                    <p style="margin-bottom: 0;">Saludos cordiales,<br><strong>Gema Romo</strong></p>
+                </div>
+                
+                <!-- Big Title/Date -->
+                <div style="text-align: center; margin: 30px 0;">
+                    <h1 id="report-big-date" style="font-size: 56px; color: #005A9C; margin: 0; font-weight: 900;">10 de Junio</h1>
+                    <h2 id="report-subtitle" style="font-size: 28px; color: #333; margin: 5px 0;">Calificación de Auditorías 5s</h2>
+                </div>
+                
+                <!-- Dynamic Content Area -->
+                <div id="report-dynamic-content" style="padding: 0 50px 50px 50px;">
+                    <!-- Areas or Actions will be injected here -->
+                </div>
+            </div>
+        </div>
 
         <!-- CONTENIDO PRINCIPAL -->
         <div class="main-content">
@@ -6384,6 +6442,305 @@
                 btn.disabled = false;
                 btn.innerHTML = '📩 Sincronizar y Enviar Alertas 5S';
             }
+        }
+
+        // ==========================================
+        // GENERADOR DE REPORTES (HTML2CANVAS)
+        // ==========================================
+        function openReportModal() {
+            document.getElementById('report-modal').style.display = 'flex';
+            document.getElementById('report-date-input').valueAsDate = new Date();
+            toggleReportDate();
+        }
+
+        function toggleReportDate() {
+            const type = document.getElementById('report-type-select').value;
+            const dateContainer = document.getElementById('report-date-container');
+            if (type === 'daily' || type === 'weekly') {
+                dateContainer.style.display = 'block';
+            } else {
+                dateContainer.style.display = 'none';
+            }
+        }
+
+        async function generateVisualReport() {
+            const btn = document.getElementById('btn-generate-report');
+            btn.innerText = 'Generando...';
+            btn.disabled = true;
+
+            const type = document.getElementById('report-type-select').value;
+            const dateStr = document.getElementById('report-date-input').value; // YYYY-MM-DD
+            const dynamicContent = document.getElementById('report-dynamic-content');
+            const bigDate = document.getElementById('report-big-date');
+            const subtitle = document.getElementById('report-subtitle');
+            const greetingText = document.getElementById('report-greeting-text');
+            
+            let selectedDate = new Date();
+            if (dateStr) {
+                const parts = dateStr.split('-');
+                selectedDate = new Date(parts[0], parts[1]-1, parts[2]);
+            }
+            
+            const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            
+            dynamicContent.innerHTML = ''; // Limpiar
+            let reportData = [];
+            
+            if (type === 'daily') {
+                bigDate.innerText = `${selectedDate.getDate()} de ${months[selectedDate.getMonth()]}`;
+                subtitle.innerText = 'Calificación de Auditorías 5s (Diario)';
+                greetingText.innerHTML = 'Les comparto la información correspondiente a las auditorías realizadas el día de hoy.<br>Agradeceré su pronta colaboración en la atención de las acciones generadas. Como recordatorio, se cuenta con un plazo de 7 días para su cierre antes de que pasen a estatus overdue.';
+                
+                reportData = globalFilteredData.filter(item => {
+                    if (!item.openDate || item.openDate === 'Sin Fecha') return false;
+                    let dStr = item.openDate.replace(/-/g, '/').split(' ')[0];
+                    let parts = dStr.split('/');
+                    let d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`); // Assume DD/MM/YYYY
+                    if(isNaN(d)) d = new Date(dStr);
+                    return d.getFullYear() === selectedDate.getFullYear() && d.getMonth() === selectedDate.getMonth() && d.getDate() === selectedDate.getDate();
+                });
+                
+                await renderAreasCharts(reportData, dynamicContent);
+                
+            } else if (type === 'weekly') {
+                const firstDay = new Date(selectedDate);
+                const day = firstDay.getDay();
+                const diff = firstDay.getDate() - day + (day === 0 ? -6 : 1);
+                firstDay.setDate(diff);
+                const lastDay = new Date(firstDay);
+                lastDay.setDate(firstDay.getDate() + 6);
+                
+                bigDate.innerText = `Semana del ${firstDay.getDate()} al ${lastDay.getDate()} de ${months[lastDay.getMonth()]}`;
+                subtitle.innerText = 'Calificación de Auditorías 5s (Semanal)';
+                greetingText.innerHTML = 'Les comparto el resumen semanal correspondiente a las auditorías de 5S.<br>Agradeceré su pronta colaboración en la atención de las acciones generadas.';
+                
+                reportData = globalFilteredData.filter(item => {
+                    if (!item.openDate || item.openDate === 'Sin Fecha') return false;
+                    let dStr = item.openDate.replace(/-/g, '/').split(' ')[0];
+                    let parts = dStr.split('/');
+                    let d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                    if(isNaN(d)) d = new Date(dStr);
+                    d.setHours(0,0,0,0);
+                    firstDay.setHours(0,0,0,0);
+                    lastDay.setHours(23,59,59,999);
+                    return d >= firstDay && d <= lastDay;
+                });
+                
+                await renderAreasCharts(reportData, dynamicContent);
+                
+            } else if (type === 'due_soon') {
+                bigDate.innerText = 'Por Vencer';
+                subtitle.innerText = 'Acciones Críticas (1-3 días)';
+                greetingText.innerHTML = 'Les comparto la lista de acciones que están a punto de vencer. Agradeceré su atención inmediata para evitar retrasos.';
+                
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                
+                reportData = globalFilteredData.filter(item => {
+                    if (item.status && item.status.toLowerCase() === 'closed on time') return false;
+                    if (!item.dueDate || item.dueDate === 'Sin Fecha') return false;
+                    const dueDateParts = item.dueDate.replace(/-/g, '/').split(' ')[0].split('/');
+                    const dDate = new Date(`${dueDateParts[2]}/${dueDateParts[1]}/${dueDateParts[0]}`);
+                    const diffTime = dDate - today;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    return diffDays > 0 && diffDays <= 3;
+                });
+                
+                renderActionList(reportData, dynamicContent, '#f59e0b');
+                
+            } else if (type === 'overdue') {
+                bigDate.innerText = 'Vencidas';
+                subtitle.innerText = 'Acciones Overdue';
+                greetingText.innerHTML = 'Les comparto la lista de acciones VENCIDAS. Se requiere plan de acción y cierre INMEDIATO.';
+                
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                
+                reportData = globalFilteredData.filter(item => {
+                    if (item.status && item.status.toLowerCase() === 'closed on time') return false;
+                    if (!item.dueDate || item.dueDate === 'Sin Fecha') return false;
+                    const dueDateParts = item.dueDate.replace(/-/g, '/').split(' ')[0].split('/');
+                    const dDate = new Date(`${dueDateParts[2]}/${dueDateParts[1]}/${dueDateParts[0]}`);
+                    const diffTime = dDate - today;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    return diffDays < 0;
+                });
+                
+                renderActionList(reportData, dynamicContent, '#dc2626');
+            }
+            
+            // Renderizar y Descargar (damos margen para que las graficas dibujen)
+            setTimeout(() => {
+                const target = document.getElementById('visual-report');
+                html2canvas(target, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `Reporte_5S_${type}_${Date.now()}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    
+                    document.getElementById('report-modal').style.display = 'none';
+                    btn.innerText = 'Generar PNG';
+                    btn.disabled = false;
+                }).catch(err => {
+                    console.error("Error al generar imagen:", err);
+                    alert("Hubo un error al generar la imagen. Revisa la consola.");
+                    btn.innerText = 'Generar PNG';
+                    btn.disabled = false;
+                });
+            }, 800);
+        }
+
+        async function renderAreasCharts(data, container) {
+            if(data.length === 0) {
+                container.innerHTML = '<p style="text-align:center; font-size: 20px; color: #666; margin-top: 50px;">No hay auditorías registradas en este periodo.</p>';
+                return;
+            }
+            
+            const areas = [...new Set(data.map(i => i.cleanLocation))].filter(Boolean);
+            let html = '';
+            
+            for (let i = 0; i < areas.length; i++) {
+                const areaName = areas[i];
+                const areaData = data.filter(item => item.cleanLocation === areaName);
+                
+                const validScores = areaData.filter(x => parseInt(x.responseScore) > 0);
+                const avgScoreRaw = validScores.length > 0 ? (validScores.reduce((s, x) => s + parseInt(x.responseScore), 0) / validScores.length) : 0;
+                const avgScore = avgScoreRaw > 0 ? Math.round((avgScoreRaw / 5) * 100) : 0;
+                
+                const actionsPerOwner = {};
+                areaData.forEach(item => {
+                    const owner = item.owner || 'Sin Asignar';
+                    if (item.actionId) {
+                        actionsPerOwner[owner] = (actionsPerOwner[owner] || 0) + 1;
+                    }
+                });
+                
+                const canvasId = 'chart-report-' + i;
+                
+                html += `
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 30px 0; border-top: 2px solid #e2e8f0;">
+                        <div style="flex: 1;">
+                            <h3 style="margin: 0; font-size: 20px; color: #64748b; text-transform: uppercase;">Área auditada</h3>
+                            <p style="margin: 5px 0 0 0; font-size: 42px; font-weight: 800; color: #0f172a;">${areaName}</p>
+                        </div>
+                        <div style="flex: 1; text-align: center;">
+                            <h3 style="margin: 0; font-size: 20px; color: #64748b; text-transform: uppercase;">Calificación general</h3>
+                            <div style="background-color: #f59e0b; color: white; display: inline-block; padding: 15px 40px; border-radius: 40px; font-size: 48px; font-weight: 900; margin-top: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                                ${avgScore}%
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                if (Object.keys(actionsPerOwner).length > 0) {
+                    html += `
+                        <div style="width: 100%; text-align: center; margin-bottom: 50px; background: #0f172a; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+                            <h4 style="margin: 0 0 20px 0; color: white; font-size: 24px;">Acciones Generadas</h4>
+                            <div style="width: 100%; height: 300px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
+                                <canvas id="${canvasId}"></canvas>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div style="width: 100%; text-align: center; margin-bottom: 50px; background: #ecfdf5; border: 2px dashed #10b981; border-radius: 16px; padding: 30px; box-sizing: border-box;">
+                            <h4 style="margin: 0; color: #047857; font-size: 24px;">¡Felicidades! Cero acciones generadas.</h4>
+                        </div>
+                    `;
+                }
+            }
+            
+            container.innerHTML = html;
+            
+            // Dibujar graficas
+            setTimeout(() => {
+                for (let i = 0; i < areas.length; i++) {
+                    const areaName = areas[i];
+                    const areaData = data.filter(item => item.cleanLocation === areaName);
+                    const actionsPerOwner = {};
+                    areaData.forEach(item => {
+                        const owner = item.owner || 'Sin Asignar';
+                        if (item.actionId) {
+                            actionsPerOwner[owner] = (actionsPerOwner[owner] || 0) + 1;
+                        }
+                    });
+                    
+                    if (Object.keys(actionsPerOwner).length > 0) {
+                        const ctx = document.getElementById('chart-report-' + i);
+                        if (ctx) {
+                            new Chart(ctx, {
+                                type: 'bar',
+                                data: {
+                                    labels: Object.keys(actionsPerOwner),
+                                    datasets: [{
+                                        data: Object.values(actionsPerOwner),
+                                        backgroundColor: '#7dd3fc',
+                                        borderColor: '#0284c7',
+                                        borderWidth: 2,
+                                        borderRadius: 4
+                                    }]
+                                },
+                                options: {
+                                    animation: false,
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: { display: false },
+                                        datalabels: {
+                                            anchor: 'end',
+                                            align: 'bottom',
+                                            color: '#0f172a',
+                                            font: { weight: 'bold', size: 24 }
+                                        }
+                                    },
+                                    scales: {
+                                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 16 } } },
+                                        x: { ticks: { font: { size: 16 } } }
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+            }, 100);
+        }
+
+        function renderActionList(data, container, color) {
+            if(data.length === 0) {
+                container.innerHTML = '<p style="text-align:center; font-size: 24px; color: #10b981; font-weight: bold; margin-top: 50px;">¡Felicidades! No hay acciones en esta categoría.</p>';
+                return;
+            }
+            
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            
+            let html = '<div style="display: flex; flex-direction: column; gap: 20px;">';
+            
+            data.forEach(action => {
+                let diffDays = 0;
+                if (action.dueDate && action.dueDate !== 'Sin Fecha') {
+                    const dueDateParts = action.dueDate.replace(/-/g, '/').split(' ')[0].split('/');
+                    const dDate = new Date(`${dueDateParts[2]}/${dueDateParts[1]}/${dueDateParts[0]}`);
+                    const diffTime = dDate - today;
+                    diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                }
+                
+                let daysText = diffDays < 0 ? `Vencida hace ${Math.abs(diffDays)} días` : `Vence en ${diffDays} días`;
+                
+                html += `
+                    <div style="border-left: 10px solid ${color}; background: #f8fafc; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <strong style="font-size: 24px; color: #0f172a;">${action.cleanLocation || 'Área Desconocida'}</strong>
+                            <span style="background: ${color}; color: white; padding: 8px 20px; border-radius: 30px; font-size: 18px; font-weight: bold;">${daysText}</span>
+                        </div>
+                        <p style="margin: 0 0 10px 0; font-size: 20px; color: #334155;"><strong>Responsable:</strong> ${action.owner || 'Sin Asignar'}</p>
+                        <p style="margin: 0; font-size: 18px; color: #64748b; font-style: italic; line-height: 1.4;">"${action.actionTitle || 'Sin descripción'}"</p>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
         }
     </script>
 </body>
