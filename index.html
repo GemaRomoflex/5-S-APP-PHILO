@@ -6543,7 +6543,7 @@
             let reportData = [];
             
             if (type === 'daily') {
-                bigDate.innerText = `Reporte Diario: ${selectedDate.getDate()} de ${months[selectedDate.getMonth()]}`;
+                bigDate.innerText = `${selectedDate.getDate()} de ${months[selectedDate.getMonth()]}`;
                 subtitle.innerText = 'Resumen Ejecutivo de Auditorías 5S';
                 
                 reportData = globalFilteredData.filter(item => {
@@ -6559,8 +6559,7 @@
                 
                 greetingText.innerHTML = `
                     Les comparto el resumen ejecutivo de las auditorías realizadas el día de hoy.<br>
-                    <strong>Calificación Promedio del Site: <span style="color: #005A9C; font-size: 18px;">${metrics.avgScore}%</span></strong> | 
-                    <strong>Porcentaje de Cierre de Acciones: <span style="color: #005A9C; font-size: 18px;">${metrics.closureRate}%</span></strong><br><br>
+                    <strong>Calificación Promedio del Site: <span style="color: #005A9C; font-size: 18px;">${metrics.avgScore}%</span></strong><br><br>
                     Agradeceré su pronta colaboración en la atención de las acciones generadas. Recuerden que tienen 7 días para el cierre oportuno.
                 `;
                 
@@ -6583,7 +6582,7 @@
                 const lastDay = new Date(firstDay);
                 lastDay.setDate(firstDay.getDate() + 6);
                 
-                bigDate.innerText = `Reporte Semanal: Semana ${weekNum}`;
+                bigDate.innerText = `Week ${weekNum}`;
                 subtitle.innerText = `Del ${firstDay.getDate()} al ${lastDay.getDate()} de ${months[lastDay.getMonth()]}`;
                 
                 reportData = globalFilteredData.filter(item => {
@@ -6599,20 +6598,18 @@
                 });
                 
                 const metrics = calculateGlobalMetrics(reportData);
-                const globalMetrics = calculateGlobalMetrics(globalFilteredData);
                 
                 greetingText.innerHTML = `
                     Les comparto el resumen ejecutivo correspondiente a la Semana ${weekNum}.<br>
-                    <strong>Calificación Promedio de la Semana: <span style="color: #005A9C; font-size: 18px;">${metrics.avgScore}%</span></strong> | 
-                    <strong>Porcentaje Histórico de Cierre del Site: <span style="color: #005A9C; font-size: 18px;">${globalMetrics.closureRate}%</span></strong><br><br>
+                    <strong>Calificación Promedio de la Semana: <span style="color: #005A9C; font-size: 18px;">${metrics.avgScore}%</span></strong><br><br>
                     Agradeceremos que revisen sus áreas asignadas y cierren sus acciones pendientes a la brevedad.
                 `;
                 
                 await renderWeeklyCharts(reportData, dynamicContent);
                 
             } else if (type === 'due_soon') {
-                bigDate.innerText = 'Acciones Críticas';
-                subtitle.innerText = 'Por Vencer (1-3 días)';
+                bigDate.innerText = 'Por Vencer';
+                subtitle.innerText = 'Acciones a 1-3 días de su límite';
                 
                 const today = new Date();
                 today.setHours(0,0,0,0);
@@ -6638,7 +6635,7 @@
                 
             } else if (type === 'overdue') {
                 bigDate.innerText = 'Acciones Overdue';
-                subtitle.innerText = 'Vencidas (Acción Inmediata Requerida)';
+                subtitle.innerText = 'Fuera de SLA (Acción Inmediata Requerida)';
                 
                 const today = new Date();
                 today.setHours(0,0,0,0);
