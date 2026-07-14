@@ -1479,8 +1479,9 @@
             </div>
             
             <div id="report-date-container" style="margin-bottom: 20px; text-align: left;">
-                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Fecha de Corte:</label>
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Periodo de Corte:</label>
                 <input type="date" id="report-date-input" class="login-input">
+                <input type="week" id="report-week-input" class="login-input" style="display: none;">
             </div>
 
             <div style="display: flex; gap: 10px;">
@@ -1553,7 +1554,7 @@
 
         <!-- CONTENEDOR OCULTO PARA HTML2CANVAS -->
         <div id="hidden-report-container" style="position: absolute; left: -9999px; top: 0; width: 800px; background: white; z-index: -1;">
-            <div id="visual-report" style="padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; background-color: #fff; background-image: url('plantilla de comunicados.png'); background-size: 100% auto; background-repeat: repeat-y; background-position: top center; width: 800px; min-height: 1200px;">
+            <div id="visual-report" style="padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; background-color: #ffffff; background-image: url('plantilla de comunicados.png'); background-size: 100% auto; background-repeat: no-repeat; background-position: top center; width: 800px; min-height: 1200px;">
                 <!-- Espaciado superior para no escribir encima del banner impreso en tu imagen -->
                 <div style="width: 100%; height: 230px;"></div>
                 
@@ -6447,17 +6448,57 @@
         // ==========================================
         // GENERADOR DE REPORTES (HTML2CANVAS)
         // ==========================================
+        function calculateGlobalMetrics(filteredData) {
+            let closed = 0;
+            let totalActions = 0;
+            
+            filteredData.forEach(item => {
+                if(item.actionId) {
+                    totalActions++;
+                    if(item.status && item.status.toLowerCase() === 'closed on time') {
+                        closed++;
+                    }
+                }
+            });
+            
+            const closureRate = totalActions > 0 ? Math.round((closed / totalActions) * 100) : 0;
+            
+            const validScores = filteredData.filter(x => parseInt(x.responseScore) > 0);
+            const avgScoreRaw = validScores.length > 0 ? (validScores.reduce((s, x) => s + parseInt(x.responseScore), 0) / validScores.length) : 0;
+            const avgScore = avgScoreRaw > 0 ? Math.round((avgScoreRaw / 5) * 100) : 0;
+            
+            return { closureRate, avgScore, totalActions, closed };
+        }
+
         function openReportModal() {
             document.getElementById('report-modal').style.display = 'flex';
             document.getElementById('report-date-input').valueAsDate = new Date();
+            
+            // Configurar default a la semana actual para el input tipo week
+            const today = new Date();
+            const year = today.getFullYear();
+            const firstDayOfYear = new Date(year, 0, 1);
+            const days = Math.floor((today - firstDayOfYear) / (24 * 60 * 60 * 1000));
+            const weekNumber = Math.ceil((today.getDay() + 1 + days) / 7);
+            document.getElementById('report-week-input').value = `${year}-W${weekNumber.toString().padStart(2, '0')}`;
+            
             toggleReportDate();
         }
 
         function toggleReportDate() {
             const type = document.getElementById('report-type-select').value;
             const dateContainer = document.getElementById('report-date-container');
-            if (type === 'daily' || type === 'weekly') {
+            const dateInput = document.getElementById('report-date-input');
+            const weekInput = document.getElementById('report-week-input');
+            
+            if (type === 'daily') {
                 dateContainer.style.display = 'block';
+                dateInput.style.display = 'block';
+                weekInput.style.display = 'none';
+            } else if (type === 'weekly') {
+                dateContainer.style.display = 'block';
+                dateInput.style.display = 'none';
+                weekInput.style.display = 'block';
             } else {
                 dateContainer.style.display = 'none';
             }
@@ -6470,13 +6511,14 @@
 
             const type = document.getElementById('report-type-select').value;
             const dateStr = document.getElementById('report-date-input').value; // YYYY-MM-DD
+            const weekStr = document.getElementById('report-week-input').value; // YYYY-Www
             const dynamicContent = document.getElementById('report-dynamic-content');
             const bigDate = document.getElementById('report-big-date');
             const subtitle = document.getElementById('report-subtitle');
             const greetingText = document.getElementById('report-greeting-text');
             
             let selectedDate = new Date();
-            if (dateStr) {
+            if (dateStr && type === 'daily') {
                 const parts = dateStr.split('-');
                 selectedDate = new Date(parts[0], parts[1]-1, parts[2]);
             }
@@ -6487,32 +6529,48 @@
             let reportData = [];
             
             if (type === 'daily') {
-                bigDate.innerText = `${selectedDate.getDate()} de ${months[selectedDate.getMonth()]}`;
-                subtitle.innerText = 'Calificación de Auditorías 5s (Diario)';
-                greetingText.innerHTML = 'Les comparto la información correspondiente a las auditorías realizadas el día de hoy.<br>Agradeceré su pronta colaboración en la atención de las acciones generadas. Como recordatorio, se cuenta con un plazo de 7 días para su cierre antes de que pasen a estatus overdue.';
+                bigDate.innerText = `Reporte Diario: ${selectedDate.getDate()} de ${months[selectedDate.getMonth()]}`;
+                subtitle.innerText = 'Resumen Ejecutivo de Auditorías 5S';
                 
                 reportData = globalFilteredData.filter(item => {
                     if (!item.openDate || item.openDate === 'Sin Fecha') return false;
                     let dStr = item.openDate.replace(/-/g, '/').split(' ')[0];
                     let parts = dStr.split('/');
-                    let d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`); // Assume DD/MM/YYYY
+                    let d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
                     if(isNaN(d)) d = new Date(dStr);
                     return d.getFullYear() === selectedDate.getFullYear() && d.getMonth() === selectedDate.getMonth() && d.getDate() === selectedDate.getDate();
                 });
                 
+                const metrics = calculateGlobalMetrics(reportData);
+                
+                greetingText.innerHTML = `
+                    Les comparto el resumen ejecutivo de las auditorías realizadas el día de hoy.<br>
+                    <strong>Calificación Promedio del Site: <span style="color: #005A9C; font-size: 18px;">${metrics.avgScore}%</span></strong> | 
+                    <strong>Porcentaje de Cierre de Acciones: <span style="color: #005A9C; font-size: 18px;">${metrics.closureRate}%</span></strong><br><br>
+                    Agradeceré su pronta colaboración en la atención de las acciones generadas. Recuerden que tienen 7 días para el cierre oportuno.
+                `;
+                
                 await renderAreasCharts(reportData, dynamicContent);
                 
             } else if (type === 'weekly') {
-                const firstDay = new Date(selectedDate);
-                const day = firstDay.getDay();
-                const diff = firstDay.getDate() - day + (day === 0 ? -6 : 1);
-                firstDay.setDate(diff);
+                // Parse YYYY-Www
+                let weekNum = 1;
+                let year = selectedDate.getFullYear();
+                if (weekStr) {
+                    const parts = weekStr.split('-W');
+                    year = parseInt(parts[0]);
+                    weekNum = parseInt(parts[1]);
+                }
+                
+                // Aproximar inicio y fin de la semana seleccionada
+                const firstDayOfYear = new Date(year, 0, 1);
+                const days = (weekNum - 1) * 7;
+                const firstDay = new Date(year, 0, 1 + days - firstDayOfYear.getDay());
                 const lastDay = new Date(firstDay);
                 lastDay.setDate(firstDay.getDate() + 6);
                 
-                bigDate.innerText = `Semana del ${firstDay.getDate()} al ${lastDay.getDate()} de ${months[lastDay.getMonth()]}`;
-                subtitle.innerText = 'Calificación de Auditorías 5s (Semanal)';
-                greetingText.innerHTML = 'Les comparto el resumen semanal correspondiente a las auditorías de 5S.<br>Agradeceré su pronta colaboración en la atención de las acciones generadas.';
+                bigDate.innerText = `Reporte Semanal: Semana ${weekNum}`;
+                subtitle.innerText = `Del ${firstDay.getDate()} al ${lastDay.getDate()} de ${months[lastDay.getMonth()]}`;
                 
                 reportData = globalFilteredData.filter(item => {
                     if (!item.openDate || item.openDate === 'Sin Fecha') return false;
@@ -6526,12 +6584,20 @@
                     return d >= firstDay && d <= lastDay;
                 });
                 
+                const metrics = calculateGlobalMetrics(reportData);
+                
+                greetingText.innerHTML = `
+                    Les comparto el resumen ejecutivo correspondiente a la Semana ${weekNum}.<br>
+                    <strong>Calificación Promedio del Site: <span style="color: #005A9C; font-size: 18px;">${metrics.avgScore}%</span></strong> | 
+                    <strong>Porcentaje de Cierre Semanal: <span style="color: #005A9C; font-size: 18px;">${metrics.closureRate}%</span></strong><br><br>
+                    Agradeceremos que revisen sus áreas asignadas y cierren sus acciones a la brevedad.
+                `;
+                
                 await renderAreasCharts(reportData, dynamicContent);
                 
             } else if (type === 'due_soon') {
-                bigDate.innerText = 'Por Vencer';
-                subtitle.innerText = 'Acciones Críticas (1-3 días)';
-                greetingText.innerHTML = 'Les comparto la lista de acciones que están a punto de vencer. Agradeceré su atención inmediata para evitar retrasos.';
+                bigDate.innerText = 'Acciones Críticas';
+                subtitle.innerText = 'Por Vencer (1-3 días)';
                 
                 const today = new Date();
                 today.setHours(0,0,0,0);
@@ -6546,12 +6612,17 @@
                     return diffDays > 0 && diffDays <= 3;
                 });
                 
-                renderActionList(reportData, dynamicContent, '#f59e0b');
+                greetingText.innerHTML = `
+                    Equipo,<br>Las siguientes acciones están a punto de pasar a estatus Vencido (Overdue) en los próximos 3 días.<br>
+                    <strong>Total de acciones en riesgo: <span style="color: #f59e0b; font-size: 18px;">${reportData.length}</span></strong><br><br>
+                    Requerimos su inmediata atención para resolverlas y mantener nuestra métrica de cierre saludable.
+                `;
+                
+                renderActionChart(reportData, dynamicContent, '#f59e0b', 'Acciones por Vencer por Responsable');
                 
             } else if (type === 'overdue') {
-                bigDate.innerText = 'Vencidas';
-                subtitle.innerText = 'Acciones Overdue';
-                greetingText.innerHTML = 'Les comparto la lista de acciones VENCIDAS. Se requiere plan de acción y cierre INMEDIATO.';
+                bigDate.innerText = 'Acciones Overdue';
+                subtitle.innerText = 'Vencidas (Acción Inmediata Requerida)';
                 
                 const today = new Date();
                 today.setHours(0,0,0,0);
@@ -6566,12 +6637,19 @@
                     return diffDays < 0;
                 });
                 
-                renderActionList(reportData, dynamicContent, '#dc2626');
+                greetingText.innerHTML = `
+                    Equipo,<br>Se muestra a continuación el conteo de acciones que ya se encuentran VENCIDAS (fuera de SLA).<br>
+                    <strong>Total de acciones vencidas: <span style="color: #dc2626; font-size: 18px;">${reportData.length}</span></strong><br><br>
+                    Por favor, pónganse en contacto con los responsables mencionados para el cierre y plan de contingencia inmediato.
+                `;
+                
+                renderActionChart(reportData, dynamicContent, '#dc2626', 'Acciones Vencidas (Overdue) por Responsable');
             }
             
-            // Renderizar y Descargar (damos margen para que las graficas dibujen)
             setTimeout(() => {
                 const target = document.getElementById('visual-report');
+                target.style.display = 'block';
+                
                 html2canvas(target, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
                     const link = document.createElement('a');
                     link.download = `Reporte_5S_${type}_${Date.now()}.png`;
@@ -6582,8 +6660,8 @@
                     btn.innerText = 'Generar PNG';
                     btn.disabled = false;
                 }).catch(err => {
-                    console.error("Error al generar imagen:", err);
-                    alert("Hubo un error al generar la imagen. Revisa la consola.");
+                    console.error("Error:", err);
+                    alert("Error al generar la imagen. Revisa consola.");
                     btn.innerText = 'Generar PNG';
                     btn.disabled = false;
                 });
@@ -6625,7 +6703,7 @@
                         </div>
                         <div style="flex: 1; text-align: center;">
                             <h3 style="margin: 0; font-size: 20px; color: #64748b; text-transform: uppercase;">Calificación general</h3>
-                            <div style="background-color: #f59e0b; color: white; display: inline-block; padding: 15px 40px; border-radius: 40px; font-size: 48px; font-weight: 900; margin-top: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            <div style="background-color: #005A9C; color: white; display: inline-block; padding: 15px 40px; border-radius: 40px; font-size: 48px; font-weight: 900; margin-top: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                                 ${avgScore}%
                             </div>
                         </div>
@@ -6634,8 +6712,8 @@
                 
                 if (Object.keys(actionsPerOwner).length > 0) {
                     html += `
-                        <div style="width: 100%; text-align: center; margin-bottom: 50px; background: #0f172a; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
-                            <h4 style="margin: 0 0 20px 0; color: white; font-size: 24px;">Acciones Generadas</h4>
+                        <div style="width: 100%; text-align: center; margin-bottom: 50px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                            <h4 style="margin: 0 0 20px 0; color: #333; font-size: 24px;">Acciones Generadas</h4>
                             <div style="width: 100%; height: 300px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
                                 <canvas id="${canvasId}"></canvas>
                             </div>
@@ -6644,7 +6722,7 @@
                 } else {
                     html += `
                         <div style="width: 100%; text-align: center; margin-bottom: 50px; background: #ecfdf5; border: 2px dashed #10b981; border-radius: 16px; padding: 30px; box-sizing: border-box;">
-                            <h4 style="margin: 0; color: #047857; font-size: 24px;">¡Felicidades! Cero acciones generadas.</h4>
+                            <h4 style="margin: 0; color: #047857; font-size: 24px;">¡Felicidades! Cero acciones generadas en esta área.</h4>
                         </div>
                     `;
                 }
@@ -6652,7 +6730,6 @@
             
             container.innerHTML = html;
             
-            // Dibujar graficas
             setTimeout(() => {
                 for (let i = 0; i < areas.length; i++) {
                     const areaName = areas[i];
@@ -6674,7 +6751,7 @@
                                     labels: Object.keys(actionsPerOwner),
                                     datasets: [{
                                         data: Object.values(actionsPerOwner),
-                                        backgroundColor: '#7dd3fc',
+                                        backgroundColor: '#38bdf8',
                                         borderColor: '#0284c7',
                                         borderWidth: 2,
                                         borderRadius: 4
@@ -6705,42 +6782,70 @@
             }, 100);
         }
 
-        function renderActionList(data, container, color) {
+        function renderActionChart(data, container, color, title) {
             if(data.length === 0) {
-                container.innerHTML = '<p style="text-align:center; font-size: 24px; color: #10b981; font-weight: bold; margin-top: 50px;">¡Felicidades! No hay acciones en esta categoría.</p>';
+                container.innerHTML = '<p style="text-align:center; font-size: 24px; color: #10b981; font-weight: bold; margin-top: 50px;">¡Felicidades! No hay acciones críticas.</p>';
                 return;
             }
             
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            
-            let html = '<div style="display: flex; flex-direction: column; gap: 20px;">';
-            
-            data.forEach(action => {
-                let diffDays = 0;
-                if (action.dueDate && action.dueDate !== 'Sin Fecha') {
-                    const dueDateParts = action.dueDate.replace(/-/g, '/').split(' ')[0].split('/');
-                    const dDate = new Date(`${dueDateParts[2]}/${dueDateParts[1]}/${dueDateParts[0]}`);
-                    const diffTime = dDate - today;
-                    diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                }
-                
-                let daysText = diffDays < 0 ? `Vencida hace ${Math.abs(diffDays)} días` : `Vence en ${diffDays} días`;
-                
-                html += `
-                    <div style="border-left: 10px solid ${color}; background: #f8fafc; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <strong style="font-size: 24px; color: #0f172a;">${action.cleanLocation || 'Área Desconocida'}</strong>
-                            <span style="background: ${color}; color: white; padding: 8px 20px; border-radius: 30px; font-size: 18px; font-weight: bold;">${daysText}</span>
-                        </div>
-                        <p style="margin: 0 0 10px 0; font-size: 20px; color: #334155;"><strong>Responsable:</strong> ${action.owner || 'Sin Asignar'}</p>
-                        <p style="margin: 0; font-size: 18px; color: #64748b; font-style: italic; line-height: 1.4;">"${action.actionTitle || 'Sin descripción'}"</p>
-                    </div>
-                `;
+            // Agrupar por Responsable (Owner)
+            const actionsPerOwner = {};
+            data.forEach(item => {
+                const owner = item.owner || 'Sin Asignar';
+                actionsPerOwner[owner] = (actionsPerOwner[owner] || 0) + 1;
             });
             
-            html += '</div>';
+            // Ordenar de mayor a menor para que los más "ofensores" salgan primero
+            const sortedOwners = Object.keys(actionsPerOwner).sort((a, b) => actionsPerOwner[b] - actionsPerOwner[a]);
+            const sortedData = sortedOwners.map(owner => actionsPerOwner[owner]);
+            
+            const html = `
+                <div style="width: 100%; text-align: center; margin-top: 20px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+                    <h3 style="margin: 0 0 20px 0; color: #333; font-size: 26px;">${title}</h3>
+                    <div style="width: 100%; height: 500px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
+                        <canvas id="chart-critical-actions"></canvas>
+                    </div>
+                </div>
+            `;
+            
             container.innerHTML = html;
+            
+            setTimeout(() => {
+                const ctx = document.getElementById('chart-critical-actions');
+                if (ctx) {
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: sortedOwners,
+                            datasets: [{
+                                data: sortedData,
+                                backgroundColor: color,
+                                borderColor: color,
+                                borderWidth: 2,
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            animation: false,
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                datalabels: {
+                                    anchor: 'end',
+                                    align: 'bottom',
+                                    color: '#ffffff',
+                                    font: { weight: 'bold', size: 24 }
+                                }
+                            },
+                            scales: {
+                                y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 16 } } },
+                                x: { ticks: { font: { size: 14 } } }
+                            }
+                        }
+                    });
+                }
+            }, 100);
         }
     </script>
 </body>
