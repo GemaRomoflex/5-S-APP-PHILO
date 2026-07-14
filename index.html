@@ -6448,12 +6448,26 @@
         // ==========================================
         // GENERADOR DE REPORTES (HTML2CANVAS)
         // ==========================================
+        function isValidAction(item) {
+            if (!item.actionId) return false;
+            const aid = item.actionId.toString().trim().toLowerCase();
+            if (aid === '' || aid === '-' || aid === 'sin accion') return false;
+            
+            const score = parseInt(item.responseScore);
+            if (!isNaN(score) && score >= 5) return false; // Solo acciones reales (score < 5)
+            
+            const owner = (item.owner || '').trim().toLowerCase();
+            if (owner === '' || owner === 'sin asignar' || owner === '-') return false;
+            
+            return true;
+        }
+
         function calculateGlobalMetrics(filteredData) {
             let closed = 0;
             let totalActions = 0;
             
             filteredData.forEach(item => {
-                if(item.actionId) {
+                if(isValidAction(item)) {
                     totalActions++;
                     if(item.status && item.status.toLowerCase() === 'closed on time') {
                         closed++;
@@ -6603,6 +6617,7 @@
                 today.setHours(0,0,0,0);
                 
                 reportData = globalFilteredData.filter(item => {
+                    if (!isValidAction(item)) return false;
                     if (item.status && item.status.toLowerCase() === 'closed on time') return false;
                     if (!item.dueDate || item.dueDate === 'Sin Fecha') return false;
                     const dueDateParts = item.dueDate.replace(/-/g, '/').split(' ')[0].split('/');
@@ -6628,6 +6643,7 @@
                 today.setHours(0,0,0,0);
                 
                 reportData = globalFilteredData.filter(item => {
+                    if (!isValidAction(item)) return false;
                     if (item.status && item.status.toLowerCase() === 'closed on time') return false;
                     if (!item.dueDate || item.dueDate === 'Sin Fecha') return false;
                     const dueDateParts = item.dueDate.replace(/-/g, '/').split(' ')[0].split('/');
@@ -6687,8 +6703,8 @@
                 
                 const actionsPerOwner = {};
                 areaData.forEach(item => {
-                    const owner = item.owner || 'Sin Asignar';
-                    if (item.actionId) {
+                    if (isValidAction(item)) {
+                        const owner = item.owner;
                         actionsPerOwner[owner] = (actionsPerOwner[owner] || 0) + 1;
                     }
                 });
@@ -6736,8 +6752,8 @@
                     const areaData = data.filter(item => item.cleanLocation === areaName);
                     const actionsPerOwner = {};
                     areaData.forEach(item => {
-                        const owner = item.owner || 'Sin Asignar';
-                        if (item.actionId) {
+                        if (isValidAction(item)) {
+                            const owner = item.owner;
                             actionsPerOwner[owner] = (actionsPerOwner[owner] || 0) + 1;
                         }
                     });
@@ -6791,8 +6807,10 @@
             // Agrupar por Responsable (Owner)
             const actionsPerOwner = {};
             data.forEach(item => {
-                const owner = item.owner || 'Sin Asignar';
-                actionsPerOwner[owner] = (actionsPerOwner[owner] || 0) + 1;
+                if (isValidAction(item)) {
+                    const owner = item.owner;
+                    actionsPerOwner[owner] = (actionsPerOwner[owner] || 0) + 1;
+                }
             });
             
             // Ordenar de mayor a menor para que los más "ofensores" salgan primero
