@@ -6624,21 +6624,42 @@
                 
                 reportData = baseForReport.filter(item => {
                     if (!isValidAction(item)) return false;
-                    const st = (item.status || '').toLowerCase();
-                    if (st.includes('clos') || st.includes('cerrad')) return false;
+                    const s = (item.status || '').toLowerCase().trim();
+                    if (s === 'closed' || s === 'close' || s === 'cerrada' || s === 'cerrado') return false;
                     
-                    if (!item.dueDate || item.dueDate === 'Sin Fecha') return false;
-                    let cleanStr = item.dueDate.replace(/-/g, '/').split(' ')[0];
-                    let dDate = new Date(cleanStr);
-                    if (isNaN(dDate.getTime())) {
-                        const parts = cleanStr.split('/');
-                        if (parts.length === 3) dDate = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                    let isOverdue = false;
+                    if (s === 'overdue' || s === 'vencida') {
+                        isOverdue = true;
+                    } else if (item.dueDate && item.dueDate !== 'Sin Fecha') {
+                        let cleanStr = item.dueDate.replace(/-/g, '/').split(' ')[0];
+                        let dDate = new Date(cleanStr);
+                        if (isNaN(dDate.getTime())) {
+                            const parts = cleanStr.split('/');
+                            if (parts.length === 3) dDate = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                        }
+                        if (!isNaN(dDate.getTime())) {
+                            dDate.setHours(0,0,0,0);
+                            if (dDate < today) isOverdue = true;
+                        }
                     }
-                    if (isNaN(dDate.getTime())) return false;
                     
-                    const diffTime = dDate - today;
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    return diffDays > 0 && diffDays <= 3;
+                    if (isOverdue) return false;
+                    
+                    if (item.dueDate && item.dueDate !== 'Sin Fecha') {
+                        let cleanStr = item.dueDate.replace(/-/g, '/').split(' ')[0];
+                        let dDate = new Date(cleanStr);
+                        if (isNaN(dDate.getTime())) {
+                            const parts = cleanStr.split('/');
+                            if (parts.length === 3) dDate = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                        }
+                        if (!isNaN(dDate.getTime())) {
+                            dDate.setHours(0,0,0,0);
+                            const diffTime = dDate - today;
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            if (diffDays >= 0 && diffDays <= 2) return true;
+                        }
+                    }
+                    return false;
                 });
                 
                 greetingText.innerHTML = `
@@ -6658,21 +6679,25 @@
                 
                 reportData = baseForReport.filter(item => {
                     if (!isValidAction(item)) return false;
-                    const st = (item.status || '').toLowerCase();
-                    if (st.includes('clos') || st.includes('cerrad')) return false;
+                    const s = (item.status || '').toLowerCase().trim();
+                    if (s === 'closed' || s === 'close' || s === 'cerrada' || s === 'cerrado') return false;
                     
-                    if (!item.dueDate || item.dueDate === 'Sin Fecha') return false;
-                    let cleanStr = item.dueDate.replace(/-/g, '/').split(' ')[0];
-                    let dDate = new Date(cleanStr);
-                    if (isNaN(dDate.getTime())) {
-                        const parts = cleanStr.split('/');
-                        if (parts.length === 3) dDate = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                    let isOverdue = false;
+                    if (s === 'overdue' || s === 'vencida') {
+                        isOverdue = true;
+                    } else if (item.dueDate && item.dueDate !== 'Sin Fecha') {
+                        let cleanStr = item.dueDate.replace(/-/g, '/').split(' ')[0];
+                        let dDate = new Date(cleanStr);
+                        if (isNaN(dDate.getTime())) {
+                            const parts = cleanStr.split('/');
+                            if (parts.length === 3) dDate = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                        }
+                        if (!isNaN(dDate.getTime())) {
+                            dDate.setHours(0,0,0,0);
+                            if (dDate < today) isOverdue = true;
+                        }
                     }
-                    if (isNaN(dDate.getTime())) return false;
-                    
-                    const diffTime = dDate - today;
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    return diffDays < 0;
+                    return isOverdue;
                 });
                 
                 greetingText.innerHTML = `
