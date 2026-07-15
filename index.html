@@ -6454,7 +6454,7 @@
             if (aid === '' || aid === '-' || aid === 'sin accion') return false;
             
             const score = parseInt(item.responseScore);
-            if (!isNaN(score) && score >= 5) return false; // Solo acciones reales (score < 5)
+            if (isNaN(score) || score < 1 || score > 4) return false; // El dashboard usa estrictamente >=1 y <=4
             
             const owner = (item.owner || '').trim().toLowerCase();
             if (owner === '' || owner === 'sin asignar' || owner === '-') return false;
@@ -6616,7 +6616,9 @@
                 
                 reportData = globalFilteredData.filter(item => {
                     if (!isValidAction(item)) return false;
-                    if (item.status && item.status.toLowerCase() === 'closed on time') return false;
+                    const st = (item.status || '').toLowerCase();
+                    if (st.includes('clos') || st.includes('cerrad')) return false;
+                    
                     if (!item.dueDate || item.dueDate === 'Sin Fecha') return false;
                     const dueDateParts = item.dueDate.replace(/-/g, '/').split(' ')[0].split('/');
                     const dDate = new Date(`${dueDateParts[2]}/${dueDateParts[1]}/${dueDateParts[0]}`);
@@ -6642,7 +6644,9 @@
                 
                 reportData = globalFilteredData.filter(item => {
                     if (!isValidAction(item)) return false;
-                    if (item.status && item.status.toLowerCase() === 'closed on time') return false;
+                    const st = (item.status || '').toLowerCase();
+                    if (st.includes('clos') || st.includes('cerrad')) return false;
+                    
                     if (!item.dueDate || item.dueDate === 'Sin Fecha') return false;
                     const dueDateParts = item.dueDate.replace(/-/g, '/').split(' ')[0].split('/');
                     const dDate = new Date(`${dueDateParts[2]}/${dueDateParts[1]}/${dueDateParts[0]}`);
@@ -6702,7 +6706,8 @@
             const openActionsPerOwner = {};
             data.forEach(item => {
                 if (isValidAction(item)) {
-                    if (!item.status || item.status.toLowerCase() !== 'closed on time') {
+                    const st = (item.status || '').toLowerCase();
+                    if (!st.includes('clos') && !st.includes('cerrad')) {
                         const owner = item.owner;
                         openActionsPerOwner[owner] = (openActionsPerOwner[owner] || 0) + 1;
                     }
