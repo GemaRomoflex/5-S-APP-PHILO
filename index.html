@@ -6449,16 +6449,9 @@
         // GENERADOR DE REPORTES (HTML2CANVAS)
         // ==========================================
         function isValidAction(item) {
-            if (!item.actionId) return false;
-            const aid = item.actionId.toString().trim().toLowerCase();
-            if (aid === '' || aid === '-' || aid === 'sin accion') return false;
-            
             const score = parseInt(item.responseScore);
-            if (isNaN(score) || score < 1 || score > 4) return false; // El dashboard usa estrictamente >=1 y <=4
-            
-            const owner = (item.owner || '').trim().toLowerCase();
-            if (owner === '' || owner === 'sin asignar' || owner === '-') return false;
-            
+            if (score === 5 || score === -1) return false;
+            if (!item.cleanLocation) return false;
             return true;
         }
 
@@ -6541,17 +6534,28 @@
             
             dynamicContent.innerHTML = ''; // Limpiar
             let reportData = [];
+            let baseForReport = typeof allAuditData !== 'undefined' ? allAuditData : globalFilteredData;
+            if (typeof window.currentAppMode !== 'undefined' && window.currentAppMode === 'cruzada') {
+                baseForReport = baseForReport.filter(item => item.source === 'app_cruzada');
+            }
+            if (typeof window.currentUserRole !== 'undefined' && window.currentUserRole === 'Auditor Cruzado' && window.currentUserArea) {
+                baseForReport = baseForReport.filter(item => item.cleanLocation === window.currentUserArea);
+            }
             
             if (type === 'daily') {
                 bigDate.innerText = `${selectedDate.getDate()} de ${months[selectedDate.getMonth()]}`;
                 subtitle.innerText = 'Resumen Ejecutivo de Auditorías 5S';
                 
-                reportData = globalFilteredData.filter(item => {
+                reportData = baseForReport.filter(item => {
                     if (!item.openDate || item.openDate === 'Sin Fecha') return false;
-                    let dStr = item.openDate.replace(/-/g, '/').split(' ')[0];
-                    let parts = dStr.split('/');
-                    let d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
-                    if(isNaN(d)) d = new Date(dStr);
+                    let cleanStr = item.openDate.replace(/-/g, '/').split(' ')[0];
+                    let d = new Date(cleanStr);
+                    if (isNaN(d.getTime())) {
+                        const parts = cleanStr.split('/');
+                        if (parts.length === 3) d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                    }
+                    if (isNaN(d.getTime())) return false;
+                    
                     return d.getFullYear() === selectedDate.getFullYear() && d.getMonth() === selectedDate.getMonth() && d.getDate() === selectedDate.getDate();
                 });
                 
@@ -6585,12 +6589,16 @@
                 bigDate.innerText = `Week ${weekNum}`;
                 subtitle.innerText = `Del ${firstDay.getDate()} al ${lastDay.getDate()} de ${months[lastDay.getMonth()]}`;
                 
-                reportData = globalFilteredData.filter(item => {
+                reportData = baseForReport.filter(item => {
                     if (!item.openDate || item.openDate === 'Sin Fecha') return false;
-                    let dStr = item.openDate.replace(/-/g, '/').split(' ')[0];
-                    let parts = dStr.split('/');
-                    let d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
-                    if(isNaN(d)) d = new Date(dStr);
+                    let cleanStr = item.openDate.replace(/-/g, '/').split(' ')[0];
+                    let d = new Date(cleanStr);
+                    if (isNaN(d.getTime())) {
+                        const parts = cleanStr.split('/');
+                        if (parts.length === 3) d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                    }
+                    if (isNaN(d.getTime())) return false;
+                    
                     d.setHours(0,0,0,0);
                     firstDay.setHours(0,0,0,0);
                     lastDay.setHours(23,59,59,999);
@@ -6614,14 +6622,20 @@
                 const today = new Date();
                 today.setHours(0,0,0,0);
                 
-                reportData = globalFilteredData.filter(item => {
+                reportData = baseForReport.filter(item => {
                     if (!isValidAction(item)) return false;
                     const st = (item.status || '').toLowerCase();
                     if (st.includes('clos') || st.includes('cerrad')) return false;
                     
                     if (!item.dueDate || item.dueDate === 'Sin Fecha') return false;
-                    const dueDateParts = item.dueDate.replace(/-/g, '/').split(' ')[0].split('/');
-                    const dDate = new Date(`${dueDateParts[2]}/${dueDateParts[1]}/${dueDateParts[0]}`);
+                    let cleanStr = item.dueDate.replace(/-/g, '/').split(' ')[0];
+                    let dDate = new Date(cleanStr);
+                    if (isNaN(dDate.getTime())) {
+                        const parts = cleanStr.split('/');
+                        if (parts.length === 3) dDate = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                    }
+                    if (isNaN(dDate.getTime())) return false;
+                    
                     const diffTime = dDate - today;
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     return diffDays > 0 && diffDays <= 3;
@@ -6642,14 +6656,20 @@
                 const today = new Date();
                 today.setHours(0,0,0,0);
                 
-                reportData = globalFilteredData.filter(item => {
+                reportData = baseForReport.filter(item => {
                     if (!isValidAction(item)) return false;
                     const st = (item.status || '').toLowerCase();
                     if (st.includes('clos') || st.includes('cerrad')) return false;
                     
                     if (!item.dueDate || item.dueDate === 'Sin Fecha') return false;
-                    const dueDateParts = item.dueDate.replace(/-/g, '/').split(' ')[0].split('/');
-                    const dDate = new Date(`${dueDateParts[2]}/${dueDateParts[1]}/${dueDateParts[0]}`);
+                    let cleanStr = item.dueDate.replace(/-/g, '/').split(' ')[0];
+                    let dDate = new Date(cleanStr);
+                    if (isNaN(dDate.getTime())) {
+                        const parts = cleanStr.split('/');
+                        if (parts.length === 3) dDate = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                    }
+                    if (isNaN(dDate.getTime())) return false;
+                    
                     const diffTime = dDate - today;
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     return diffDays < 0;
