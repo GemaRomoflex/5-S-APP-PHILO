@@ -1462,6 +1462,52 @@
         </div>
     </div>
 
+    <!-- MODAL GESTION OWNERS -->
+    <div id="manage-owners-modal" class="login-overlay" style="display: none; z-index: 10000;">
+        <div class="login-box" style="max-width: 800px; width: 90%;">
+            <h2 style="color: #005A9C; margin-top: 0;">👑 Gestión de Owners de Área</h2>
+            <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Agrega, edita o elimina a los responsables de las áreas. (Solo Administradores)</p>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: flex-end; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="font-size: 12px; font-weight: bold;">ID de Área (ej. area1):</label>
+                    <input type="text" id="owner-new-id" class="form-control" placeholder="ID (solo minúsculas y números)">
+                </div>
+                <div style="flex: 2; min-width: 200px;">
+                    <label style="font-size: 12px; font-weight: bold;">Nombre del Owner:</label>
+                    <input type="text" id="owner-new-name" class="form-control" placeholder="Nombre completo">
+                </div>
+                <div style="flex: 2; min-width: 200px;">
+                    <label style="font-size: 12px; font-weight: bold;">Departamento:</label>
+                    <input type="text" id="owner-new-dept" class="form-control" placeholder="Ej. Calidad, Producción...">
+                </div>
+                <div style="min-width: 120px;">
+                    <button onclick="addOwnerFromModal()" class="btn btn-primary" style="width: 100%;">➕ Agregar</button>
+                </div>
+            </div>
+
+            <div style="max-height: 400px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                    <thead style="background: #f1f5f9; position: sticky; top: 0; z-index: 2;">
+                        <tr>
+                            <th style="padding: 10px; border-bottom: 2px solid #ccc;">ID Área</th>
+                            <th style="padding: 10px; border-bottom: 2px solid #ccc;">Owner</th>
+                            <th style="padding: 10px; border-bottom: 2px solid #ccc;">Departamento</th>
+                            <th style="padding: 10px; border-bottom: 2px solid #ccc; width: 150px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="owners-table-body">
+                        <!-- Llenado por JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 20px; text-align: right;">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('manage-owners-modal').style.display='none'">Cerrar Panel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL GENERADOR DE REPORTES (CANVA) -->
     <div id="report-modal" class="login-overlay" style="display: none; z-index: 9999;">
         <div class="login-card" style="border-top: 5px solid #0284c7; min-width: 400px;">
@@ -1861,8 +1907,11 @@
                 <!-- CONTENIDO DEL DASHBOARD (SOLO GRÁFICAS) -->
                 <div id="view-dashboard" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
                     
-                    <!-- BOTÓN DE COMPETENCIA PROMINENTE (VISIBLE PARA TODOS LOS ROLES EN EL DASHBOARD) -->
-                    <div style="display: flex; justify-content: flex-end; width: 100%; padding: 0 10px;">
+                    <!-- BOTONES SUPERIORES (COMPETENCIA Y ADMIN) -->
+                    <div style="display: flex; justify-content: flex-end; gap: 15px; width: 100%; padding: 0 10px;">
+                        <button id="btn-manage-owners" class="hidden" onclick="openManageOwnersModal()" style="background-color: #000; color: #f59e0b; border: 2px solid #f59e0b; font-weight: bold; padding: 12px 24px; font-size: 16px; border-radius: 8px; cursor: pointer; transition: background 0.2s; display: none;">
+                            👑 GESTIONAR OWNERS
+                        </button>
                         <button id="btn-competition-mode" onclick="toggleCompetitionMode()" style="background-color: #ff0000; color: white; border: none; font-weight: bold; padding: 12px 24px; font-size: 16px; border-radius: 8px; box-shadow: 0 4px 10px rgba(255,0,0,0.4); cursor: pointer; transition: transform 0.2s;">
                             🏁 ACTIVAR MODO COMPETENCIA
                         </button>
@@ -5990,6 +6039,12 @@
         }
 
         function applyRBAC() {
+            // Habilitar botón de Owners si es Administrador
+            const btnOwners = document.getElementById('btn-manage-owners');
+            if (btnOwners && window.currentUserRole !== 'Auditor' && window.currentUserRole !== 'Auditor Cruzado') {
+                btnOwners.style.display = 'block';
+            }
+
             if (window.currentUserRole === 'Auditor' || window.currentUserRole === 'Auditor Cruzado') {
                 // 1. Ocultar Pestaña de Data (Subida de CSV)
                 const navData = document.getElementById('nav-data');
@@ -6955,6 +7010,117 @@
                     });
                 }
             }, 100);
+        }
+
+        // ==========================================
+        // GESTIÓN DE OWNERS (MODAL)
+        // ==========================================
+        
+        async function openManageOwnersModal() {
+            document.getElementById('manage-owners-modal').style.display = 'flex';
+            await loadOwnersForModal();
+        }
+
+        async function loadOwnersForModal() {
+            const tbody = document.getElementById('owners-table-body');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">Cargando directorio...</td></tr>';
+            
+            const { data, error } = await supabaseClient.from('owners_directory').select('*').order('area_id', { ascending: true });
+            if (error) {
+                alert("Error al cargar owners: " + error.message);
+                return;
+            }
+            
+            // Actualizar caché global
+            allOwnersDirectory = data || [];
+            
+            tbody.innerHTML = '';
+            if (allOwnersDirectory.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">No hay owners registrados.</td></tr>';
+                return;
+            }
+            
+            allOwnersDirectory.forEach(own => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #f1f5f9';
+                tr.innerHTML = `
+                    <td style="padding: 8px;">${own.area_id}</td>
+                    <td style="padding: 8px;">
+                        <input type="text" id="edit-owner-name-${own.area_id}" value="${own.owner_name || ''}" class="form-control" style="padding: 4px; font-size: 13px;">
+                    </td>
+                    <td style="padding: 8px;">
+                        <input type="text" id="edit-owner-dept-${own.area_id}" value="${own.department || ''}" class="form-control" style="padding: 4px; font-size: 13px;">
+                    </td>
+                    <td style="padding: 8px;">
+                        <button onclick="saveOwnerChanges('${own.area_id}')" class="btn btn-primary" style="padding: 4px 8px; font-size: 12px; margin-right: 5px;" title="Guardar">💾</button>
+                        <button onclick="deleteOwnerFromModal('${own.area_id}')" class="btn" style="background-color: #ef4444; color: white; padding: 4px 8px; font-size: 12px; border: none; cursor: pointer; border-radius: 4px;" title="Eliminar">🗑️</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function addOwnerFromModal() {
+            const areaId = document.getElementById('owner-new-id').value.trim().toLowerCase();
+            const ownerName = document.getElementById('owner-new-name').value.trim();
+            const dept = document.getElementById('owner-new-dept').value.trim();
+            
+            if (!areaId || !ownerName) {
+                alert("El ID del área y el Nombre del Owner son obligatorios.");
+                return;
+            }
+            
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerText = "Guardando...";
+            
+            const { error } = await supabaseClient.from('owners_directory').insert([{
+                area_id: areaId,
+                owner_name: ownerName,
+                department: dept
+            }]);
+            
+            btn.disabled = false;
+            btn.innerText = "➕ Agregar";
+            
+            if (error) {
+                alert("Error al agregar: " + error.message);
+            } else {
+                document.getElementById('owner-new-id').value = '';
+                document.getElementById('owner-new-name').value = '';
+                document.getElementById('owner-new-dept').value = '';
+                loadOwnersForModal();
+            }
+        }
+
+        async function saveOwnerChanges(areaId) {
+            const newName = document.getElementById(`edit-owner-name-${areaId}`).value.trim();
+            const newDept = document.getElementById(`edit-owner-dept-${areaId}`).value.trim();
+            
+            const { error } = await supabaseClient.from('owners_directory')
+                .update({ owner_name: newName, department: newDept })
+                .eq('area_id', areaId);
+                
+            if (error) {
+                alert("Error al guardar: " + error.message);
+            } else {
+                alert("Cambios guardados con éxito.");
+                loadOwnersForModal();
+            }
+        }
+
+        async function deleteOwnerFromModal(areaId) {
+            if (!confirm(`¿Estás seguro de eliminar el registro del área "${areaId}"?`)) return;
+            
+            const { error } = await supabaseClient.from('owners_directory')
+                .delete()
+                .eq('area_id', areaId);
+                
+            if (error) {
+                alert("Error al eliminar: " + error.message);
+            } else {
+                loadOwnersForModal();
+            }
         }
 
         // ==========================================
