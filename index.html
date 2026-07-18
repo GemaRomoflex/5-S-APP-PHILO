@@ -5071,8 +5071,11 @@
                 
                 const matchingAction = items.find(act => act.actionId === `${auditId}-${q.id}`);
                 const score = matchingAction ? matchingAction.responseScore : 'N/A';
-                const comments = matchingAction ? matchingAction.comments.split('\\nNotas: ')[1] || 'Sin comentarios' : 'N/A';
-                const photoUrl = matchingAction ? matchingAction.evidence_url : null;
+                let rawComments = matchingAction ? matchingAction.comments : '';
+                let photoUrl = null;
+                const evMatch = rawComments.match(/\nEVIDENCE:(.*)/);
+                if (evMatch) { photoUrl = evMatch[1]; rawComments = rawComments.replace(/\nEVIDENCE:.*/, ''); }
+                const comments = matchingAction ? rawComments.split('\\nNotas: ')[1] || 'Sin comentarios' : 'N/A';
                 
                 htmlContent += `
                     <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee; page-break-inside: avoid;">
@@ -5193,9 +5196,8 @@
                         openDate: openDate,
                         dueDate: 'Sin Fecha',
                         responseScore: parseInt(score),
-                        comments: `[${q.category}] ${q.text} \nNotas: ${comment}`,
+                        comments: `[${q.category}] ${q.text} \nNotas: ${comment}` + (photoUrl ? `\nEVIDENCE:${photoUrl}` : ''),
                         source: 'app_cruzada',
-                        evidence_url: photoUrl,
                         shift: shift
                     });
                 }
@@ -7123,9 +7125,8 @@
                         openDate: openDate,
                         dueDate: dueStr,
                         responseScore: responseScore,
-                        comments: `[GEMBA - ${cat}] Prioridad: ${pri}\n${actionTxt}`,
+                        comments: `[GEMBA - ${cat}] Prioridad: ${pri}\n${actionTxt}` + (urls.length ? `\nEVIDENCE:${urls.join('|')}` : ''),
                         source: 'gemba',
-                        evidence_url: urls.join('|'),
                         shift: shift
                     });
                     qIndex++;
@@ -7189,9 +7190,11 @@
                 if (pri === 'Alta') badgeColor = '#ef4444';
 
                 let photosHtml = '';
-                if (item.evidence_url) {
-                    const urls = item.evidence_url.split('|');
+                const evMatch = justAction.match(/\nEVIDENCE:(.*)/);
+                if (evMatch) {
+                    const urls = evMatch[1].split('|');
                     urls.forEach(u => photosHtml += `<a href="${u}" target="_blank"><img src="${u}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; margin-right: 5px;"></a>`);
+                    justAction = justAction.replace(/\nEVIDENCE:.*/, '');
                 }
 
                 tr.innerHTML = `
@@ -7284,11 +7287,13 @@
                 if (pri === 'Alta') { badgeColor = '#ef4444'; slaText = '36 hrs'; }
 
                 let photoGrid = '';
-                if (act.evidence_url) {
-                    const urls = act.evidence_url.split('|');
+                const evMatch = justAction.match(/\nEVIDENCE:(.*)/);
+                if (evMatch) {
+                    const urls = evMatch[1].split('|');
                     urls.forEach(u => {
                         photoGrid += `<img src="${u}" style="width: 200px; height: 150px; object-fit: cover; border-radius: 8px; margin: 5px; border: 1px solid #ccc;">`;
                     });
+                    justAction = justAction.replace(/\nEVIDENCE:.*/, '');
                 }
                 
                 html += `
