@@ -5245,9 +5245,8 @@
                         openDate: openDate,
                         dueDate: 'Sin Fecha',
                         responseScore: parseInt(score),
-                        comments: `[${q.category}] ${q.text} \nNotas: ${comment}` + (photoUrl ? `\nEVIDENCE:${photoUrl}` : ''),
-                        source: 'app_cruzada',
-                        shift: shift
+                        comments: `[${q.category}] ${q.text} \nNotas: ${comment}\nTURNO:${shift}` + (photoUrl ? `\nEVIDENCE:${photoUrl}` : ''),
+                        source: 'app_cruzada'
                     });
                 }
                 
@@ -7291,9 +7290,8 @@
                         openDate: openDate,
                         dueDate: dueStr,
                         responseScore: responseScore,
-                        comments: `[GEMBA - ${cat}] Prioridad: ${pri}\n${actionTxt}` + (urls.length ? `\nEVIDENCE:${urls.join('|')}` : ''),
-                        source: 'gemba',
-                        shift: shift
+                        comments: `[GEMBA - ${cat}] Prioridad: ${pri}\n${actionTxt}\nTURNO:${shift}` + (urls.length ? `\nEVIDENCE:${urls.join('|')}` : ''),
+                        source: 'gemba'
                     });
                     qIndex++;
                 }
