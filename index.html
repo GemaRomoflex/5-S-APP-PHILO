@@ -2924,15 +2924,15 @@
             document.getElementById('dashboard-empty-state').classList.add('hidden');
             // La visibilidad de dashboard-content ahora es controlada exclusivamente por switchView() para evitar traslapes.
 
-            // FILTRO GLOBAL BASE (Ignorar SIEMPRE los de Gemba)
-            globalFilteredData = allAuditData.filter(item => item.source !== 'gemba');
-            
-            // FILTRO DE ORIGEN DE DATOS (Oficiales vs Cruzadas)
+            // Excluir acciones de GEMBA por defecto en el dashboard general
+            globalFilteredData = allAuditData.filter(item => item.department !== 'Gemba');
+
+            // Filtrado por Origen (app cruzada vs auditorías base)
             const sourceFilter = document.getElementById('global-source-filter').value;
             if (sourceFilter === 'official') {
-                globalFilteredData = globalFilteredData.filter(item => !item.source || item.source !== 'app_cruzada');
+                globalFilteredData = globalFilteredData.filter(item => item.department !== 'Cross Audit');
             } else if (sourceFilter === 'cross') {
-                globalFilteredData = globalFilteredData.filter(item => item.source === 'app_cruzada');
+                globalFilteredData = globalFilteredData.filter(item => item.department === 'Cross Audit');
             }
             
             // FILTRO DE SEGURIDAD (RBAC - Auditor Cruzado encerrado en su área)
@@ -4767,7 +4767,7 @@
             }
             sel.value = s;
 
-            if (item.source === 'app_cruzada') {
+            if (item.department === 'Cross Audit') {
                 document.getElementById('btn-delete-action').classList.remove('hidden');
             } else {
                 document.getElementById('btn-delete-action').classList.add('hidden');
@@ -5037,7 +5037,7 @@
         function loadPastAudits() {
             const audits = {};
             allAuditData.forEach(item => {
-                if (item.source === 'app_cruzada' && item.auditId) {
+                if (item.department === 'Cross Audit' && item.auditId) {
                     if (!audits[item.auditId]) {
                         audits[item.auditId] = {
                             id: item.auditId,
@@ -5245,8 +5245,7 @@
                         openDate: openDate,
                         dueDate: 'Sin Fecha',
                         responseScore: parseInt(score),
-                        comments: `[${q.category}] ${q.text} \nNotas: ${comment}\nTURNO:${shift}` + (photoUrl ? `\nEVIDENCE:${photoUrl}` : ''),
-                        source: 'app_cruzada'
+                        comments: `[${q.category}] ${q.text} \nNotas: ${comment}\nTURNO:${shift}` + (photoUrl ? `\nEVIDENCE:${photoUrl}` : '')
                     });
                 }
                 
@@ -6490,9 +6489,9 @@
             
             dynamicContent.innerHTML = ''; // Limpiar
             let reportData = [];
-            let baseForReport = typeof allAuditData !== 'undefined' ? allAuditData.filter(item => item.source !== 'gemba') : globalFilteredData;
+            let baseForReport = typeof allAuditData !== 'undefined' ? allAuditData.filter(item => item.department !== 'Gemba') : globalFilteredData;
             if (typeof window.currentAppMode !== 'undefined' && window.currentAppMode === 'cruzada') {
-                baseForReport = baseForReport.filter(item => item.source === 'app_cruzada');
+                baseForReport = baseForReport.filter(item => item.department === 'Cross Audit');
             }
             if (typeof window.currentUserRole !== 'undefined' && window.currentUserRole === 'Auditor Cruzado' && window.currentUserArea) {
                 baseForReport = baseForReport.filter(item => item.cleanLocation === window.currentUserArea);
@@ -7290,8 +7289,7 @@
                         openDate: openDate,
                         dueDate: dueStr,
                         responseScore: responseScore,
-                        comments: `[GEMBA - ${cat}] Prioridad: ${pri}\n${actionTxt}\nTURNO:${shift}` + (urls.length ? `\nEVIDENCE:${urls.join('|')}` : ''),
-                        source: 'gemba'
+                        comments: `[GEMBA - ${cat}] Prioridad: ${pri}\n${actionTxt}\nTURNO:${shift}` + (urls.length ? `\nEVIDENCE:${urls.join('|')}` : '')
                     });
                     qIndex++;
                 }
@@ -7321,7 +7319,7 @@
         function initGembaDashboard() {
             document.getElementById('view-gemba-form').classList.add('hidden');
             
-            const gembaData = allAuditData.filter(d => d.source === 'gemba');
+            const gembaData = allAuditData.filter(d => d.department === 'Gemba');
             
             // Render Table
             const tbody = document.querySelector('#gemba-actions-table tbody');
