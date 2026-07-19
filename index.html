@@ -3024,7 +3024,11 @@ Siéntanse libres de reenviar este comunicado a quien consideren necesario. Agra
                     if (isOverdue) {
                         arrOverdue.push(item);
                     } else {
-                        arrWIP.push(item);
+                        // Solo agregar a WIP si tiene uno de los estatus permitidos explícitamente
+                        if (s === 'open' || s === 'reject' || s === 'reasignada' || s === 'reasignado') {
+                            arrWIP.push(item);
+                        }
+                        
                         // Verificar si está próxima a vencer (0 a 2 días)
                         if (item.dueDate && item.dueDate !== 'Sin Fecha') {
                             let cleanStr = item.dueDate.replace(/-/g, '/').split(' ')[0];
