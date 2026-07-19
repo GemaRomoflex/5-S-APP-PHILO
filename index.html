@@ -2987,8 +2987,7 @@ Siéntanse libres de reenviar este comunicado a quien consideren necesario. Agra
             // Filtrar descartes (Excluir -1 y 5 porque 5 no genera accion correctiva real)
             const validActions = globalFilteredData.filter(item => {
                 const s = parseInt(item.responseScore);
-                // Si está en la base de datos, se asume que es una acción válida a menos que tenga calificación perfecta (5)
-                return s !== 5;
+                return s !== 5 && s !== -1;
             });
 
             // Generar y poblar tres arrays independientes
@@ -3024,10 +3023,8 @@ Siéntanse libres de reenviar este comunicado a quien consideren necesario. Agra
                     if (isOverdue) {
                         arrOverdue.push(item);
                     } else {
-                        // Solo agregar a WIP si tiene uno de los estatus permitidos explícitamente
-                        if (s === 'open' || s === 'reject' || s === 'reasignada' || s === 'reasignado' || s === 're-assigned' || s === 'reassigned') {
-                            arrWIP.push(item);
-                        }
+                        // Cualquier cosa que no sea closed o overdue, se considera En Proceso (WIP)
+                        arrWIP.push(item);
                         
                         // Verificar si está próxima a vencer (0 a 2 días)
                         if (item.dueDate && item.dueDate !== 'Sin Fecha') {
