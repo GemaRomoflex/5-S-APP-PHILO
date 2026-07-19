@@ -1949,10 +1949,9 @@
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <strong style="color: var(--color-text); font-size: 14px;">Origen de Datos:</strong>
                                 <select id="global-source-filter" class="filter-select" style="padding: 6px; font-size: 13px; width: auto;" onchange="updateDashboard()">
-                                    <option value="official">Auditorías Oficiales (Lean)</option>
+                                    <option value="official" selected>Auditorías Oficiales (Lean)</option>
                                     <option value="cross">Auditorías Cruzadas (App)</option>
-                                    <option value="gemba">Gemba Walks</option>
-                                    <option value="all" selected>Todas (Combinadas)</option>
+                                    <option value="all">Todas (Combinadas)</option>
                                 </select>
                             </div>
                         </section>
@@ -2946,19 +2945,16 @@ Siéntanse libres de reenviar este comunicado a quien consideren necesario. Agra
             document.getElementById('dashboard-empty-state').classList.add('hidden');
             // La visibilidad de dashboard-content ahora es controlada exclusivamente por switchView() para evitar traslapes.
 
-            // Cargar toda la base de datos
-            globalFilteredData = [...allAuditData];
+            // Excluir acciones de GEMBA por defecto en el dashboard general
+            globalFilteredData = allAuditData.filter(item => item.department !== 'Gemba');
 
-            // Filtrado por Origen
+            // Filtrado por Origen (app cruzada vs auditorías base)
             const sourceFilter = document.getElementById('global-source-filter').value;
             if (sourceFilter === 'official') {
-                globalFilteredData = globalFilteredData.filter(item => item.department !== 'Cross Audit' && item.department !== 'Gemba');
+                globalFilteredData = globalFilteredData.filter(item => item.department !== 'Cross Audit');
             } else if (sourceFilter === 'cross') {
                 globalFilteredData = globalFilteredData.filter(item => item.department === 'Cross Audit');
-            } else if (sourceFilter === 'gemba') {
-                globalFilteredData = globalFilteredData.filter(item => item.department === 'Gemba');
             }
-            // Si es 'all', no se aplica ningún filtro de origen.
             
             // FILTRO DE SEGURIDAD (RBAC - Auditor Cruzado encerrado en su área)
             if (window.currentUserRole === 'Auditor Cruzado' && window.currentUserArea) {
