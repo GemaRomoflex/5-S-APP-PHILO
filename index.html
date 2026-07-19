@@ -3303,7 +3303,7 @@ Siéntanse libres de reenviar este comunicado a quien consideren necesario. Agra
 
             // KPI 2: Acciones Totales (Suma de los 3 arrays independientes de negocio)
             const totalActions = arrClosed.length + arrOverdue.length + arrWIP.length;
-            document.getElementById('kpi-total-actions').textContent = totalActions;
+            // document.getElementById('kpi-total-actions').textContent = totalActions; // Tarjeta removida
 
             // KPI 3: Acciones en Proceso
             document.getElementById('kpi-open-actions').textContent = arrWIP.length;
