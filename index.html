@@ -67,13 +67,15 @@
             line-height: 1.6;
             margin: 0;
             padding: 0;
+            overflow: hidden; /* Evitar que el fondo se desborde, delegar scroll a los hijos */
         }
 
         /* --- LAYOUT PRINCIPAL (SIDEBAR + CONTENT) --- */
         .app-layout {
             display: none; /* Oculto por defecto hasta validar sesión en Supabase */
-            min-height: 100vh;
+            height: 100vh;
             width: 100%;
+            overflow: hidden;
         }
 
         /* --- LOGIN OVERLAY --- */
@@ -152,7 +154,18 @@
             padding: 24px 0;
             flex-shrink: 0;
             transition: width 0.3s ease;
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
+            height: 100vh;
+        }
+
+        /* Scrollbar interno elegante para la sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
         }
         
         .sidebar.collapsed {
@@ -245,6 +258,7 @@
             gap: 20px;
             height: 100vh;
             overflow-y: auto;
+            overflow-x: hidden; /* Evitar scroll horizontal general, que los hijos lo manejen */
         }
 
         /* --- CONTENEDOR INTERNO --- */
