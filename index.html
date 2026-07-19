@@ -2426,6 +2426,17 @@
                             </div>
                         </div>
 
+                        <div class="form-group" style="margin-bottom: 30px;">
+                            <label style="font-size: 16px; color: #005A9C;">Mensaje del Reporte a Gerentes (Personalizable para cada Gemba):</label>
+                            <textarea id="gemba-report-msg" class="form-control" rows="9">Estimados Gerentes,
+
+Como parte del seguimiento al recorrido Gemba realizado la semana pasada, solicitamos amablemente su apoyo con las acciones derivadas en el pasillo que conecta las áreas de Empaque y Almacén.
+
+Dado que en dicha zona se encontraron objetos pertenecientes a distintos departamentos, les compartimos este reporte con el objetivo de agilizar su resolución. Les pedimos de favor canalizar estas acciones a las personas responsables dentro de sus respectivos equipos, recordando que este pasillo debe permanecer estrictamente libre de estaciones de trabajo, carros, material y basura para asegurar el flujo adecuado.
+
+Siéntanse libres de reenviar este comunicado a quien consideren necesario. Agradecemos de antemano su colaboración y liderazgo.</textarea>
+                        </div>
+
                         <div style="border-top: 2px dashed #ccc; padding-top: 25px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                                 <h3 style="margin: 0; color: #333;">Registro de Hallazgos</h3>
@@ -7298,10 +7309,11 @@
                 if (dbErr) throw dbErr;
 
                 alert("Gemba guardado exitosamente.");
+                const reportMsg = document.getElementById('gemba-report-msg').value;
                 document.getElementById('gemba-walk-form').reset();
                 
                 // Generar reporte
-                generateGembaReport(openDateRaw, actionsToInsert);
+                generateGembaReport(openDateRaw, actionsToInsert, reportMsg);
                 
                 // Recargar Data
                 loadFromSupabase();
@@ -7403,10 +7415,10 @@
             });
         }
 
-        async function generateGembaReport(dateRaw, actions) {
+        async function generateGembaReport(dateRaw, actions, customMsg = "Se comparten acciones generadas durante el Gemba, favor de darles prioridad según su nivel.") {
             // Build temporary hidden div for HTML2Canvas
             const reportDiv = document.createElement('div');
-            reportDiv.style.cssText = "position: absolute; left: -9999px; top: 0; width: 1200px; background: white; padding: 40px; font-family: 'Segoe UI', sans-serif;";
+            reportDiv.style.cssText = "position: absolute; left: -9999px; top: 0; width: 1400px; background: white; padding: 0; font-family: 'Segoe UI', sans-serif;";
             document.body.appendChild(reportDiv);
             
             const [y, m, d] = dateRaw.split('-');
@@ -7414,18 +7426,19 @@
             const formattedDate = `${parseInt(d)} de ${months[parseInt(m)-1]}`;
             
             let html = `
-                <div style="background-color: #005A9C; color: white; padding: 20px 40px; border-radius: 8px 8px 0 0; text-align: center;">
-                    <h1 style="margin: 0; font-size: 36px;">Reporte Gemba Walk</h1>
-                    <h2 style="margin: 5px 0 0 0; font-size: 24px; color: #bae6fd;">${formattedDate}</h2>
+                <div style="width: 100%; padding: 0;">
+                    <img src="./documents/plantilla de comunicados.png" style="width: 100%; height: auto; display: block;" onerror="this.style.display='none'">
                 </div>
-                <div style="padding: 20px; font-size: 18px; color: #333; line-height: 1.5;">
-                    <p>Equipo,<br>Se comparten acciones generadas durante el Gemba de la fecha <strong>${formattedDate}</strong>, favor de darles prioridad según su nivel.</p>
+                <div style="padding: 40px 40px 20px 40px;">
+                    <h2 style="color: #005A9C; margin-top: 0; font-size: 28px; border-bottom: 2px solid #005A9C; padding-bottom: 10px;">Reporte Ejecutivo Gemba Walk - ${formattedDate}</h2>
+                    <div style="font-size: 18px; color: #333; line-height: 1.6; white-space: pre-wrap; font-family: Arial, sans-serif;">${customMsg}</div>
                 </div>
+                <div style="padding: 0 40px 40px 40px;">
                 <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
                     <thead>
                         <tr style="background-color: #f1f5f9; border-bottom: 3px solid #cbd5e1;">
-                            <th style="padding: 15px; text-align: left; width: 40%;">Evidencia Fotográfica</th>
-                            <th style="padding: 15px; text-align: left;">Detalle del Hallazgo</th>
+                            <th style="padding: 15px; text-align: left; width: 35%;">Evidencia Fotográfica</th>
+                            <th style="padding: 15px; text-align: left; width: 65%;">Detalle del Hallazgo</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -7475,7 +7488,7 @@
                 `;
             });
 
-            html += `</tbody></table>`;
+            html += `</tbody></table></div>`;
             reportDiv.innerHTML = html;
 
             // Wait for images to load before canvas
