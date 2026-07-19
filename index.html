@@ -2986,8 +2986,8 @@ Siéntanse libres de reenviar este comunicado a quien consideren necesario. Agra
 
             // Filtrar descartes (Excluir -1 y 5 porque 5 no genera accion correctiva real)
             const validActions = globalFilteredData.filter(item => {
-                const s = parseInt(item.responseScore);
-                return s !== 5 && s !== -1;
+                // Si está en la base de datos, se asume que es una acción válida a menos que tenga calificación perfecta (5)
+                return s !== 5;
             });
 
             // Generar y poblar tres arrays independientes
