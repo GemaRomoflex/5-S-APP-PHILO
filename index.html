@@ -2731,7 +2731,7 @@ Siéntanse libres de reenviar este comunicado a quien consideren necesario. Agra
                 const headerMap = mapHeaders(headers);
 
                 // Convertir filas crudas en objetos mapeados con normalización de campos
-                const newItems = parsedRows.slice(1).map((row, index) => {
+                let newItems = parsedRows.slice(1).map((row, index) => {
                     if (row.length === 0 || (row.length === 1 && row[0].trim() === '')) return null;
 
                     const getValue = (idx, defaultVal = '') => {
