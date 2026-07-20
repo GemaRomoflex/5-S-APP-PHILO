@@ -7719,7 +7719,8 @@
         }
 
         function initGembaDashboard() {
-            document.getElementById('view-gemba-form').classList.add('hidden');
+            document.getElementById('view-gemba-admin').classList.add('hidden');
+            document.getElementById('view-gemba-participant').classList.add('hidden');
             
             const gembaData = allAuditData.filter(d => d.department === 'Gemba');
             
