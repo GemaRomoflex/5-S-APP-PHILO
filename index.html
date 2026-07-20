@@ -2987,7 +2987,11 @@ Siéntanse libres de reenviar este comunicado a quien consideren necesario. Agra
             // Filtrar descartes (Excluir -1 y 5 porque 5 no genera accion correctiva real)
             const validActions = globalFilteredData.filter(item => {
                 const s = parseInt(item.responseScore);
-                return s !== 5 && s !== -1;
+                const isValid = s !== 5 && s !== -1;
+                if (!isValid && item.id && item.id.trim() !== '') {
+                    console.log("🕵️‍♂️ Acción ignorada por Score (" + s + "):", item.id, item);
+                }
+                return isValid;
             });
 
             // Generar y poblar tres arrays independientes
