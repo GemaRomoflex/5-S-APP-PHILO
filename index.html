@@ -2814,11 +2814,12 @@
                     };
                 }).filter(item => item !== null);
 
-                // Nota: Ya no filtramos los 5 y -1 porque son necesarios para calcular el score final de la auditoría.
-                // newItems = newItems.filter(item => item.responseScore !== 5 && item.responseScore !== -1);
+                // FILTRO INTELIGENTE: Eliminamos los -1 (No aplica) para no hacer basura en BD.
+                // PERO DEJAMOS LOS 5, porque son necesarios para que la matemática del Score sea correcta.
+                newItems = newItems.filter(item => item.responseScore !== -1);
 
                 if (newItems.length === 0) {
-                    alert('No se encontraron acciones correctivas válidas en este archivo.');
+                    alert('No se encontraron registros válidos en este archivo.');
                     return;
                 }
 
