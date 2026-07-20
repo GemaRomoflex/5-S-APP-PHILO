@@ -2645,7 +2645,7 @@ Siéntanse libres de reenviar este comunicado a quien consideren necesario. Agra
             }
 
             // --- B) CARGAR Y MIGRAR AUDITORÍAS ---
-            const { data, error } = await supabaseClient.from('actions').select('*');
+            const { data, error } = await supabaseClient.from('actions').select('*').limit(100000);
             
             if (error) {
                 console.error("Error al descargar datos de Supabase:", error);
