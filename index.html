@@ -2814,11 +2814,11 @@
                     };
                 }).filter(item => item !== null);
 
-                // FILTRAR ACCIONES BASURA ANTES DE SUBIR
-                newItems = newItems.filter(item => item.responseScore !== 5 && item.responseScore !== -1);
+                // Nota: Ya no filtramos los 5 y -1 porque son necesarios para calcular el score final de la auditoría.
+                // newItems = newItems.filter(item => item.responseScore !== 5 && item.responseScore !== -1);
 
                 if (newItems.length === 0) {
-                    alert('No se encontraron acciones correctivas válidas en este archivo (todas son 5 o -1).');
+                    alert('No se encontraron acciones correctivas válidas en este archivo.');
                     return;
                 }
 
@@ -2830,8 +2830,7 @@
 
                 const upsertResults = await runUpsert(newItems);
                 
-                const validNew = newItems.filter(item => item.responseScore !== 5 && item.responseScore !== -1).length;
-                statusText.innerHTML = `<strong>Sincronización exitosa:</strong> Se agregaron <strong>${upsertResults.inserted}</strong> registros y se actualizaron <strong>${upsertResults.updated}</strong>. (Se detectaron ${validNew} acciones correctivas válidas en esta carga).`;
+                statusText.innerHTML = `<strong>Sincronización exitosa:</strong> Se agregaron <strong>${upsertResults.inserted}</strong> registros y se actualizaron <strong>${upsertResults.updated}</strong>.`;
                 statusDiv.classList.remove('hidden');
 
                 loadFromSupabase();
