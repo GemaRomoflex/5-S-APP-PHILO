@@ -2780,8 +2780,11 @@ Siéntanse libres de reenviar este comunicado a quien consideren necesario. Agra
                     };
                 }).filter(item => item !== null);
 
+                // FILTRAR ACCIONES BASURA ANTES DE SUBIR
+                newItems = newItems.filter(item => item.responseScore !== 5 && item.responseScore !== -1);
+
                 if (newItems.length === 0) {
-                    alert('No se pudieron extraer registros del archivo.');
+                    alert('No se encontraron acciones correctivas válidas en este archivo (todas son 5 o -1).');
                     return;
                 }
 
@@ -2917,12 +2920,15 @@ Siéntanse libres de reenviar este comunicado a quien consideren necesario. Agra
                 else insertedCount++;
             });
 
-            const { data, error } = await supabaseClient.from('actions').upsert(newItems, { onConflict: 'actionId' }).select();
-            
-            if (error) {
-                console.error("Error al hacer upsert en Supabase:", error);
-                alert("Hubo un error guardando los datos en Supabase: " + error.message);
-                return { inserted: 0, updated: 0, total: 0 };
+            const chunkSize = 500;
+            for (let i = 0; i < newItems.length; i += chunkSize) {
+                const chunk = newItems.slice(i, i + chunkSize);
+                const { error } = await supabaseClient.from('actions').upsert(chunk, { onConflict: 'actionId' });
+                if (error) {
+                    console.error("Error al hacer upsert en Supabase:", error);
+                    alert("Hubo un error guardando una parte de los datos en Supabase: " + error.message);
+                    return { inserted: 0, updated: 0, total: 0 };
+                }
             }
 
             return {
