@@ -3059,6 +3059,43 @@ Siéntanse libres de reenviar este comunicado a quien consideren necesario. Agra
             renderChartDeptOverdue();
             renderChartAgingOverdue();
 
+            // ----------------------------------------------------
+            // GPS TRACKER PARA ACCION 2631352
+            // ----------------------------------------------------
+            let debugMsg = "NO LLEGÓ A BD (No encontrada en allAuditData).";
+            const inAll = allAuditData.find(i => String(i.actionId).trim() === '2631352');
+            if (inAll) {
+                debugMsg = "Llegó a BD. ";
+                const inGlobal = globalFilteredData.find(i => String(i.actionId).trim() === '2631352');
+                if (inGlobal) {
+                    debugMsg += "Pasó filtro Gemba/Cross. ";
+                    const inValid = validActions.find(i => String(i.actionId).trim() === '2631352');
+                    if (inValid) {
+                        debugMsg += "Pasó regla Score ("+inGlobal.responseScore+"). ";
+                        const inWIP = arrWIP.find(i => String(i.actionId).trim() === '2631352');
+                        const inOverdue = arrOverdue.find(i => String(i.actionId).trim() === '2631352');
+                        const inClosed = arrClosed.find(i => String(i.actionId).trim() === '2631352');
+                        if (inWIP) debugMsg += "🎯 ESTÁ EN 'EN PROCESO'!";
+                        else if (inOverdue) debugMsg += "🔴 SE FUE A 'VENCIDAS'!";
+                        else if (inClosed) debugMsg += "🟢 SE FUE A 'CERRADAS'!";
+                        else debugMsg += "👻 SE PERDIÓ EN EL LIMBO!";
+                    } else {
+                        debugMsg += "❌ BORRADA POR REGLA DE SCORE (Score: " + inGlobal.responseScore + ")";
+                    }
+                } else {
+                    debugMsg += "❌ BORRADA POR FILTRO GLOBAL (Dept: " + inAll.department + ")";
+                }
+            }
+            const statusDiv = document.getElementById('upload-status');
+            const statusText = document.getElementById('status-text');
+            if (statusDiv && statusText) {
+                statusText.innerHTML = "<strong>📍 GPS Acción 2631352:</strong> " + debugMsg;
+                statusDiv.classList.remove('hidden');
+                statusDiv.classList.remove('bg-green-600', 'bg-blue-600');
+                statusDiv.classList.add('bg-red-600');
+            }
+            // ----------------------------------------------------
+
             // Actualizar datos de la tabla
             applyFilters();
             
