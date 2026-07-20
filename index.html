@@ -2747,6 +2747,10 @@ Siéntanse libres de reenviar este comunicado a quien consideren necesario. Agra
                     const scoreVal = parseInt(rawScore);
                     const score = isNaN(scoreVal) ? -1 : scoreVal;
 
+                    if (actionId === '2631352' || actionId === '2631361') {
+                        alert("🔍 DEBUG (Acción " + actionId + "):\nRaw Score: '" + rawScore + "'\nScore Parsed: " + score + "\nLocation Raw: '" + rawLocation + "'\nRevisa si estos valores corresponden al Excel, o si se recorrieron las columnas.");
+                    }
+
                     const dept = getValue(headerMap.dept, 'Sin Departamento');
                     const owner = getValue(headerMap.owner, 'Sin Asignar');
                     
