@@ -3529,23 +3529,26 @@
         }
 
         function renderChartAreaScores() {
-            const audits = getAuditScores(globalFilteredData);
-            
-            // Promediar el score de las auditorías por área
+            // Calcular el score directamente de las acciones por área (evitar promedio de promedios)
             const areaGroups = {};
-            audits.forEach(audit => {
-                const loc = audit.location;
+            globalFilteredData.forEach(item => {
+                const score = parseInt(item.responseScore, 10);
+                if (isNaN(score) || score === -1) return; // Ignoramos NA y datos vacíos
+                
+                const loc = item.cleanLocation || 'Sin Área';
                 if (!areaGroups[loc]) {
                     areaGroups[loc] = { sum: 0, count: 0 };
                 }
-                areaGroups[loc].sum += audit.percentage;
+                areaGroups[loc].sum += score;
                 areaGroups[loc].count += 1;
             });
 
             let areaScores = Object.keys(areaGroups).map(loc => {
+                let rawAvg = areaGroups[loc].count > 0 ? areaGroups[loc].sum / areaGroups[loc].count : 0;
+                let percentage = (rawAvg / 5) * 100;
                 return {
                     location: loc,
-                    avg: Math.round((areaGroups[loc].sum / areaGroups[loc].count) * 10) / 10
+                    avg: Math.round(percentage * 10) / 10
                 };
             });
 
