@@ -3060,10 +3060,10 @@
                 });
             }
 
-            // Filtrar descartes (Excluir -1 y 5 porque 5 no genera accion correctiva real)
+            // Filtrar descartes: Solo las calificaciones 1, 2, 3 y 4 generan una acción correctiva real.
             const validActions = globalFilteredData.filter(item => {
-                const s = parseInt(item.responseScore);
-                return s !== 5 && s !== -1;
+                const s = parseInt(item.responseScore, 10);
+                return !isNaN(s) && s >= 1 && s <= 4;
             });
 
             // Generar y poblar tres arrays independientes
@@ -3406,11 +3406,14 @@
 
         // 5. CÁLCULO DE KPIs METRICS
         function calculateKPIs() {
-            // KPI 1: Promedio de Score General 5S (Excluye -1) convertido a porcentaje (Promedio / 5) * 100
-            const scoreData = globalFilteredData.filter(item => parseInt(item.responseScore) !== -1);
+            // KPI 1: Promedio de Score General 5S (Solo válidos del 1 al 5) convertido a porcentaje (Promedio / 5) * 100
+            const scoreData = globalFilteredData.filter(item => {
+                const s = parseInt(item.responseScore, 10);
+                return !isNaN(s) && s >= 1 && s <= 5;
+            });
             let avgPercent = 0;
             if (scoreData.length > 0) {
-                const sum = scoreData.reduce((acc, curr) => acc + parseInt(curr.responseScore), 0);
+                const sum = scoreData.reduce((acc, curr) => acc + parseInt(curr.responseScore, 10), 0);
                 const rawAvg = sum / scoreData.length;
                 avgPercent = (rawAvg / 5) * 100;
             }
@@ -3494,7 +3497,7 @@
             const auditGroups = {}; 
             data.forEach(item => {
                 const score = parseInt(item.responseScore, 10);
-                if (isNaN(score) || score === -1) return;
+                if (isNaN(score) || score < 1 || score > 5) return; // Regla estricta 1 al 5
                 
                 let dateKey = item.openDate ? item.openDate.split(' ')[0] : 'Sin Fecha';
                 let loc = item.cleanLocation || 'Sin Área';
@@ -3533,7 +3536,7 @@
             const areaGroups = {};
             globalFilteredData.forEach(item => {
                 const score = parseInt(item.responseScore, 10);
-                if (isNaN(score) || score === -1) return; // Ignoramos NA y datos vacíos
+                if (isNaN(score) || score < 1 || score > 5) return; // Regla estricta 1 al 5
                 
                 const loc = item.cleanLocation || 'Sin Área';
                 if (!areaGroups[loc]) {
