@@ -171,6 +171,23 @@
         .sidebar.collapsed {
             width: 70px;
         }
+
+        /* --- RESPONSIVE SIDEBAR --- */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 9998;
+                width: 260px !important; /* En móvil, si está abierto, toma 260px */
+            }
+            .sidebar.collapsed {
+                transform: translateX(-100%);
+                width: 0 !important;
+                padding: 0;
+            }
+            .btn-toggle-sidebar-mobile {
+                display: block !important;
+            }
+        }
         
         .sidebar-header {
             padding: 0 24px 24px 24px;
@@ -1553,6 +1570,10 @@
 
     <div class="app-layout">
         
+        <!-- BOTÓN MÓVIL FLOTANTE (Solo visible en cel cuando barra está colapsada) -->
+        <button class="btn-toggle-sidebar-mobile" onclick="toggleSidebar()" style="display: none; position: fixed; top: 15px; left: 15px; z-index: 10000; background-color: #005A9C; color: white; border: none; padding: 10px 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;" title="Abrir Menú">
+            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
         <!-- SIDEBAR DE NAVEGACIÓN -->
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -2411,7 +2432,7 @@
                 <div id="view-gemba-admin" class="hidden" style="width: 100%; display: flex; flex-direction: column; gap: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <h2 style="color: #005A9C; margin: 0; font-size: 24px;">👑 Panel de Administrador: Gemba en Vivo</h2>
-                        <button class="btn btn-secondary" onclick="switchTab('gemba')">← Volver al Dashboard</button>
+                        <button class="btn" onclick="switchTab('gemba')" style="background-color: #64748b; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">← Volver al Dashboard</button>
                     </div>
                     
                     <div class="table-card" style="padding: 25px;">
@@ -2434,7 +2455,7 @@
                                 <input type="text" id="gemba-admin-areas" class="form-control" placeholder="Ej. B27, Almacén...">
                             </div>
                         </div>
-                        <button type="button" class="btn btn-primary" onclick="createGembaEvent()" style="width: 100%; font-size: 18px; padding: 12px; background-color: #005A9C;">📡 Crear Sala y Generar PIN</button>
+                        <button type="button" class="btn btn-primary" onclick="createGembaEvent()" style="width: 100%; font-size: 18px; padding: 12px; background-color: #005A9C; color: white; border: none; border-radius: 5px;">📡 Crear Sala y Generar PIN</button>
                     </div>
 
                     <!-- LOBBY ACTIVO (Oculto hasta crear) -->
@@ -2454,8 +2475,8 @@
                         </div>
                         
                         <div style="text-align: right; border-top: 1px solid #eee; padding-top: 20px;">
-                            <button type="button" id="btn-start-gemba" class="btn btn-primary" onclick="startGembaEvent()" style="font-size: 18px; padding: 12px 30px; background-color: #10b981; border-color: #10b981;">🚀 Iniciar Auditoría</button>
-                            <button type="button" id="btn-end-gemba" class="btn btn-primary hidden" onclick="endGembaEvent()" style="font-size: 18px; padding: 12px 30px; background-color: #ef4444; border-color: #ef4444;">🛑 Finalizar Auditoría y Descargar Reporte (PNG)</button>
+                            <button type="button" id="btn-start-gemba" class="btn btn-primary" onclick="startGembaEvent()" style="font-size: 18px; padding: 12px 30px; background-color: #10b981; border-color: #10b981; color: white;">🚀 Iniciar Auditoría</button>
+                            <button type="button" id="btn-end-gemba" class="btn btn-primary hidden" onclick="endGembaEvent()" style="font-size: 18px; padding: 12px 30px; background-color: #ef4444; border-color: #ef4444; color: white;">🛑 Finalizar Auditoría y Descargar Reporte (PNG)</button>
                         </div>
                     </div>
                 </div>
@@ -2478,7 +2499,7 @@
                             <label style="font-size: 18px; font-weight: bold;">PIN de la Sala:</label>
                             <input type="number" id="gemba-participant-pin" class="form-control" style="font-size: 24px; padding: 15px; text-align: center; letter-spacing: 5px;" placeholder="0000">
                         </div>
-                        <button onclick="joinGembaEvent()" class="btn btn-primary" style="width: 100%; font-size: 20px; padding: 15px; background-color: #f59e0b; border: none; border-radius: 50px;">Entrar a la Sala</button>
+                        <button onclick="joinGembaEvent()" class="btn btn-primary" style="width: 100%; font-size: 20px; padding: 15px; background-color: #f59e0b; color: white; border: none; border-radius: 50px;">Entrar a la Sala</button>
                     </div>
 
                     <!-- WAITING ROOM -->
@@ -3457,8 +3478,8 @@
         function getAuditScores(data) {
             const auditGroups = {}; 
             data.forEach(item => {
-                const score = item.responseScore;
-                if (score === -1) return;
+                const score = parseInt(item.responseScore, 10);
+                if (isNaN(score) || score === -1) return;
                 
                 let dateKey = item.openDate ? item.openDate.split(' ')[0] : 'Sin Fecha';
                 let loc = item.cleanLocation || 'Sin Área';
@@ -7532,7 +7553,7 @@
                     </label>
                     <span id="act-photo-status-${actionId}" style="font-size: 12px; color: #666;">Sin foto</span>
                 </div>
-                <button onclick="submitMobileAction(this, ${actionId}, '${section}', '${question}')" class="btn btn-primary" style="width: 100%; margin-top: 15px; background: #dc2626; border: none; padding: 12px; font-weight: bold;">
+                <button onclick="submitMobileAction(this, ${actionId}, '${section}', '${question}')" class="btn btn-primary" style="width: 100%; margin-top: 15px; background: #dc2626; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 5px;">
                     Subir Acción a la Sala
                 </button>
             `;
@@ -7602,29 +7623,31 @@
             
             template.onload = async () => {
                 // Configurar tamaño base. Usaremos el de la plantilla.
-                // Haremos el canvas más alto si hay muchas acciones (ej. 350px extra por cada acción)
                 const headerHeight = template.height > 0 ? template.height : 1080;
                 const width = template.width > 0 ? template.width : 1920;
                 const actionBlockHeight = 350; 
+                const startOfWhiteAreaY = 350; // Altura aproximada del banner superior
                 
                 canvas.width = width;
-                canvas.height = headerHeight + (actions.length * actionBlockHeight) + 100;
+                // Hacer el canvas más alto solo si las acciones sobrepasan la plantilla original
+                const neededHeight = startOfWhiteAreaY + (actions.length * actionBlockHeight) + 100;
+                canvas.height = Math.max(headerHeight, neededHeight);
                 
-                // Fondo blanco por defecto
+                // Fondo blanco por defecto (por si extendemos la plantilla hacia abajo)
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                // Dibujar el header/plantilla original en la parte superior
+                // Dibujar la plantilla original (se dibujará el banner y lo que traiga)
                 ctx.drawImage(template, 0, 0, width, headerHeight);
                 
-                // Escribir Titulo del Reporte
+                // Escribir Titulo del Reporte justo debajo del banner
                 ctx.fillStyle = '#000000';
                 ctx.font = 'bold 40px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText(`Reporte de Gemba Walk - ${document.getElementById('gemba-admin-date').value}`, width / 2, headerHeight + 50);
+                ctx.fillText(`Reporte de Gemba Walk - ${document.getElementById('gemba-admin-date').value}`, width / 2, startOfWhiteAreaY + 40);
                 
                 // Dibujar cada acción
-                let startY = headerHeight + 120;
+                let startY = startOfWhiteAreaY + 100;
                 
                 for (let i = 0; i < actions.length; i++) {
                     const act = actions[i];
