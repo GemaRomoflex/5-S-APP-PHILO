@@ -3552,31 +3552,6 @@
                 };
             });
 
-            // DIAGNÓSTICO: Buscar L12 BOTTOM y mostrar cuántas preguntas y qué calificaciones tiene
-            const l12AuditScores = audits.filter(a => a.location === 'L12 BOTTOM');
-            const l12RawData = globalFilteredData.filter(item => (item.cleanLocation || '').toUpperCase() === 'L12 BOTTOM');
-            const count5s = l12RawData.filter(i => parseInt(i.responseScore, 10) === 5).length;
-            const countAll = l12RawData.length;
-            
-            console.log("=== DIAGNÓSTICO L12 BOTTOM ===");
-            console.log("Auditorías encontradas:", l12AuditScores);
-            console.log("Acciones crudas encontradas:", countAll);
-            console.log("Cincos encontrados:", count5s);
-            
-            let diagDiv = document.getElementById('debug-diag');
-            if (!diagDiv) {
-                diagDiv = document.createElement('div');
-                diagDiv.id = 'debug-diag';
-                diagDiv.style = "position: fixed; bottom: 10px; left: 10px; background: rgba(0,0,0,0.8); color: lime; padding: 15px; z-index: 999999; border-radius: 8px; font-family: monospace; font-size: 14px;";
-                document.body.appendChild(diagDiv);
-            }
-            diagDiv.innerHTML = `<strong>DIAGNÓSTICO L12 BOTTOM:</strong><br>
-            - Auditorías grupales: ${l12AuditScores.length}<br>
-            - Total preguntas en BD para el área: ${countAll}<br>
-            - Preguntas con calificación 5: ${count5s}<br>
-            <span style="color: yellow; font-size: 11px;">(Si hay 0 cincos, los datos en Supabase están incompletos)</span>`;
-
-
             if (areaTopMode === 'worst') {
                 areaScores.sort((a, b) => a.avg - b.avg);
             } else {
