@@ -2508,13 +2508,13 @@
                     
                     <div class="table-card" style="padding: 25px;">
                         <h3 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px;">Crear Nueva Sala Virtual</h3>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                             <div class="form-group" style="display: none;">
                                 <label>Fecha:</label>
                                 <input type="date" id="gemba-admin-date" class="form-control">
                             </div>
                             <div class="form-group">
-                                <label>Turno:</label>
+                                <label style="text-transform: uppercase; font-weight: bold; font-size: 14px; color: #555;">Turno:</label>
                                 <select id="gemba-admin-shift" class="form-control">
                                     <option value="1">Turno 1</option>
                                     <option value="2">Turno 2</option>
@@ -2522,6 +2522,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
+                                <label style="text-transform: uppercase; font-weight: bold; font-size: 14px; color: #555;">Áreas Visitadas:</label>
                                 <select id="gemba-admin-areas" class="form-control">
                                     <!-- Dinámico vía populateGembaAreasSelect() -->
                                 </select>
