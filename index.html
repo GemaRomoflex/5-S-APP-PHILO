@@ -4847,6 +4847,10 @@
             const statusVal = document.getElementById('editor-filter-status').value;
 
             editorFilteredData = allAuditData.filter(item => {
+                // Separación estricta 5S vs Gemba
+                if (currentAppMode === '5s' && (item.department === 'Gemba' || item.department === 'Gemba Walk')) return false;
+                if (currentAppMode === 'gemba' && item.department !== 'Gemba' && item.department !== 'Gemba Walk') return false;
+
                 // Excluir Descartes (-1) y Perfectos (5)
                 const score = parseInt(item.responseScore);
                 if (score === 5 || score === -1) return false;
