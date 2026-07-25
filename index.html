@@ -64,20 +64,41 @@
         body.tv-mode #btn-competition-mode, body.tv-mode #btn-tv-mode, body.tv-mode #btn-manage-owners { display: none !important; }
         
         /* Ajustes TV Dashboard Normal */
-        body.tv-mode:not([data-theme="competition"]) #dashboard-content { display: flex !important; flex-wrap: wrap; flex-direction: row; }
-        body.tv-mode:not([data-theme="competition"]) .kpis-grid { width: 100%; grid-template-columns: 1fr !important; margin-bottom: 20px !important; }
+        body.tv-mode:not([data-theme="competition"]) #dashboard-content { 
+            display: grid !important; 
+            grid-template-columns: 1fr 1fr 1fr !important;
+            grid-template-rows: auto 1fr !important; 
+            gap: 20px; 
+            height: 100vh !important;
+            padding-bottom: 20px;
+        }
+        body.tv-mode:not([data-theme="competition"]) .kpis-grid { 
+            grid-column: 1 / -1 !important; 
+            display: flex !important;
+            justify-content: center !important;
+            margin-bottom: 0 !important;
+        }
         body.tv-mode:not([data-theme="competition"]) .kpi-card:not(:first-child) { display: none !important; }
         body.tv-mode:not([data-theme="competition"]) .kpi-card:first-child { text-align: center; justify-content: center; transform: scale(1.1); margin-top: 10px; }
         
-        body.tv-mode:not([data-theme="competition"]) .charts-grid { flex: 1; margin-right: 20px; display: flex; flex-direction: column; }
-        body.tv-mode:not([data-theme="competition"]) .charts-three-grid { flex: 2; display: flex; gap: 20px; }
-        
-        body.tv-mode:not([data-theme="competition"]) .chart-card { padding: 15px; flex: 1; height: calc(100vh - 190px) !important; }
+        /* Desempacar las secciones para que sus gráficas entren directo al grid de 3 columnas */
+        body.tv-mode:not([data-theme="competition"]) .charts-grid,
+        body.tv-mode:not([data-theme="competition"]) .charts-three-grid { 
+            display: contents !important; 
+        }
+        body.tv-mode:not([data-theme="competition"]) .chart-card { 
+            padding: 15px; 
+            height: 100% !important; 
+            margin: 0 !important; 
+        }
         
         /* Ocultamos Historial (Aging Overdue) */
         body.tv-mode:not([data-theme="competition"]) .charts-three-grid > .chart-card:nth-child(2) { display: none !important; } 
 
         /* Ajustes TV Modo Competencia (Mario Kart) */
+        body.tv-mode[data-theme="competition"] .main-content {
+            padding: 0 !important; /* Eliminar padding global que alejaba todo de la orilla */
+        }
         body.tv-mode[data-theme="competition"] .racetrack-container {
             display: flex !important;
             flex-direction: row !important; /* Pódium Izquierda, Pista Derecha */
@@ -91,19 +112,26 @@
             display: none !important; /* Ocultar el título para que no robe espacio en flex */
         }
         body.tv-mode[data-theme="competition"] .podium-container {
-            flex: 1 !important;
-            width: 50% !important;
-            max-width: 50% !important;
-            height: 100vh !important;
+            flex: none !important; /* Quitar flex-grow para usar width exacto */
+            width: 50vw !important;
+            max-width: 50vw !important;
+            height: 100vh !important; /* Rellenar altura completa */
+            max-height: none !important;
             margin: 0 !important;
-            border-radius: 0 !important; /* Quitar bordes redondeados para rellenar orillas */
-            transform: none !important; /* Quitar zoom al contenedor, lo haremos a los escalones */
-            padding-bottom: 80px !important; /* Separación del suelo */
+            padding: 0 0 50px 0 !important; /* Solo espacio abajo para las bases */
+            border-radius: 0 !important; /* Pódium cuadrado a los bordes */
+            box-shadow: none !important; /* Sin sombra de caja */
+            background-size: cover !important;
+            background-position: center bottom !important; /* Alinear al suelo */
+            transform: none !important; /* Sin zooms extraños */
+            display: flex !important;
+            align-items: flex-end !important;
+            justify-content: center !important;
         }
         body.tv-mode[data-theme="competition"] .podium-step {
             transform: scale(1.4) !important; /* Hacer crecer los monitos y cajones */
             transform-origin: bottom center !important;
-            margin: 0 20px !important;
+            margin: 0 30px !important; /* Separarlos más */
         }
         body.tv-mode[data-theme="competition"] .tracks-wrapper {
             flex: 1 !important;
