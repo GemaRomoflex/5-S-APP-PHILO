@@ -94,16 +94,17 @@
             flex: 1 !important;
             width: 50% !important;
             max-width: 50% !important;
-            height: 80% !important;
+            height: auto !important;
             margin: auto !important;
-            transform: scale(0.9);
-            transform-origin: center;
+            transform: scale(1.35) !important; /* Hacer el pódium 35% más grande */
+            transform-origin: center center !important;
         }
         body.tv-mode[data-theme="competition"] .tracks-wrapper {
             flex: 1 !important;
             width: 50% !important;
             max-width: 50% !important;
-            padding-right: 20px !important;
+            padding-right: 150px !important; /* Margen gigante derecho para que no se corten las etiquetas */
+            padding-left: 20px !important;
         }
         body.tv-mode[data-theme="competition"] .track-lane {
             height: 38px !important;
@@ -115,13 +116,16 @@
             top: 4px !important;
         }
         body.tv-mode[data-theme="competition"] .racer-label {
-            font-size: 11px !important;
-            bottom: -15px !important;
-            background: rgba(255,255,255,0.9);
+            font-size: 10px !important;
+            bottom: -16px !important;
+            background: rgba(255,255,255,0.95);
             color: #000;
             padding: 2px 6px;
             border-radius: 10px;
             border: 1px solid #ccc;
+            white-space: nowrap; /* Evitar que el texto haga saltos de línea extraños */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 99;
         }
 
         /* Fondo azul limpio globalmente */
