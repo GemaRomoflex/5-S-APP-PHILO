@@ -81,20 +81,32 @@
         body.tv-mode[data-theme="competition"] .racetrack-container {
             display: flex !important;
             flex-direction: row !important; /* Pódium Izquierda, Pista Derecha */
-            height: calc(100vh - 20px) !important;
-            background-color: transparent !important;
+            height: 100vh !important;
+            background-color: #0099FF !important; /* Fuerza el azul */
             padding: 0 !important;
             margin: 0 !important;
+            align-items: center !important;
+        }
+        body.tv-mode[data-theme="competition"] .racetrack-container > h2 { 
+            display: none !important; /* Ocultar el título para que no robe espacio en flex */
         }
         body.tv-mode[data-theme="competition"] .podium-container {
-            width: 40% !important;
-            height: 100% !important;
-            margin-top: 0 !important;
-            padding-top: 10vh !important;
+            flex: 1 !important;
+            width: 50% !important;
+            max-width: 50% !important;
+            height: 80% !important;
+            margin: auto !important;
             transform: scale(0.9);
+            transform-origin: center;
+        }
+        body.tv-mode[data-theme="competition"] .tracks-wrapper {
+            flex: 1 !important;
+            width: 50% !important;
+            max-width: 50% !important;
+            padding-right: 20px !important;
         }
         body.tv-mode[data-theme="competition"] .track-lane {
-            height: 38px !important; /* Más delgado para caber 20 */
+            height: 38px !important;
             margin-bottom: 2px !important;
         }
         body.tv-mode[data-theme="competition"] .racer-circle {
