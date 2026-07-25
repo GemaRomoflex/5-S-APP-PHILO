@@ -54,6 +54,66 @@
             --color-danger: #E52521; /* Rojo Mario (Críticas) */
         }
 
+        /* =========================================
+           MODO TV (SMART GALLERY)
+           ========================================= */
+        body.tv-mode .sidebar { display: none !important; }
+        body.tv-mode .header { display: none !important; }
+        body.tv-mode .main-content { margin-left: 0 !important; width: 100vw !important; height: 100vh !important; padding: 10px !important; overflow: hidden !important; }
+        body.tv-mode #dashboard-content > section:first-of-type { display: none !important; } /* Ocultar Filtros Globales */
+        body.tv-mode #btn-competition-mode, body.tv-mode #btn-tv-mode, body.tv-mode #btn-manage-owners { display: none !important; }
+        
+        /* Ajustes TV Dashboard Normal */
+        body.tv-mode:not([data-theme="competition"]) .kpis-grid { grid-template-columns: repeat(3, 1fr) !important; margin-bottom: 10px !important; }
+        body.tv-mode:not([data-theme="competition"]) .charts-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; height: calc(100vh - 120px); gap: 10px; margin-bottom: 0; }
+        body.tv-mode:not([data-theme="competition"]) .chart-card { padding: 10px; }
+        body.tv-mode:not([data-theme="competition"]) .chart-card:nth-child(4) { display: none !important; } /* Ocultar historial o menos importantes */
+        body.tv-mode:not([data-theme="competition"]) .chart-card:nth-child(5) { display: none !important; }
+
+        /* Ajustes TV Modo Competencia (Mario Kart) */
+        body.tv-mode[data-theme="competition"] .racetrack-container {
+            display: flex !important;
+            flex-direction: row !important; /* Pódium Izquierda, Pista Derecha */
+            height: calc(100vh - 20px) !important;
+            background-color: transparent !important; /* Quitar gris oscuro */
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        body.tv-mode[data-theme="competition"] .podium-container {
+            width: 40% !important;
+            height: 100% !important;
+            margin-top: 0 !important;
+            padding-top: 10vh !important;
+            transform: scale(0.9);
+        }
+        body.tv-mode[data-theme="competition"] .track-lane {
+            height: 38px !important; /* Más delgado para caber 20 */
+            margin-bottom: 2px !important;
+        }
+        body.tv-mode[data-theme="competition"] .racer-circle {
+            width: 30px !important;
+            height: 30px !important;
+            top: 4px !important;
+        }
+        body.tv-mode[data-theme="competition"] .racer-label {
+            font-size: 11px !important;
+            bottom: -15px !important;
+            background: rgba(255,255,255,0.9);
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+        }
+
+        /* Quitar asfalto feo globalmente */
+        [data-theme="competition"] .racetrack-container {
+            display: flex;
+            background-color: var(--color-bg-light); /* Fondo claro Mario Kart */
+            background-image: radial-gradient(circle, #ffffff 10%, transparent 10%), radial-gradient(circle, #ffffff 10%, transparent 10%);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -2021,7 +2081,15 @@
                         <button id="btn-competition-mode" onclick="toggleCompetitionMode()" style="background-color: #ff0000; color: white; border: none; font-weight: bold; padding: 12px 24px; font-size: 16px; border-radius: 8px; box-shadow: 0 4px 10px rgba(255,0,0,0.4); cursor: pointer; transition: transform 0.2s;">
                             🏁 ACTIVAR MODO COMPETENCIA
                         </button>
+                        <button id="btn-tv-mode" onclick="toggleTvMode()" style="background-color: #000; color: white; border: 2px solid #fff; font-weight: bold; padding: 12px 24px; font-size: 16px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); cursor: pointer; transition: transform 0.2s;">
+                            📺 MODO TV
+                        </button>
                     </div>
+                    
+                    <!-- Botón Flotante para Salir de TV -->
+                    <button id="btn-exit-tv" onclick="toggleTvMode()" class="hidden" style="position: fixed; top: 20px; right: 20px; z-index: 999999; background: rgba(0,0,0,0.7); color: white; border: 2px solid white; font-weight: bold; padding: 10px 20px; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                        ❌ SALIR DE MODO TV
+                    </button>
 
                     <main id="dashboard-content" style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
             
@@ -3259,6 +3327,22 @@
             }
         }
 
+        // --- MODO TV ---
+        let isTvMode = false;
+        function toggleTvMode() {
+            isTvMode = !isTvMode;
+            if (isTvMode) {
+                document.body.classList.add('tv-mode');
+                document.getElementById('btn-exit-tv').classList.remove('hidden');
+            } else {
+                document.body.classList.remove('tv-mode');
+                document.getElementById('btn-exit-tv').classList.add('hidden');
+            }
+            if (window.currentTab === 'dashboard' || !window.currentTab) {
+                updateDashboard();
+            }
+        }
+
         // DICCIONARIOS DE MARIO KART (SPRITES)
         const kartSprites = {
             'Mario': { x: 0, y: 0 }, 'Luigi': { x: 20, y: 0 }, 'Peach': { x: 40, y: 0 }, 'Daisy': { x: 60, y: 0 }, 'Rosalina': { x: 80, y: 0 }, 'Pauline': { x: 100, y: 0 },
@@ -3431,8 +3515,11 @@
             }
 
             // RENDERIZAR PISTA DE CARRERAS
-            let html = '';
-            racersData.forEach((racer, index) => {
+            // Limitar a 20 corredores si estamos en Modo TV
+            let displayRacers = isTvMode ? racersData.slice(0, 20) : racersData;
+            
+            let html = '<div class="tracks-wrapper" style="flex: 1; display: flex; flex-direction: column; justify-content: space-around; height: 100%; padding-left: 20px;">';
+            displayRacers.forEach((racer, index) => {
                 const isGood = racer.overdueCount === 0;
                 const trailClass = isGood ? 'trail-good' : 'trail-bad';
                 
@@ -3446,11 +3533,15 @@
                         <div class="track-finish"></div>
                         <div class="progress-trail ${trailClass}" id="trail-${index}"></div>
                         <div class="racer-circle" id="racer-${index}" style="${bgImg}">
-                            <div class="racer-label">${racer.name} ${charName ? '('+charName+')' : ''}</div>
+                            <div class="racer-label">
+                                ${racer.name} ${charName ? '('+charName+')' : ''} 
+                                <strong style="color:#0369a1; margin-left: 3px; font-size: 13px;">${racer.score.toFixed(1)}%</strong>
+                            </div>
                         </div>
                     </div>
                 `;
             });
+            html += '</div>';
             
             container.insertAdjacentHTML('beforeend', html);
             
