@@ -94,10 +94,16 @@
             flex: 1 !important;
             width: 50% !important;
             max-width: 50% !important;
-            height: auto !important;
-            margin: auto !important;
-            transform: scale(1.35) !important; /* Hacer el pódium 35% más grande */
-            transform-origin: center center !important;
+            height: 100vh !important;
+            margin: 0 !important;
+            border-radius: 0 !important; /* Quitar bordes redondeados para rellenar orillas */
+            transform: none !important; /* Quitar zoom al contenedor, lo haremos a los escalones */
+            padding-bottom: 80px !important; /* Separación del suelo */
+        }
+        body.tv-mode[data-theme="competition"] .podium-step {
+            transform: scale(1.4) !important; /* Hacer crecer los monitos y cajones */
+            transform-origin: bottom center !important;
+            margin: 0 20px !important;
         }
         body.tv-mode[data-theme="competition"] .tracks-wrapper {
             flex: 1 !important;
