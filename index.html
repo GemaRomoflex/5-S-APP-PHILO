@@ -112,11 +112,11 @@
             display: none !important;
         }
         
-        /* COLUMNA IZQUIERDA (70%) - PODIUM */
+        /* COLUMNA IZQUIERDA (50%) - PODIUM */
         body.tv-mode[data-theme="competition"] .podium-container {
             flex: none !important;
-            width: 70vw !important;
-            max-width: 70vw !important;
+            width: 50vw !important;
+            max-width: 50vw !important;
             height: 100vh !important;
             max-height: none !important;
             margin: 0 !important;
@@ -131,37 +131,37 @@
             justify-content: center !important;
         }
         body.tv-mode[data-theme="competition"] .podium-step {
-            transform: scale(1.8) !important; /* Personajes Masivos */
+            transform: scale(1.6) !important; /* Ajustado para la mitad de la pantalla */
             transform-origin: bottom center !important;
-            margin: 0 50px !important;
+            margin: 0 35px !important;
         }
         
-        /* COLUMNA DERECHA (30%) - LEADERBOARD VERTICAL */
+        /* COLUMNA DERECHA (50%) - LEADERBOARD VERTICAL */
         body.tv-mode[data-theme="competition"] .tracks-wrapper {
             flex: none !important;
-            width: 30vw !important;
-            max-width: 30vw !important;
+            width: 50vw !important;
+            max-width: 50vw !important;
             height: 100vh !important;
-            padding: 15px !important;
+            padding: 20px !important;
             background: rgba(0,0,0,0.85) !important; /* Fondo oscuro sólido para la tabla */
             display: flex !important;
             flex-direction: column !important;
             justify-content: flex-start !important;
-            gap: 2px !important; /* Lista super compacta */
+            gap: 4px !important; /* Más separación entre filas */
             overflow: hidden !important;
-            box-shadow: -10px 0 20px rgba(0,0,0,0.5) !important; /* Separación profunda */
+            box-shadow: -10px 0 20px rgba(0,0,0,0.5) !important;
         }
         body.tv-mode[data-theme="competition"] .track-lane {
-            height: 4.2vh !important; /* Altura proporcional para rellenar */
-            min-height: 25px !important;
+            height: 4.5vh !important; /* Filas mucho más gruesas */
+            min-height: 35px !important;
             margin-bottom: 0 !important;
-            background: rgba(255,255,255,0.05) !important;
+            background: rgba(255,255,255,0.08) !important;
             border: none !important;
             box-shadow: none !important;
             display: flex !important;
             align-items: center !important;
             position: relative !important;
-            border-radius: 4px !important;
+            border-radius: 8px !important; /* Bordes suaves */
         }
         /* Ocultar elementos de pista horizontal y transformarlos en lista */
         body.tv-mode[data-theme="competition"] .track-start,
@@ -177,7 +177,7 @@
             width: 100% !important; /* Ocupar toda la fila */
             height: 100% !important;
             top: 0 !important;
-            background-size: contain !important; /* Autoajustar la cara del personaje a la altura de la fila */
+            background-size: contain !important; /* Autoajustar la cara del personaje gigante */
             background-position: left center !important;
             background-repeat: no-repeat !important;
             border: none !important;
@@ -185,13 +185,13 @@
             background-color: transparent !important;
             display: flex !important;
             align-items: center !important;
-            padding-left: 5vh !important; /* Dejar hueco para la cara del personaje */
+            padding-left: 6vh !important; /* Mucho más espacio para la cara gigante */
         }
         body.tv-mode[data-theme="competition"] .racer-label {
             position: static !important;
             background: transparent !important;
             color: #fff !important;
-            font-size: 1.8vh !important;
+            font-size: 2.2vh !important; /* Texto ENORME para legibilidad */
             font-weight: bold !important;
             border: none !important;
             box-shadow: none !important;
