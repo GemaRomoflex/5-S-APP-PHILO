@@ -97,69 +97,106 @@
 
         /* Ajustes TV Modo Competencia (Mario Kart) */
         body.tv-mode[data-theme="competition"] .main-content {
-            padding: 0 !important; /* Eliminar padding global que alejaba todo de la orilla */
+            padding: 0 !important;
         }
         body.tv-mode[data-theme="competition"] .racetrack-container {
             display: flex !important;
-            flex-direction: row !important; /* Pódium Izquierda, Pista Derecha */
+            flex-direction: row !important; /* Pódium Izquierda (70%), Pista Derecha (30%) */
             height: 100vh !important;
-            background-color: #0099FF !important; /* Fuerza el azul */
+            background-color: #0099FF !important;
             padding: 0 !important;
             margin: 0 !important;
-            align-items: center !important;
+            align-items: stretch !important; /* Llenar altura */
         }
         body.tv-mode[data-theme="competition"] .racetrack-container > h2 { 
-            display: none !important; /* Ocultar el título para que no robe espacio en flex */
+            display: none !important;
         }
+        
+        /* COLUMNA IZQUIERDA (70%) - PODIUM */
         body.tv-mode[data-theme="competition"] .podium-container {
-            flex: none !important; /* Quitar flex-grow para usar width exacto */
-            width: 50vw !important;
-            max-width: 50vw !important;
-            height: 100vh !important; /* Rellenar altura completa */
+            flex: none !important;
+            width: 70vw !important;
+            max-width: 70vw !important;
+            height: 100vh !important;
             max-height: none !important;
             margin: 0 !important;
-            padding: 0 0 50px 0 !important; /* Solo espacio abajo para las bases */
-            border-radius: 0 !important; /* Pódium cuadrado a los bordes */
-            box-shadow: none !important; /* Sin sombra de caja */
+            padding: 0 0 10vh 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
             background-size: cover !important;
-            background-position: center bottom !important; /* Alinear al suelo */
-            transform: none !important; /* Sin zooms extraños */
+            background-position: center bottom !important;
+            transform: none !important;
             display: flex !important;
             align-items: flex-end !important;
             justify-content: center !important;
         }
         body.tv-mode[data-theme="competition"] .podium-step {
-            transform: scale(1.4) !important; /* Hacer crecer los monitos y cajones */
+            transform: scale(1.8) !important; /* Personajes Masivos */
             transform-origin: bottom center !important;
-            margin: 0 30px !important; /* Separarlos más */
+            margin: 0 50px !important;
         }
+        
+        /* COLUMNA DERECHA (30%) - LEADERBOARD VERTICAL */
         body.tv-mode[data-theme="competition"] .tracks-wrapper {
-            flex: 1 !important;
-            width: 50% !important;
-            max-width: 50% !important;
-            padding-right: 150px !important; /* Margen gigante derecho para que no se corten las etiquetas */
-            padding-left: 20px !important;
+            flex: none !important;
+            width: 30vw !important;
+            max-width: 30vw !important;
+            height: 100vh !important;
+            padding: 15px !important;
+            background: rgba(0,0,0,0.85) !important; /* Fondo oscuro sólido para la tabla */
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            gap: 2px !important; /* Lista super compacta */
+            overflow: hidden !important;
+            box-shadow: -10px 0 20px rgba(0,0,0,0.5) !important; /* Separación profunda */
         }
         body.tv-mode[data-theme="competition"] .track-lane {
-            height: 38px !important;
-            margin-bottom: 2px !important;
+            height: 4.2vh !important; /* Altura proporcional para rellenar */
+            min-height: 25px !important;
+            margin-bottom: 0 !important;
+            background: rgba(255,255,255,0.05) !important;
+            border: none !important;
+            box-shadow: none !important;
+            display: flex !important;
+            align-items: center !important;
+            position: relative !important;
+            border-radius: 4px !important;
         }
+        /* Ocultar elementos de pista horizontal y transformarlos en lista */
+        body.tv-mode[data-theme="competition"] .track-start,
+        body.tv-mode[data-theme="competition"] .track-finish,
+        body.tv-mode[data-theme="competition"] .progress-trail,
+        body.tv-mode[data-theme="competition"] .track-lane::before {
+            display: none !important;
+        }
+        
         body.tv-mode[data-theme="competition"] .racer-circle {
-            width: 30px !important;
-            height: 30px !important;
-            top: 4px !important;
+            position: relative !important;
+            left: 0 !important; 
+            width: 100% !important; /* Ocupar toda la fila */
+            height: 100% !important;
+            top: 0 !important;
+            background-size: contain !important; /* Autoajustar la cara del personaje a la altura de la fila */
+            background-position: left center !important;
+            background-repeat: no-repeat !important;
+            border: none !important;
+            box-shadow: none !important;
+            background-color: transparent !important;
+            display: flex !important;
+            align-items: center !important;
+            padding-left: 5vh !important; /* Dejar hueco para la cara del personaje */
         }
         body.tv-mode[data-theme="competition"] .racer-label {
-            font-size: 10px !important;
-            bottom: -16px !important;
-            background: rgba(255,255,255,0.95);
-            color: #000;
-            padding: 2px 6px;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            white-space: nowrap; /* Evitar que el texto haga saltos de línea extraños */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            z-index: 99;
+            position: static !important;
+            background: transparent !important;
+            color: #fff !important;
+            font-size: 1.8vh !important;
+            font-weight: bold !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            white-space: nowrap !important;
         }
 
         /* Fondo azul limpio globalmente */
