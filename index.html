@@ -7892,18 +7892,21 @@
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                     <select id="act-dept-${actionId}" class="form-control">
                         <option value="">Depto Responsable...</option>
-                        <option value="Producción">Producción</option>
+                        <option value="Manufactura">Manufactura</option>
                         <option value="Calidad">Calidad</option>
-                        <option value="Ingeniería">Ingeniería</option>
-                        <option value="Mantenimiento">Mantenimiento</option>
-                        <option value="Materiales / Logística">Materiales / Logística</option>
-                        <option value="Seguridad (EHS)">Seguridad (EHS)</option>
-                        <option value="Recursos Humanos">Recursos Humanos</option>
-                        <option value="Otro">Otro</option>
+                        <option value="Reparación">Reparación</option>
+                        <option value="Industrial">Industrial</option>
+                        <option value="EHS">EHS</option>
+                        <option value="Lean">Lean</option>
+                        <option value="Debug">Debug</option>
+                        <option value="Equipos">Equipos</option>
+                        <option value="Automatización">Automatización</option>
                     </select>
                     <select id="act-pri-${actionId}" class="form-control">
-                        <option value="Media">Media (3 días)</option>
+                        <option value="">Prioridad...</option>
                         <option value="Alta">Alta (36 hrs)</option>
+                        <option value="Media">Media (3 días)</option>
+                        <option value="Baja">Baja (7 días)</option>
                     </select>
                 </div>
                 <div style="display: flex; gap: 10px; align-items: center;">
@@ -7930,11 +7933,13 @@
 
         async function submitMobileAction(btn, actionId, section, question) {
             const txt = document.getElementById(`act-txt-${actionId}`).value;
-            const dept = document.getElementById(`act-dept-${actionId}`).value || 'N/A';
+            const dept = document.getElementById(`act-dept-${actionId}`).value;
             const pri = document.getElementById(`act-pri-${actionId}`).value;
             const fileInput = document.getElementById(`act-photo-${actionId}`);
             
-            if (!txt) return alert("Escribe la descripción de la acción.");
+            if (!txt) return alert("⚠️ Escribe la descripción de la acción.");
+            if (!dept) return alert("⚠️ Selecciona el Departamento Responsable.");
+            if (!pri) return alert("⚠️ Selecciona una Prioridad.");
             
             btn.disabled = true;
             btn.textContent = "Subiendo...";
@@ -8043,7 +8048,7 @@
                     ctx.font = '26px sans-serif';
                     
                     // Multi-line wrap para la descripción de la acción
-                    const maxLineWidth = width - 600; // Espacio a la izquierda, dejando un hueco para la foto a la derecha
+                    const maxLineWidth = width - 160; // Aprovechar todo el ancho (80px izq y 80px der)
                     const words = act.action_text.split(' ');
                     let line = '';
                     let textY = startY;
@@ -8060,18 +8065,17 @@
                     }
                     ctx.fillText(line, 80, textY);
                     
-                    // Dibujar Foto (si existe el base64)
+                    // Dibujar Foto (si existe el base64) abajo del texto
                     if (act.photo_base64) {
                         try {
                             const img = new Image();
                             img.src = act.photo_base64;
-                            // Promesa para esperar que la foto del base64 cargue en memoria antes de dibujar
                             await new Promise((res) => { img.onload = res; img.onerror = res; });
                             
                             const imgW = 400;
                             const imgH = 300;
-                            const imgX = width - imgW - 80; // A la derecha
-                            const imgY = startY - 80;
+                            const imgX = 80; // A la izquierda, alineado
+                            const imgY = textY + 30; // Directamente debajo de la descripción
                             
                             // Borde bonito para la foto
                             ctx.strokeStyle = '#005A9C';
@@ -8079,13 +8083,15 @@
                             ctx.strokeRect(imgX - 2, imgY - 2, imgW + 4, imgH + 4);
                             
                             ctx.drawImage(img, imgX, imgY, imgW, imgH);
+                            
+                            textY = imgY + imgH + 20; // Recorrer Y para incluir la imagen
                         } catch(e) {
                             console.error("Error drawing photo", e);
                         }
                     }
                     
                     // Avanzar la Y para la siguiente acción
-                    startY = textY > (startY - 80 + 300) ? textY + 50 : (startY - 80 + 300 + 50); 
+                    startY = textY + 50; 
                 }
                 
                 // Descargar PNG automáticamente
