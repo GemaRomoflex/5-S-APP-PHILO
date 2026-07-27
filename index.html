@@ -3393,8 +3393,9 @@
                 });
             }
 
-            // Filtrar descartes: Solo las calificaciones 1, 2, 3 y 4 generan una acción correctiva real.
+            // Filtrar descartes: Solo las calificaciones 1, 2, 3 y 4 generan una acción correctiva real. (Gemba siempre pasa)
             const validActions = globalFilteredData.filter(item => {
+                if (item.department === 'Gemba' || item.department === 'Gemba Walk') return true;
                 const s = parseInt(item.responseScore, 10);
                 return !isNaN(s) && s >= 1 && s <= 4;
             });
@@ -6876,9 +6877,16 @@
         // GENERADOR DE REPORTES (HTML2CANVAS)
         // ==========================================
         function isValidAction(item) {
-            const score = parseInt(item.responseScore);
-            if (score === 5 || score === -1) return false;
+            // Siempre aceptar acciones de Gemba
+            if (item.department === 'Gemba' || item.department === 'Gemba Walk') return true;
+            
+            // Para el resto (5S), requerimos estrictamente una calificación reprobatoria explícita (1 a 4)
+            const score = parseInt(item.responseScore, 10);
+            if (isNaN(score)) return false;
+            if (score < 1 || score > 4) return false;
+            
             if (!item.cleanLocation) return false;
+            
             return true;
         }
 
@@ -8063,7 +8071,9 @@
                     ctx.textAlign = 'left';
                     ctx.fillStyle = '#d97706'; // Naranja/Ambar
                     ctx.font = 'bold 28px sans-serif';
-                    ctx.fillText(`Sección: ${act.section} | Depto Responsable: ${act.owner} | Prioridad: ${act.priority}`, 80, startY);
+                    ctx.fillText(`Sección: ${act.section}`, 80, startY);
+                    startY += 30;
+                    ctx.fillText(`Depto Responsable: ${act.owner} | Prioridad: ${act.priority}`, 80, startY);
                     
                     startY += 40;
                     
