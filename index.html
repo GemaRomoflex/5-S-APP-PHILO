@@ -7971,7 +7971,38 @@
                 btn.disabled = false;
                 btn.textContent = "Reintentar";
             } else {
-                btn.parentElement.innerHTML = `<div style="text-align: center; color: #10b981; font-weight: bold; font-size: 18px; padding: 10px;">¡Acción enviada al administrador! ✅</div>`;
+                // Inyectar en tabla general actions (Dashboard global) omitiendo la foto para no saturar
+                const actionIdStr = 'GEMBA-' + actionId;
+                const openDate = new Date().toISOString().split('T')[0];
+                
+                let dueDate = 'Sin Fecha';
+                const today = new Date();
+                if (pri === 'Alta') {
+                    today.setHours(today.getHours() + 36);
+                    dueDate = today.toISOString().split('T')[0];
+                } else if (pri === 'Media') {
+                    today.setDate(today.getDate() + 3);
+                    dueDate = today.toISOString().split('T')[0];
+                } else if (pri === 'Baja') {
+                    today.setDate(today.getDate() + 7);
+                    dueDate = today.toISOString().split('T')[0];
+                }
+
+                await supabaseClient.from('actions').upsert([{
+                    actionId: actionIdStr,
+                    auditId: currentGembaEventId,
+                    location: 'Flex -> Gemba Walk -> Planta',
+                    cleanLocation: 'Gemba',
+                    department: 'Gemba',
+                    owner: dept,
+                    status: 'Open',
+                    openDate: openDate,
+                    dueDate: dueDate,
+                    responseScore: 0,
+                    comments: `[Gemba - ${section}] Prioridad: ${pri}\n${txt}`
+                }], { onConflict: 'actionId' });
+
+                btn.parentElement.innerHTML = `<div style="text-align: center; color: #10b981; font-weight: bold; font-size: 18px; padding: 10px;">¡Acción enviada al administrador y al Dashboard! ✅</div>`;
             }
         }
 
@@ -8033,14 +8064,6 @@
                     ctx.fillStyle = '#d97706'; // Naranja/Ambar
                     ctx.font = 'bold 28px sans-serif';
                     ctx.fillText(`Sección: ${act.section} | Depto Responsable: ${act.owner} | Prioridad: ${act.priority}`, 80, startY);
-                    
-                    startY += 40;
-                    
-                    ctx.fillStyle = '#333333';
-                    ctx.font = 'italic 24px sans-serif';
-                    // Pregunta truncada para ahorrar espacio
-                    const shortQ = act.question.length > 90 ? act.question.substring(0, 90) + '...' : act.question;
-                    ctx.fillText(`Pregunta: ${shortQ}`, 80, startY);
                     
                     startY += 40;
                     
