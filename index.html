@@ -327,7 +327,11 @@
         }
         
         .sidebar.collapsed {
-            width: 70px;
+            width: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            border-right: none !important;
+            transform: translateX(-100%);
         }
 
         /* --- RESPONSIVE SIDEBAR --- */
@@ -2808,7 +2812,15 @@
         
         // NAVEGACIÓN SIDEBAR
         function toggleSidebar() {
-            document.querySelector('.sidebar').classList.toggle('collapsed');
+            const sidebar = document.querySelector('.sidebar');
+            const btnMobile = document.querySelector('.btn-toggle-sidebar-mobile');
+            sidebar.classList.toggle('collapsed');
+            
+            if (sidebar.classList.contains('collapsed')) {
+                btnMobile.style.display = 'block';
+            } else {
+                btnMobile.style.display = ''; // Permitir que la media query lo esconda
+            }
         }
 
         function toggleNavGroup(group) {
@@ -6140,6 +6152,7 @@
                 document.getElementById('view-layout-main').classList.add('hidden');
             } else if (origin === 'areas') {
                 document.getElementById('view-areas').classList.add('hidden');
+                document.getElementById('view-dashboard').classList.remove('hidden'); // Fix: Encender el dashboard general
                 document.getElementById('view-layout-wrapper').classList.remove('hidden');
                 document.getElementById('view-layout-main').classList.add('hidden'); // Ocultar el mapa explícitamente
             }
@@ -6225,6 +6238,7 @@
                 document.getElementById('view-layout-main').classList.remove('hidden');
             } else if (layoutDetailOrigin === 'areas') {
                 document.getElementById('view-layout-wrapper').classList.add('hidden');
+                document.getElementById('view-dashboard').classList.add('hidden'); // Fix: Apagar el dashboard general
                 document.getElementById('view-areas').classList.remove('hidden');
             }
         }
