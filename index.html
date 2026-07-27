@@ -6887,6 +6887,12 @@
             
             if (!item.cleanLocation) return false;
             
+            // Filtro Anti-Fantasmas: Una acción real reprobatoria debe tener responsable o departamento.
+            // Si la app externa inyecta un falso "4" pero vacío, lo ignoramos.
+            const owner = (item.owner || '').trim();
+            const dept = (item.department || '').trim();
+            if (owner === '' && dept === '') return false;
+            
             return true;
         }
 
