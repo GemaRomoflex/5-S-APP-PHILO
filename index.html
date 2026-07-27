@@ -2175,22 +2175,20 @@
                 <!-- CONTENIDO DEL DASHBOARD (SOLO GRÁFICAS) -->
                 <div id="view-dashboard" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
                     
-                    <!-- BOTONES SUPERIORES (COMPETENCIA Y ADMIN) -->
-                    <div style="display: flex; justify-content: flex-end; gap: 15px; width: 100%; padding: 0 10px;">
-                        <button id="btn-manage-owners" class="hidden" onclick="openManageOwnersModal()" style="background-color: #000; color: #f59e0b; border: 2px solid #f59e0b; font-weight: bold; padding: 12px 24px; font-size: 16px; border-radius: 8px; cursor: pointer; transition: background 0.2s; display: none;">
-                            👑 GESTIONAR OWNERS
-                        </button>
-                        <button id="btn-competition-mode" onclick="toggleCompetitionMode()" style="background-color: #ff0000; color: white; border: none; font-weight: bold; padding: 12px 24px; font-size: 16px; border-radius: 8px; box-shadow: 0 4px 10px rgba(255,0,0,0.4); cursor: pointer; transition: transform 0.2s;">
-                            🏁 ACTIVAR MODO COMPETENCIA
-                        </button>
-                        <button id="btn-tv-mode" onclick="toggleTvMode()" style="background-color: #000; color: white; border: 2px solid #fff; font-weight: bold; padding: 12px 24px; font-size: 16px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); cursor: pointer; transition: transform 0.2s;">
-                            📺 MODO TV
-                        </button>
-                    </div>
-                    <!-- Botón Flotante para Salir de TV removido -->
-
                     <main id="dashboard-content" style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
-            
+                        <!-- BOTONES SUPERIORES (COMPETENCIA Y ADMIN) -->
+                        <div style="display: flex; justify-content: flex-end; gap: 15px; width: 100%; padding: 0 10px;">
+                            <button id="btn-manage-owners" class="hidden" onclick="openManageOwnersModal()" style="background-color: #000; color: #f59e0b; border: 2px solid #f59e0b; font-weight: bold; padding: 12px 24px; font-size: 16px; border-radius: 8px; cursor: pointer; transition: background 0.2s; display: none;">
+                                👑 GESTIONAR OWNERS
+                            </button>
+                            <button id="btn-competition-mode" onclick="toggleCompetitionMode()" style="background-color: #ff0000; color: white; border: none; font-weight: bold; padding: 12px 24px; font-size: 16px; border-radius: 8px; box-shadow: 0 4px 10px rgba(255,0,0,0.4); cursor: pointer; transition: transform 0.2s;">
+                                🏁 ACTIVAR MODO COMPETENCIA
+                            </button>
+                            <button id="btn-tv-mode" onclick="toggleTvMode()" style="background-color: #000; color: white; border: 2px solid #fff; font-weight: bold; padding: 12px 24px; font-size: 16px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); cursor: pointer; transition: transform 0.2s;">
+                                📺 MODO TV
+                            </button>
+                        </div>
+                        
                         <!-- FILTRO GLOBAL DE FECHAS Y ORIGEN PARA DASHBOARD -->
                         <section class="chart-card" style="padding: 15px 24px; flex-direction: row; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 15px;">
                             <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
