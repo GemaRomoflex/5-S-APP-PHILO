@@ -58,6 +58,7 @@
            MODO TV (SMART GALLERY)
            ========================================= */
         body.tv-mode .sidebar { display: none !important; }
+        body.tv-mode .btn-toggle-sidebar-mobile { display: none !important; }
         body.tv-mode .header { display: none !important; }
         body.tv-mode .main-content { margin-left: 0 !important; width: 100vw !important; height: 100vh !important; padding: 10px !important; overflow: hidden !important; }
         body.tv-mode #dashboard-content > section:first-of-type { display: none !important; } /* Ocultar Filtros Globales */
@@ -131,6 +132,10 @@
             max-width: 100% !important;
             height: 100vh !important;
             background-color: #0099FF !important;
+            background-image: url('fondo.webp') !important;
+            background-size: cover !important;
+            background-position: center center !important;
+            background-repeat: no-repeat !important;
             padding: 0 !important;
             margin: 0 !important;
             align-items: stretch !important; /* Llenar altura */
@@ -152,8 +157,7 @@
             padding: 0 0 5vh 0 !important;
             border-radius: 0 !important;
             box-shadow: none !important;
-            background-size: cover !important;
-            background-position: center bottom !important;
+            background: transparent !important;
             transform: none !important;
             display: flex !important;
             align-items: flex-end !important;
@@ -268,7 +272,7 @@
         [data-theme="competition"] .racetrack-container {
             display: flex;
             background-color: #0099FF; /* Azul cielo vibrante */
-            background-image: none !important;
+            /* La imagen se inyecta nativamente via css normal, pero en tv mode se usa !important */
         }
 
         * {
