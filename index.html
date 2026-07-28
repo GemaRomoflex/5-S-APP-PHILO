@@ -7789,7 +7789,7 @@
             
             alert(`Auditoría finalizada. Se generaron ${actions ? actions.length : 0} acciones.`);
             if (actions && actions.length > 0) {
-                generateGembaReportPNG(actions);
+                orchestrateGembaReports(actions);
             }
             
             // Cleanup and exit
@@ -8021,130 +8021,183 @@
         }
 
         // ========================== ADMIN REPORT GENERATION ==========================
-        async function generateGembaReportPNG(actions) {
-            alert("Generando PNG con la plantilla... (Se descargará automáticamente)");
+        async function orchestrateGembaReports(actions) {
+            alert("Generando reportes modulares... (El navegador descargará varios archivos. Por favor, dale en 'Permitir')");
+            const todayStr = new Date().toISOString().split('T')[0];
             
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
+            // 1. Encontrar todos los departamentos únicos (que en Gemba viven en 'owner')
+            const departments = new Set();
+            actions.forEach(act => {
+                const ownerStr = act.owner || '';
+                departments.add(ownerStr.trim() || 'Sin_Asignar');
+            });
             
-            // Cargar plantilla base
-            const template = new Image();
-            template.src = 'plantilla de comunicados.png';
-            
-            template.onload = async () => {
-                // Configurar tamaño base. Usaremos el de la plantilla.
-                const headerHeight = template.height > 0 ? template.height : 1080;
-                const width = template.width > 0 ? template.width : 1920;
-                const actionBlockHeight = 350; 
-                const startOfWhiteAreaY = 350; // Altura aproximada del banner superior
-                
-                canvas.width = width;
-                // Hacer el canvas más alto solo si las acciones sobrepasan la plantilla original
-                const neededHeight = startOfWhiteAreaY + (actions.length * actionBlockHeight) + 100;
-                canvas.height = Math.max(headerHeight, neededHeight);
-                
-                // Fondo blanco por defecto (por si extendemos la plantilla hacia abajo)
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Dibujar la plantilla original (se dibujará el banner y lo que traiga)
-                ctx.drawImage(template, 0, 0, width, headerHeight);
-                
-                // Escribir Titulo del Reporte justo debajo del banner
-                ctx.fillStyle = '#000000';
-                ctx.font = 'bold 40px sans-serif';
-                ctx.textAlign = 'center';
-                const todayStr = new Date().toISOString().split('T')[0];
-                ctx.fillText(`Reporte de Gemba Walk - ${todayStr}`, width / 2, startOfWhiteAreaY + 40);
-                
-                // Dibujar cada acción
-                let startY = startOfWhiteAreaY + 100;
-                
-                for (let i = 0; i < actions.length; i++) {
-                    const act = actions[i];
-                    
-                    // Línea separadora
-                    ctx.strokeStyle = '#cccccc';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.moveTo(50, startY);
-                    ctx.lineTo(width - 50, startY);
-                    ctx.stroke();
-                    
-                    startY += 40;
-                    
-                    // Textos del hallazgo
-                    ctx.textAlign = 'left';
-                    ctx.fillStyle = '#d97706'; // Naranja/Ambar
-                    ctx.font = 'bold 28px sans-serif';
-                    ctx.fillText(`Sección: ${act.section}`, 80, startY);
-                    startY += 30;
-                    ctx.fillText(`Depto Responsable: ${act.owner} | Prioridad: ${act.priority}`, 80, startY);
-                    
-                    startY += 40;
-                    
-                    ctx.fillStyle = '#000000';
-                    ctx.font = '26px sans-serif';
-                    
-                    // Multi-line wrap para la descripción de la acción
-                    const maxLineWidth = width - 160; // Aprovechar todo el ancho (80px izq y 80px der)
-                    const words = act.action_text.split(' ');
-                    let line = '';
-                    let textY = startY;
-                    for (let n = 0; n < words.length; n++) {
-                        const testLine = line + words[n] + ' ';
-                        const metrics = ctx.measureText(testLine);
-                        if (metrics.width > maxLineWidth && n > 0) {
-                            ctx.fillText(line, 80, textY);
-                            line = words[n] + ' ';
-                            textY += 35;
-                        } else {
-                            line = testLine;
-                        }
-                    }
-                    ctx.fillText(line, 80, textY);
-                    
-                    // Dibujar Foto (si existe el base64) abajo del texto
-                    if (act.photo_base64) {
-                        try {
-                            const img = new Image();
-                            img.src = act.photo_base64;
-                            await new Promise((res) => { img.onload = res; img.onerror = res; });
-                            
-                            const imgW = 400;
-                            const imgH = 300;
-                            const imgX = 80; // A la izquierda, alineado
-                            const imgY = textY + 30; // Directamente debajo de la descripción
-                            
-                            // Borde bonito para la foto
-                            ctx.strokeStyle = '#005A9C';
-                            ctx.lineWidth = 4;
-                            ctx.strokeRect(imgX - 2, imgY - 2, imgW + 4, imgH + 4);
-                            
-                            ctx.drawImage(img, imgX, imgY, imgW, imgH);
-                            
-                            textY = imgY + imgH + 20; // Recorrer Y para incluir la imagen
-                        } catch(e) {
-                            console.error("Error drawing photo", e);
-                        }
-                    }
-                    
-                    // Avanzar la Y para la siguiente acción
-                    startY = textY + 50; 
+            // 2. Generar reportes individuales
+            const deptArray = Array.from(departments);
+            for (let i = 0; i < deptArray.length; i++) {
+                const dept = deptArray[i];
+                const deptActions = actions.filter(act => {
+                    const ownerStr = act.owner || '';
+                    return (ownerStr.trim() || 'Sin_Asignar') === dept;
+                });
+                if (deptActions.length > 0) {
+                    await generateGembaReportPNG(deptActions, `Reporte Gemba - ${dept}`, `Gemba_${dept.replace(/\s+/g, '_')}_${todayStr}.png`, false);
+                    // Pausa de 1.5s entre descargas para no asustar al navegador
+                    await new Promise(r => setTimeout(r, 1500));
                 }
-                
-                // Descargar PNG automáticamente
-                const link = document.createElement('a');
-                link.download = `Reporte_Gemba_Walk_${Date.now()}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            };
+            }
             
-            template.onerror = () => {
-                alert("⚠️ No se encontró el archivo 'plantilla de comunicados.png'. Asegúrate de que exista en la misma carpeta. Se generará un fondo blanco de emergencia.");
-                // Fallback (1x1 blank pixel)
-                template.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII='; 
-            };
+            // 3. Generar Reporte Maestro para el Admin
+            await generateGembaReportPNG(actions, `Reporte Gemba Maestro - Global`, `Gemba_Master_Admin_${todayStr}.png`, true);
+        }
+
+        async function generateGembaReportPNG(actions, customTitle = null, customFilename = null, includeCharts = false) {
+            return new Promise((resolve, reject) => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Cargar plantilla base
+                const template = new Image();
+                template.src = 'plantilla de comunicados.png';
+                
+                template.onload = async () => {
+                    // Configurar tamaño base
+                    const headerHeight = template.height > 0 ? template.height : 1080;
+                    const width = template.width > 0 ? template.width : 1920;
+                    const actionBlockHeight = 450; 
+                    const startOfWhiteAreaY = 350; 
+                    
+                    // Calcular espacio extra para las gráficas si es el maestro
+                    const chartsHeight = includeCharts ? 550 : 0;
+                    
+                    canvas.width = width;
+                    const neededHeight = startOfWhiteAreaY + chartsHeight + (actions.length * actionBlockHeight) + 100;
+                    canvas.height = Math.max(headerHeight, neededHeight);
+                    
+                    // Fondo blanco
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(template, 0, 0, width, headerHeight);
+                    
+                    // Titulo
+                    ctx.fillStyle = '#000000';
+                    ctx.font = 'bold 40px sans-serif';
+                    ctx.textAlign = 'center';
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    const displayTitle = customTitle || `Reporte de Gemba Walk - ${todayStr}`;
+                    ctx.fillText(displayTitle, width / 2, startOfWhiteAreaY + 40);
+                    
+                    let startY = startOfWhiteAreaY + 100;
+                    
+                    // Inyección de gráficas para el Maestro
+                    if (includeCharts) {
+                        const chartCatCanvas = document.getElementById('chart-gemba-category');
+                        const chartPriCanvas = document.getElementById('chart-gemba-priority');
+                        
+                        if (chartCatCanvas && chartPriCanvas) {
+                            const chartWidth = (width - 200) / 2;
+                            const ratioCat = chartCatCanvas.height / chartCatCanvas.width;
+                            const ratioPri = chartPriCanvas.height / chartPriCanvas.width;
+                            
+                            const drawHeightCat = chartWidth * ratioCat;
+                            const drawHeightPri = chartWidth * ratioPri;
+                            
+                            ctx.fillStyle = '#1e293b';
+                            ctx.font = 'bold 30px sans-serif';
+                            ctx.fillText("Hallazgos por Responsable", 50 + (chartWidth/2), startY);
+                            ctx.fillText("Niveles de Prioridad", 50 + chartWidth + 100 + (chartWidth/2), startY);
+                            
+                            startY += 40;
+                            
+                            // Fondo blanco para las gráficas transparentes
+                            ctx.fillStyle = '#ffffff';
+                            ctx.fillRect(50, startY, chartWidth, drawHeightCat);
+                            ctx.fillRect(50 + chartWidth + 100, startY, chartWidth, drawHeightPri);
+                            
+                            ctx.drawImage(chartCatCanvas, 50, startY, chartWidth, drawHeightCat);
+                            ctx.drawImage(chartPriCanvas, 50 + chartWidth + 100, startY, chartWidth, drawHeightPri);
+                            
+                            startY += Math.max(drawHeightCat, drawHeightPri) + 80;
+                        }
+                    }
+                    
+                    // Dibujar cada acción
+                    for (let i = 0; i < actions.length; i++) {
+                        const act = actions[i];
+                        
+                        ctx.strokeStyle = '#cccccc';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(50, startY);
+                        ctx.lineTo(width - 50, startY);
+                        ctx.stroke();
+                        
+                        startY += 40;
+                        
+                        ctx.textAlign = 'left';
+                        ctx.fillStyle = '#d97706'; 
+                        ctx.font = 'bold 28px sans-serif';
+                        ctx.fillText(`Sección: ${act.section}`, 80, startY);
+                        startY += 30;
+                        ctx.fillText(`Depto Responsable: ${act.owner} | Prioridad: ${act.priority}`, 80, startY);
+                        
+                        startY += 40;
+                        
+                        ctx.fillStyle = '#000000';
+                        ctx.font = '26px sans-serif';
+                        
+                        const maxLineWidth = width - 160; 
+                        const words = (act.action_text || '').split(' ');
+                        let line = '';
+                        let textY = startY;
+                        for (let n = 0; n < words.length; n++) {
+                            const testLine = line + words[n] + ' ';
+                            const metrics = ctx.measureText(testLine);
+                            if (metrics.width > maxLineWidth && n > 0) {
+                                ctx.fillText(line, 80, textY);
+                                line = words[n] + ' ';
+                                textY += 35;
+                            } else {
+                                line = testLine;
+                            }
+                        }
+                        ctx.fillText(line, 80, textY);
+                        
+                        if (act.photo_base64) {
+                            try {
+                                const img = new Image();
+                                img.src = act.photo_base64;
+                                await new Promise((res) => { img.onload = res; img.onerror = res; });
+                                
+                                const imgW = 400;
+                                const imgH = 300;
+                                const imgX = 80; 
+                                const imgY = textY + 30; 
+                                
+                                ctx.strokeStyle = '#005A9C';
+                                ctx.lineWidth = 4;
+                                ctx.strokeRect(imgX - 2, imgY - 2, imgW + 4, imgH + 4);
+                                
+                                ctx.drawImage(img, imgX, imgY, imgW, imgH);
+                                
+                                textY = imgY + imgH + 20; 
+                            } catch(e) {}
+                        }
+                        
+                        startY = textY + 50; 
+                    }
+                    
+                    const link = document.createElement('a');
+                    link.download = customFilename || `Reporte_Gemba_Walk_${Date.now()}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    resolve();
+                };
+                
+                template.onerror = () => {
+                    resolve();
+                };
+            });
         }
 
         function initGembaDashboard() {
