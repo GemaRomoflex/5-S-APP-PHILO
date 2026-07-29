@@ -7928,7 +7928,7 @@
                     <select id="act-dept-${actionId}" class="form-control">
                         <option value="">Owner Responsable...</option>
                         ${(typeof allOwnersDirectory !== 'undefined' && allOwnersDirectory.length > 0) ? 
-                            allOwnersDirectory.map(o => `<option value="${o.owner}">${o.owner} (${o.department})</option>`).join('') : 
+                            allOwnersDirectory.map(o => `<option value="${o.owner_name}">${o.owner_name} (${o.department})</option>`).join('') : 
                             '<option value="Sin asignar">Sin Owners cargados</option>'}
                     </select>
                     <select id="act-pri-${actionId}" class="form-control">
@@ -8108,7 +8108,9 @@
                 
                 container.innerHTML = html;
                 container.style.position = 'absolute';
-                container.style.left = '-9999px';
+                container.style.top = '0';
+                container.style.left = '0';
+                container.style.zIndex = '-9999';
                 document.body.appendChild(container);
                 
                 const opt = {
@@ -8184,12 +8186,36 @@
                     
                     ctx.textAlign = 'left';
                     ctx.fillStyle = '#0f172a';
-                    ctx.font = '32px sans-serif';
+                    
+                    const scale = width / 1920;
+                    const baseFont = Math.max(16, 32 * scale);
+                    ctx.font = `${baseFont}px sans-serif`;
+                    
                     let textY = startOfWhiteAreaY + 160;
-                    msgLines.forEach(l => {
-                        ctx.fillText(l, 100, textY);
-                        textY += 45;
-                    });
+                    
+                    // Función simple para word-wrap
+                    function drawWrappedText(text, x, y, maxWidth, lineHeight) {
+                        const words = text.split(' ');
+                        let line = '';
+                        for (let n = 0; n < words.length; n++) {
+                            const testLine = line + words[n] + ' ';
+                            const metrics = ctx.measureText(testLine);
+                            if (metrics.width > maxWidth && n > 0) {
+                                ctx.fillText(line, x, y);
+                                line = words[n] + ' ';
+                                y += lineHeight;
+                            } else {
+                                line = testLine;
+                            }
+                        }
+                        ctx.fillText(line, x, y);
+                        return y + lineHeight;
+                    }
+                    
+                    // Unir todo el mensaje en un solo string para hacer wrap correctamente
+                    const fullMsg = "Buenos días. Les comparto las acciones generadas durante el Gemba Walk realizado el día de hoy. Les recordamos que estas acciones deben atenderse con la máxima prioridad para asegurar que nuestras áreas reflejen un ambiente profesional, seguro y alineado con los estándares de excelencia de Flex. Gracias por su apoyo y seguimiento oportuno.";
+                    
+                    textY = drawWrappedText(fullMsg, 50, textY, width - 100, baseFont + 15);
                     
                     textY += 60;
                     const colors = ['#005A9C', '#f59e0b', '#10b981', '#dc2626', '#8b5cf6', '#ec4899'];
@@ -8197,32 +8223,37 @@
                     
                     Object.keys(dataBySecAndOwner).forEach(sec => {
                         ctx.fillStyle = '#1e293b';
-                        ctx.font = 'bold 35px sans-serif';
-                        ctx.fillText(`Sección: ${sec}`, 100, textY);
+                        ctx.font = `bold ${baseFont + 4}px sans-serif`;
+                        ctx.fillText(`Sección: ${sec}`, 50, textY);
                         textY += 50;
                         
                         const owners = dataBySecAndOwner[sec];
                         const maxVal = Math.max(...Object.values(owners));
-                        const maxBarWidth = 1000;
+                        const maxBarWidth = width - 350; // Ajustado al ancho disponible
                         
                         Object.keys(owners).forEach(own => {
                             const val = owners[own];
                             const barWidth = maxVal > 0 ? (val / maxVal) * maxBarWidth : 0;
                             
                             ctx.fillStyle = '#475569';
-                            ctx.font = '28px sans-serif';
-                            ctx.fillText(own, 100, textY + 25);
+                            ctx.font = `${baseFont - 4}px sans-serif`;
+                            // Truncar owner name si es muy largo
+                            let dOwn = own;
+                            if (ctx.measureText(dOwn).width > 220) {
+                                dOwn = dOwn.substring(0, 15) + '...';
+                            }
+                            ctx.fillText(dOwn, 50, textY + 25);
                             
                             ctx.fillStyle = colors[colorIdx % colors.length];
-                            ctx.fillRect(400, textY, barWidth, 35);
+                            ctx.fillRect(300, textY, barWidth, 35);
                             
                             ctx.fillStyle = '#ffffff';
-                            ctx.font = 'bold 24px sans-serif';
+                            ctx.font = `bold ${baseFont - 6}px sans-serif`;
                             if (barWidth > 30) {
-                                ctx.fillText(val, 400 + barWidth - 25, textY + 26);
+                                ctx.fillText(val, 300 + barWidth - 25, textY + 26);
                             } else {
                                 ctx.fillStyle = '#000000';
-                                ctx.fillText(val, 400 + barWidth + 10, textY + 26);
+                                ctx.fillText(val, 300 + barWidth + 10, textY + 26);
                             }
                             
                             textY += 50;
