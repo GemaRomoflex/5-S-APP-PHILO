@@ -2731,7 +2731,10 @@
                 <div id="view-gemba-admin" class="hidden" style="width: 100%; display: flex; flex-direction: column; gap: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <h2 style="color: #005A9C; margin: 0; font-size: 24px;">👑 Panel de Administrador: Gemba en Vivo</h2>
-                        <button class="btn" onclick="switchTab('gemba')" style="background-color: #64748b; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">← Volver al Dashboard</button>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn" onclick="openManageOwnersModal()" style="background-color: #000; color: #f59e0b; border: 2px solid #f59e0b; font-weight: bold; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: background 0.2s;">👑 Directorio de Owners</button>
+                            <button class="btn" onclick="switchTab('gemba')" style="background-color: #64748b; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">← Volver al Dashboard</button>
+                        </div>
                     </div>
                     
                     <div class="table-card" style="padding: 25px;">
