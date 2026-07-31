@@ -7915,6 +7915,9 @@
             }
             
             questions.forEach((q, index) => {
+                const safeQ = q.replace(/'/g, "\\'").replace(/"/g, "&quot;").replace(/\n/g, " ").replace(/\r/g, "");
+                const safeSection = section.replace(/'/g, "\\'").replace(/"/g, "&quot;").replace(/\n/g, " ").replace(/\r/g, "");
+                
                 html += `
                     <div class="table-card" style="padding: 20px; border-top: 4px solid #f59e0b;">
                         <p style="font-size: 18px; font-weight: bold; margin-top: 0;">${index + 1}. ${q}</p>
@@ -7922,7 +7925,7 @@
                         <div id="actions-list-${index}"></div>
                         
                         <div style="display: flex; gap: 10px; margin-top: 15px;">
-                            <button onclick="addMobileAction('${section}', '${q.replace(/'/g, "\\'")}', ${index})" class="btn btn-secondary" style="flex: 1; border: 2px solid #ef4444; color: #ef4444; font-size: 16px; font-weight: bold; padding: 12px;">
+                            <button onclick="addMobileAction('${safeSection}', '${safeQ}', ${index})" class="btn btn-secondary" style="flex: 1; border: 2px solid #ef4444; color: #ef4444; font-size: 16px; font-weight: bold; padding: 12px;">
                                 ❌ Crear Acción
                             </button>
                         </div>
@@ -8075,7 +8078,7 @@
                 const container = document.createElement('div');
                 container.style.padding = '20px';
                 container.style.fontFamily = 'Arial, sans-serif';
-                container.style.width = '800px';
+                container.style.width = '100%';
                 container.style.backgroundColor = '#ffffff';
                 
                 let html = `
@@ -8125,52 +8128,26 @@
                     `;
                 });
                 
-                const overlay = document.createElement('div');
-                overlay.style.position = 'fixed';
-                overlay.style.top = '0'; overlay.style.left = '0'; overlay.style.width = '100%'; overlay.style.height = '100%';
-                overlay.style.backgroundColor = '#ffffff';
-                overlay.style.zIndex = '999999';
-                overlay.style.display = 'flex';
-                overlay.style.alignItems = 'center';
-                overlay.style.justifyContent = 'center';
-                overlay.innerHTML = '<h1 style="color:#005A9C;">Generando PDF Oficial...</h1>';
-                document.body.appendChild(overlay);
-
                 container.innerHTML = html;
-                container.style.position = 'fixed';
-                container.style.top = '0';
-                container.style.left = '0';
-                container.style.width = '100%';
-                container.style.minHeight = '100vh';
-                container.style.zIndex = '999998';
                 
+                // ESCONDER TODA LA APP Y MOSTRAR SOLO EL REPORTE
+                const originalBody = document.body.innerHTML;
+                document.body.innerHTML = '';
                 document.body.appendChild(container);
+                document.body.style.backgroundColor = '#ffffff';
                 
-                window.scrollTo(0,0);
-                
-                const opt = {
-                    margin:       10,
-                    filename:     `Reporte_Gemba_Detallado_${dateStr}.pdf`,
-                    image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { scale: 2, useCORS: true, windowWidth: 800, windowHeight: container.scrollHeight },
-                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                };
-                
-                if (typeof html2pdf !== 'undefined') {
-                    html2pdf().set(opt).from(container).save().then(() => {
-                        document.body.removeChild(container);
-                        document.body.removeChild(overlay);
-                        resolve();
-                    }).catch(e => {
-                        alert("Error en PDF: " + e.message);
-                        document.body.removeChild(container);
-                        document.body.removeChild(overlay);
-                        resolve();
-                    });
-                } else {
-                    alert("No se pudo cargar la librería PDF.");
+                // IMPRIMIR NATIVAMENTE
+                setTimeout(() => {
+                    window.print();
+                    
+                    // Restaurar la app inmediatamente después
+                    setTimeout(() => {
+                        document.body.innerHTML = originalBody;
+                        window.location.reload(); // Recargar para limpiar caché visual
+                    }, 500);
+                    
                     resolve();
-                }
+                }, 500);
             });
         }
 
