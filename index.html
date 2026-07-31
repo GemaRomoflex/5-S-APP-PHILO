@@ -2754,10 +2754,7 @@
                             </div>
                             <div class="form-group">
                                 <label style="text-transform: uppercase; font-weight: bold; font-size: 14px; color: #555;">Auditor Principal:</label>
-                                <select id="gemba-admin-auditor" class="form-control">
-                                    <option value="">Selecciona tu nombre...</option>
-                                    <!-- Dinámico vía populateGembaAreasSelect() -->
-                                </select>
+                                <input type="text" id="gemba-admin-auditor" class="form-control" list="gemba-auditors-list" placeholder="Escribe o selecciona tu nombre...">
                             </div>
                             <div class="form-group">
                                 <label style="text-transform: uppercase; font-weight: bold; font-size: 14px; color: #555;">Áreas Visitadas:</label>
@@ -3006,6 +3003,7 @@
             const { data: ownersData, error: ownersErr } = await supabaseClient.from('owners_directory').select('*');
             if (ownersData) {
                 allOwnersDirectory = ownersData;
+                buildGembaDatalists();
             }
 
             // --- B) CARGAR Y MIGRAR COORDENADAS DEL LAYOUT ---
@@ -7539,6 +7537,7 @@
             
             // Actualizar caché global
             allOwnersDirectory = data || [];
+            buildGembaDatalists();
             
             tbody.innerHTML = '';
             if (allOwnersDirectory.length === 0) {
@@ -7724,13 +7723,13 @@
             const shift = document.getElementById('gemba-admin-shift').value;
             const areas = document.getElementById('gemba-admin-areas').value;
             const pin = Math.floor(1000 + Math.random() * 9000).toString(); // 4-digit PIN
-
+            const auditor = document.getElementById('gemba-admin-auditor').value.trim();
             const { data, error } = await supabaseClient.from('gemba_events').insert([{
                 event_date: dateStr,
                 shift: shift,
                 areas: areas,
                 pin_code: pin,
-                admin_name: window.currentUserEmail || 'Admin'
+                admin_name: auditor || window.currentUserEmail || 'Admin'
             }]).select();
 
             if (error) {
@@ -7821,12 +7820,15 @@
             if (!currentGembaEventId) return;
             await supabaseClient.from('gemba_events').update({ status: 'completed' }).eq('id', currentGembaEventId);
             
+            const { data: eventData } = await supabaseClient.from('gemba_events').select('*').eq('id', currentGembaEventId).single();
+            const adminName = eventData ? eventData.admin_name : (window.currentUserEmail || 'Admin');
+            
             // Descargar Reporte y Acciones
             const { data: actions, error } = await supabaseClient.from('gemba_live_actions').select('*').eq('event_id', currentGembaEventId);
             
             alert(`Auditoría finalizada. Se generaron ${actions ? actions.length : 0} acciones.`);
             if (actions && actions.length > 0) {
-                orchestrateGembaReports(actions);
+                orchestrateGembaReports(actions, adminName);
             }
             
             // Cleanup and exit
@@ -7947,12 +7949,7 @@
                 <h4 style="margin: 0 0 10px 0; color: #dc2626;">Nueva Acción Correctiva</h4>
                 <textarea id="act-txt-${actionId}" class="form-control" rows="2" placeholder="Describe el problema y la acción..." style="margin-bottom: 10px;"></textarea>
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                    <select id="act-dept-${actionId}" class="form-control">
-                        <option value="">Owner Responsable...</option>
-                        ${(typeof allOwnersDirectory !== 'undefined' && allOwnersDirectory.length > 0) ? 
-                            allOwnersDirectory.map(o => `<option value="${o.owner_name}">${o.owner_name} (${o.department})</option>`).join('') : 
-                            '<option value="Sin asignar">Sin Owners cargados</option>'}
-                    </select>
+                    <input type="text" id="act-dept-${actionId}" class="form-control" list="gemba-owners-list" placeholder="Owner Responsable...">
                     <select id="act-pri-${actionId}" class="form-control">
                         <option value="">Prioridad...</option>
                         <option value="Alta">Alta (36 hrs)</option>
@@ -8058,10 +8055,10 @@
         }
 
         // ========================== ADMIN REPORT GENERATION ==========================
-        async function orchestrateGembaReports(actions) {
+        async function orchestrateGembaReports(actions, adminNameOverride) {
             alert("Generando reportes 3.0... (El navegador descargará el PNG y luego el PDF)");
             const todayStr = new Date().toISOString().split('T')[0];
-            const adminName = window.currentUserEmail || 'Administrador';
+            const adminName = adminNameOverride || window.currentUserEmail || 'Administrador';
             
             // 1. Generar PNG Ejecutivo
             await generateGembaExecutivePNG(actions, todayStr, adminName);
@@ -8132,7 +8129,7 @@
                 overlay.style.position = 'fixed';
                 overlay.style.top = '0'; overlay.style.left = '0'; overlay.style.width = '100%'; overlay.style.height = '100%';
                 overlay.style.backgroundColor = '#ffffff';
-                overlay.style.zIndex = '99999';
+                overlay.style.zIndex = '999999';
                 overlay.style.display = 'flex';
                 overlay.style.alignItems = 'center';
                 overlay.style.justifyContent = 'center';
@@ -8140,13 +8137,15 @@
                 document.body.appendChild(overlay);
 
                 container.innerHTML = html;
-                container.style.position = 'absolute';
+                container.style.position = 'fixed';
                 container.style.top = '0';
                 container.style.left = '0';
-                container.style.zIndex = '99998'; // Debajo del overlay
+                container.style.width = '100%';
+                container.style.minHeight = '100vh';
+                container.style.zIndex = '999998';
+                
                 document.body.appendChild(container);
                 
-                // Forzar un pequeño scroll al top para que html2canvas detecte todo el frame visible
                 window.scrollTo(0,0);
                 
                 const opt = {
@@ -8505,6 +8504,30 @@
                 html += `<option value="${area}">${area}</option>`;
             });
             select.innerHTML = html;
+        }
+
+        function buildGembaDatalists() {
+            if (typeof allOwnersDirectory === 'undefined' || allOwnersDirectory.length === 0) return;
+            
+            // Quitar repetidos por nombre exacto
+            const uniqueNames = [...new Set(allOwnersDirectory.map(o => o.owner_name))].filter(n => n).sort();
+            
+            let datalistsHTML = `
+                <datalist id="gemba-auditors-list">
+                    ${uniqueNames.map(n => `<option value="${n}">`).join('')}
+                </datalist>
+                <datalist id="gemba-owners-list">
+                    ${uniqueNames.map(n => `<option value="${n}">`).join('')}
+                </datalist>
+            `;
+            
+            let container = document.getElementById('gemba-datalists');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'gemba-datalists';
+                document.body.appendChild(container);
+            }
+            container.innerHTML = datalistsHTML;
         }
 
     </script>
