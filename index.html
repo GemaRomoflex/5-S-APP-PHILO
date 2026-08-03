@@ -3059,19 +3059,30 @@
             // Flujo Normal
             if (data && data.length > 0) {
                 // Mapear los datos para corregir problemas de case-sensitivity (minúsculas de Supabase)
-                const mappedData = data.map(item => ({
-                    ...item,
-                    auditId: item.auditId !== undefined ? item.auditId : item.auditid,
-                    actionId: item.actionId !== undefined ? item.actionId : item.actionid,
-                    cleanLocation: item.cleanLocation !== undefined ? item.cleanLocation : item.cleanlocation,
-                    responseScore: item.responseScore !== undefined ? item.responseScore : item.responsescore,
-                    dueDate: item.dueDate !== undefined ? item.dueDate : item.duedate,
-                    openDate: item.openDate !== undefined ? item.openDate : item.opendate,
-                    closedDate: item.closedDate !== undefined ? item.closedDate : item.closeddate,
-                    isLate: item.isLate !== undefined ? item.isLate : item.islate,
-                    agingDays: item.agingDays !== undefined ? item.agingDays : item.agingdays,
-                    daysToClose: item.daysToClose !== undefined ? item.daysToClose : item.daystoclose
-                }));
+                const mappedData = data.map(item => {
+                    let oDate = item.openDate !== undefined ? item.openDate : item.opendate;
+                    let dDate = item.dueDate !== undefined ? item.dueDate : item.duedate;
+                    let cDate = item.closedDate !== undefined ? item.closedDate : item.closeddate;
+                    
+                    // Eliminar la 'T' del tiempo universal para compatibilidad con todos los reportes
+                    if (oDate) oDate = String(oDate).replace('T', ' ');
+                    if (dDate) dDate = String(dDate).replace('T', ' ');
+                    if (cDate) cDate = String(cDate).replace('T', ' ');
+
+                    return {
+                        ...item,
+                        auditId: item.auditId !== undefined ? item.auditId : item.auditid,
+                        actionId: item.actionId !== undefined ? item.actionId : item.actionid,
+                        cleanLocation: item.cleanLocation !== undefined ? item.cleanLocation : item.cleanlocation,
+                        responseScore: item.responseScore !== undefined ? item.responseScore : item.responsescore,
+                        dueDate: dDate,
+                        openDate: oDate,
+                        closedDate: cDate,
+                        isLate: item.isLate !== undefined ? item.isLate : item.islate,
+                        agingDays: item.agingDays !== undefined ? item.agingDays : item.agingdays,
+                        daysToClose: item.daysToClose !== undefined ? item.daysToClose : item.daystoclose
+                    };
+                });
                 
                 allAuditData = mappedData;
                 document.getElementById('btn-reset').classList.remove('hidden');
