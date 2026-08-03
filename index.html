@@ -7006,7 +7006,19 @@
             
             dynamicContent.innerHTML = ''; // Limpiar
             let reportData = [];
-            let baseForReport = typeof globalFilteredData !== 'undefined' ? [...globalFilteredData] : [];
+            
+            // INDEPENDENCIA DEL REPORTE: Usar allAuditData para evitar heredar el filtro de fecha del Dashboard
+            let baseForReport = typeof allAuditData !== 'undefined' ? [...allAuditData] : [];
+            
+            // Aplicar filtros de departamento
+            if (typeof window.currentAppMode !== 'undefined') {
+                if (window.currentAppMode === '5s') {
+                    baseForReport = baseForReport.filter(item => item.department !== 'Gemba' && item.department !== 'Gemba Walk');
+                } else if (window.currentAppMode === 'gemba') {
+                    baseForReport = baseForReport.filter(item => item.department === 'Gemba' || item.department === 'Gemba Walk');
+                }
+            }
+            
             if (typeof window.currentAppMode !== 'undefined' && window.currentAppMode === 'cruzada') {
                 baseForReport = baseForReport.filter(item => item.department === 'Cross Audit');
             }
