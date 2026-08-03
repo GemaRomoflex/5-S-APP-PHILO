@@ -7010,18 +7010,17 @@
             // INDEPENDENCIA DEL REPORTE: Usar allAuditData para evitar heredar el filtro de fecha del Dashboard
             let baseForReport = typeof allAuditData !== 'undefined' ? [...allAuditData] : [];
             
-            // Aplicar filtros de departamento
-            if (typeof window.currentAppMode !== 'undefined') {
-                if (window.currentAppMode === '5s') {
-                    baseForReport = baseForReport.filter(item => item.department !== 'Gemba' && item.department !== 'Gemba Walk');
-                } else if (window.currentAppMode === 'gemba') {
-                    baseForReport = baseForReport.filter(item => item.department === 'Gemba' || item.department === 'Gemba Walk');
-                }
-            }
+            // Aplicar filtros de departamento según el modo actual
+            let mode = typeof currentAppMode !== 'undefined' ? currentAppMode : '5s';
             
-            if (typeof window.currentAppMode !== 'undefined' && window.currentAppMode === 'cruzada') {
+            if (mode === '5s') {
+                baseForReport = baseForReport.filter(item => item.department !== 'Gemba' && item.department !== 'Gemba Walk' && item.department !== 'Cross Audit');
+            } else if (mode === 'gemba') {
+                baseForReport = baseForReport.filter(item => item.department === 'Gemba' || item.department === 'Gemba Walk');
+            } else if (mode === 'cruzada') {
                 baseForReport = baseForReport.filter(item => item.department === 'Cross Audit');
             }
+            
             if (typeof window.currentUserRole !== 'undefined' && window.currentUserRole === 'Auditor Cruzado' && window.currentUserArea) {
                 baseForReport = baseForReport.filter(item => item.cleanLocation === window.currentUserArea);
             }
