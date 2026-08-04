@@ -7030,13 +7030,23 @@
                     let y, m, d;
                     // Detectar si el año está al principio o al final
                     if (parts[0].length === 4) {
-                        y = parseInt(parts[0]);
-                        m = parseInt(parts[1]) - 1;
-                        d = parseInt(parts[2]);
+                        y = parseInt(parts[0], 10);
+                        m = parseInt(parts[1], 10) - 1;
+                        d = parseInt(parts[2], 10);
                     } else if (parts[2].length === 4) {
-                        y = parseInt(parts[2]);
-                        m = parseInt(parts[1]) - 1;
-                        d = parseInt(parts[0]);
+                        y = parseInt(parts[2], 10);
+                        let p1 = parseInt(parts[0], 10);
+                        let p2 = parseInt(parts[1], 10);
+                        
+                        // Sistema inteligente para detectar Mes/Día/Año (Excel US) vs Día/Mes/Año (Latino)
+                        if (p1 > 12) {
+                            d = p1; m = p2 - 1; // El primero es mayor a 12, seguro es el día
+                        } else if (p2 > 12) {
+                            m = p1 - 1; d = p2; // El segundo es mayor a 12, seguro es el día
+                        } else {
+                            // En caso de ambigüedad (ej. 05/06/2026), asumimos estándar de la aplicación: DD/MM/YYYY
+                            d = p1; m = p2 - 1;
+                        }
                     } else {
                         return false;
                     }
