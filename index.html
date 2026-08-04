@@ -3435,12 +3435,9 @@
                 });
             }
 
-            // Filtrar descartes: Solo las calificaciones 1, 2, 3 y 4 generan una acción correctiva real. (Gemba siempre pasa)
-            const validActions = globalFilteredData.filter(item => {
-                if (item.department === 'Gemba' || item.department === 'Gemba Walk') return true;
-                const s = parseInt(item.responseScore, 10);
-                return !isNaN(s) && s >= 1 && s <= 4;
-            });
+            // Filtrar descartes: Solo las calificaciones 1 a 4 generan una acción correctiva real.
+            // Además, filtramos los "fantasmas" (acciones sin departamento ni owner).
+            const validActions = globalFilteredData.filter(item => isValidAction(item));
 
             // Generar y poblar tres arrays independientes
             arrOverdue = [];
