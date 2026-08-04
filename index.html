@@ -7490,7 +7490,10 @@
             }
             
             // 1. Calificaciones por Área Actual
-            const areas = [...new Set(data.map(i => i.cleanLocation))].filter(Boolean);
+            const excludedAreas = ['monitores', 'oficinas', 'lobby', 'visitas'];
+            const areas = [...new Set(data.map(i => i.cleanLocation))]
+                .filter(Boolean)
+                .filter(area => !excludedAreas.some(ex => area.toLowerCase().includes(ex)));
             const areaScores = {};
             areas.forEach(areaName => {
                 const areaData = data.filter(item => item.cleanLocation === areaName);
