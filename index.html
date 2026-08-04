@@ -7028,12 +7028,13 @@
                     if (parts.length !== 3) return false;
                     
                     let y, m, d;
-                    // Detectar si el año está al principio o al final
-                    if (parts[0].length === 4) {
+                    // Detectar si el año está al principio (ej. 2026/07/31 o 26/07/31)
+                    if (parts[0].length === 4 || (parts[0].length === 2 && parts[2].length === 2 && parseInt(parts[0], 10) > 31)) {
                         y = parseInt(parts[0], 10);
                         m = parseInt(parts[1], 10) - 1;
                         d = parseInt(parts[2], 10);
-                    } else if (parts[2].length === 4) {
+                    } else {
+                        // Asumir que el año está al final (ej. 31/07/2026, 07/31/2026, 31/07/26, 07/31/26)
                         y = parseInt(parts[2], 10);
                         let p1 = parseInt(parts[0], 10);
                         let p2 = parseInt(parts[1], 10);
@@ -7044,12 +7045,13 @@
                         } else if (p2 > 12) {
                             m = p1 - 1; d = p2; // El segundo es mayor a 12, seguro es el día
                         } else {
-                            // En caso de ambigüedad (ej. 05/06/2026), asumimos estándar de la aplicación: DD/MM/YYYY
+                            // En caso de ambigüedad (ej. 05/06/26), asumimos estándar de la aplicación: DD/MM/YY
                             d = p1; m = p2 - 1;
                         }
-                    } else {
-                        return false;
                     }
+                    
+                    // Si el año viene a 2 dígitos (ej. "26"), lo convertimos a "2026"
+                    if (y < 100) y += 2000;
                     
                     let dt = new Date(y, m, d);
                     if (isNaN(dt.getTime())) return false;
