@@ -7129,10 +7129,12 @@
                 reportData = baseForReport.filter(item => {
                     if (!item.openDate || item.openDate === 'Sin Fecha') return false;
                     let cleanStr = item.openDate.replace(/-/g, '/').split(' ')[0];
-                    let d = new Date(cleanStr);
-                    if (isNaN(d.getTime())) {
-                        const parts = cleanStr.split('/');
-                        if (parts.length === 3) d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                    let parts = cleanStr.split('/');
+                    let d;
+                    if (parts.length === 3) {
+                        d = new Date(parts[2], parseInt(parts[1]) - 1, parts[0]);
+                    } else {
+                        d = new Date(cleanStr);
                     }
                     if (isNaN(d.getTime())) return false;
                     
@@ -7183,10 +7185,12 @@
                     return baseForReport.filter(item => {
                         if (!item.openDate || item.openDate === 'Sin Fecha') return false;
                         let cleanStr = item.openDate.replace(/-/g, '/').split(' ')[0];
-                        let d = new Date(cleanStr);
-                        if (isNaN(d.getTime())) {
-                            const parts = cleanStr.split('/');
-                            if (parts.length === 3) d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                        let parts = cleanStr.split('/');
+                        let d;
+                        if (parts.length === 3) {
+                            d = new Date(parts[2], parseInt(parts[1]) - 1, parts[0]);
+                        } else {
+                            d = new Date(cleanStr);
                         }
                         if (isNaN(d.getTime())) return false;
                         
