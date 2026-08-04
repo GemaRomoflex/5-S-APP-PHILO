@@ -2239,11 +2239,6 @@
                 <!-- CONTENIDO DEL DASHBOARD (SOLO GRÁFICAS) -->
                 <div id="view-dashboard" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
                     
-                    <!-- DEBUG PANEL -->
-                    <div id="debug-panel" style="background-color: #fee2e2; border: 2px solid #ef4444; padding: 10px; border-radius: 5px; font-size: 11px; color: #7f1d1d; overflow: auto; text-align: left; max-width: 100%;">
-                        Esperando datos...
-                    </div>
-                    
                     <main id="dashboard-content" style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
                         <!-- BOTONES SUPERIORES (COMPETENCIA Y ADMIN) -->
                         <div style="display: flex; justify-content: flex-end; gap: 15px; width: 100%; padding: 0 10px;">
@@ -3423,19 +3418,6 @@
                 const s = parseInt(item.responseScore, 10);
                 return !isNaN(s) && s >= 1 && s <= 4;
             });
-            
-            // DEBUG INJECTION
-            const debugPanel = document.getElementById('debug-panel');
-            if(debugPanel) {
-                let dText = `allAuditData: ${allAuditData.length} | globalFilteredData: ${globalFilteredData.length} | validActions: ${validActions.length}<br>`;
-                let b29 = allAuditData.find(a => a.department === 'B29 DEBUG' || a.cleanLocation === 'CRITICAL REPAIR 1');
-                if(b29) {
-                    dText += `Found B29: date=${b29.openDate}, score=${b29.responseScore}, dept=${b29.department}<br>`;
-                } else {
-                    dText += `No B29 DEBUG found in allAuditData!<br>`;
-                }
-                debugPanel.innerHTML = dText;
-            }
 
             // Generar y poblar tres arrays independientes
             arrOverdue = [];
