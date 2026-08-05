@@ -7131,9 +7131,11 @@
                     let cleanStr = item.openDate.replace(/-/g, '/').split(' ')[0];
                     let parts = cleanStr.split('/');
                     let d;
-                    if (parts.length === 3) {
+                    if (parts.length === 3 && parts[2].length === 4) {
+                        // Formato DD/MM/YYYY
                         d = new Date(parts[2], parseInt(parts[1]) - 1, parts[0]);
                     } else {
+                        // Formato YYYY/MM/DD (Nativo)
                         d = new Date(cleanStr);
                     }
                     if (isNaN(d.getTime())) return false;
@@ -7187,9 +7189,11 @@
                         let cleanStr = item.openDate.replace(/-/g, '/').split(' ')[0];
                         let parts = cleanStr.split('/');
                         let d;
-                        if (parts.length === 3) {
+                        if (parts.length === 3 && parts[2].length === 4) {
+                            // Formato DD/MM/YYYY
                             d = new Date(parts[2], parseInt(parts[1]) - 1, parts[0]);
                         } else {
+                            // Formato YYYY/MM/DD (Nativo)
                             d = new Date(cleanStr);
                         }
                         if (isNaN(d.getTime())) return false;
