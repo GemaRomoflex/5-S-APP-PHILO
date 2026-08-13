@@ -43,3 +43,6 @@ Todo el control de vistas está centralizado en la función `applyRBAC()`.
 
 ### [Julio 2026] - Auditoría Cruzada (Fixes de Estabilidad)
 *   **Refactorización de Evidencias:** Se purgó el código que intentaba guardar e invocar la columna fantasma `evidence_url`. Ahora el renderizado cruzado también extrae las fotografías secretas desde el interior de los `comments`.
+
+### [Agosto 2026] - Auditoría Cruzada (Ajuste de Interface / UI)
+*   **Ocultar Encabezado Superior:** Se removió la visibilidad de la barra de encabezado superior (`main-header`) en la vista de Auditorías Cruzadas (`switchTab('audits')`) para eliminar los botones "Descargar Plantilla CSV" y "Cargar Datos Demo" de esta sección, manteniendo limpia la UI sin alterar el funcionamiento interno ni la lógica de carga de datos en las demás secciones.
