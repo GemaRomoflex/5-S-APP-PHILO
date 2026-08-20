@@ -1206,112 +1206,7 @@
             height: 16px;
         }
 
-        /* --- MÓDULO LAYOUT INTERACTIVO --- */
-        .layout-header-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--color-bg-white);
-            padding: 15px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            margin-bottom: 20px;
-        }
-        .layout-container {
-            position: relative;
-            width: 100%;
-            max-width: 100%;
-            height: 80vh;
-            background-color: var(--color-bg-white);
-            background-size: contain;
-            background-position: center top;
-            background-repeat: no-repeat;
-            border: 2px solid var(--color-border);
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
-        }
-        .layout-box {
-            position: absolute;
-            box-sizing: border-box;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease-in-out;
-        }
-        .layout-box.edit-mode {
-            background-color: rgba(0, 154, 221, 0.2);
-            border: 2px dashed var(--color-primary);
-            cursor: move;
-        }
-        .layout-box-label {
-            font-size: clamp(8px, 0.8vw, 12px);
-            color: var(--color-primary);
-            font-weight: bold;
-            text-align: center;
-            pointer-events: none;
-            background: rgba(255,255,255,0.9);
-            padding: 2px 6px;
-            border-radius: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 90%;
-        }
-        .layout-box.prod-mode {
-            border: none;
-            opacity: 0; /* Totalmente transparente por defecto */
-            cursor: pointer;
-        }
-        .layout-box.prod-mode .layout-box-label {
-            display: none; /* No mostrar texto en prod mode */
-        }
-        .layout-box.prod-mode:hover,
-        .layout-box.prod-mode.hover-active {
-            opacity: 1 !important; /* Muestra el color asignado en JS al hacer hover */
-        }
-        .layout-box .resize-handle {
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            background: var(--color-secondary);
-            right: -6px;
-            bottom: -6px;
-            cursor: se-resize;
-            display: none;
-            border-radius: 50%;
-            z-index: 10;
-        }
-        .layout-box.edit-mode .resize-handle {
-            display: block;
-        }
-        .layout-tooltip {
-            position: fixed;
-            background: rgba(25, 33, 44, 0.7);
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 13px;
-            pointer-events: none;
-            z-index: 10000;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            display: none;
-            min-width: 220px;
-            backdrop-filter: blur(3px);
-        }
-        .layout-tooltip h4 {
-            margin: 0 0 10px 0;
-            color: var(--color-bg-light);
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            padding-bottom: 5px;
-            font-size: 15px;
-        }
-        .layout-tooltip p {
-            margin: 6px 0;
-            display: flex;
-            justify-content: space-between;
-            font-weight: 500;
-        }
+
 
         .hidden {
             display: none !important;
@@ -1877,10 +1772,6 @@
                             <span class="nav-icon">✏️</span>
                             <span>Actions Editor</span>
                         </a>
-                        <a class="nav-item" id="nav-layout" onclick="switchTab('layout')" title="Visualiza el mapa interactivo de la planta (Heatmap) con puntuaciones">
-                            <span class="nav-icon">🗺️</span>
-                            <span>Layout</span>
-                        </a>
                         <a class="nav-item" id="nav-audits" onclick="switchTab('audits')" title="Formulario interactivo para registrar una nueva Auditoría Cruzada">
                             <span class="nav-icon">📋</span>
                             <span>Audits</span>
@@ -2431,110 +2322,7 @@
                 </div>
             </div> <!-- END ACTIONS EDITOR -->
 
-            <!-- VISTA LAYOUT INTERACTIVO -->
-            <div id="view-layout-wrapper" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
-                
-                <!-- VISTA PRINCIPAL DEL MAPA -->
-                <div id="view-layout-main">
-                    <div class="layout-header-controls" style="display: flex; flex-direction: column; align-items: flex-start; gap: 15px;">
-                        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%;">
-                            <h2 style="margin: 0; font-size: 20px; color: var(--color-text);">Layout Interactivo 5S</h2>
-                            <select id="layout-selector" class="filter-select" onchange="changeLayoutMap()">
-                                <option value="B27.png">Planta - Edificio B27</option>
-                                <option value="B29.png">Planta - Edificio B29</option>
-                            </select>
-                            <select id="layout-view-mode" class="filter-select" onchange="changeLayoutMap()">
-                                <option value="areas">Modo: Áreas</option>
-                                <option value="sectors">Modo: Sectores</option>
-                            </select>
-                        </div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 10px; width: 100%; border-top: 1px solid #eee; padding-top: 10px;">
-                            <button id="btn-layout-edit" class="btn" style="background-color: #6c757d; color: white;" onclick="toggleLayoutEditMode()">Activar Modo Edición</button>
-                            <button id="btn-layout-add" class="btn hidden" style="background-color: #009ADD; color: white;" onclick="addLayoutBox()">+ Añadir Recuadro</button>
-                            <button id="btn-layout-save" class="btn hidden" style="background-color: #6c757d; color: white;" onclick="saveLayoutCoordinates()">Guardar (Consola)</button>
-                        </div>
-                    </div>
 
-                    <div class="layout-container" id="layout-map-container">
-                        <!-- Las cajas dinámicas se renderizan aquí -->
-                    </div>
-                </div>
-
-                <!-- VISTA DE DEEP DIVE (DETALLE DE ÁREA) -->
-                <div id="view-layout-detail" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
-                    <div class="chart-header" style="justify-content: flex-start; gap: 15px; border-bottom: 1px solid var(--color-border); padding-bottom: 10px; margin-bottom: 0;">
-                        <button class="btn btn-primary" id="btn-back-deepdive" onclick="closeLayoutDetail()">
-                            ◀ Volver al Mapa
-                        </button>
-                        <h2 id="layout-detail-title" style="margin: 0; font-size: 20px; color: var(--color-text);">Detalle de Área</h2>
-                    </div>
-
-                    <section class="kpis-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-                        <div class="kpi-card score" style="cursor: default;">
-                            <span class="kpi-title">Score Últimas 3 Audits</span>
-                            <span class="kpi-value" id="ld-kpi-score">0.0%</span>
-                        </div>
-                        <div class="kpi-card" id="ld-kpi-improvement-card" style="cursor: default; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
-                            <span class="kpi-title" style="color: rgba(255,255,255,0.9);">Mejora Continua</span>
-                            <span class="kpi-value" id="ld-kpi-improvement">N/A</span>
-                        </div>
-                        <div class="kpi-card" style="cursor: default; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white;">
-                            <span class="kpi-title" style="color: rgba(255,255,255,0.9);">On-Time Closure</span>
-                            <span class="kpi-value" id="ld-kpi-ontime">0.0%</span>
-                        </div>
-                        <div class="kpi-card warning interactive-card" onclick="openLayoutListModal('wip')" style="cursor: pointer; transition: transform 0.2s;">
-                            <span class="kpi-title">Acciones en Proceso (WIP)</span>
-                            <span class="kpi-value" id="ld-kpi-wip">0</span>
-                            <span style="font-size: 12px; opacity: 0.8; margin-top: 5px;">👆 Clic para ver lista</span>
-                        </div>
-                        <div class="kpi-card overdue interactive-card" onclick="openLayoutListModal('overdue')" style="cursor: pointer; transition: transform 0.2s;">
-                            <span class="kpi-title">Acciones Vencidas (Overdue)</span>
-                            <span class="kpi-value" id="ld-kpi-overdue">0</span>
-                            <span style="font-size: 12px; opacity: 0.8; margin-top: 5px;">👆 Clic para ver lista</span>
-                        </div>
-                    </section>
-
-                    <section class="charts-grid" style="grid-template-columns: 1fr;">
-                        <div class="table-card">
-                            <div class="chart-header"><span class="chart-title">Responsables del Área (Owners)</span></div>
-                            <div class="table-responsive">
-                                <table id="layout-owners-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Responsable</th>
-                                            <th>Departamento</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="layout-owners-table-body"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- MODAL PARA LISTA DE ACCIONES -->
-                    <div class="modal" id="layout-list-modal">
-                        <div class="modal-content" style="max-width: 800px;">
-                            <div class="modal-header">
-                                <h3 id="layout-list-title">Lista de Acciones</h3>
-                                <button class="btn btn-primary" onclick="closeLayoutListModal()" style="background: transparent; color: var(--color-text); border: none; font-size: 20px;">×</button>
-                            </div>
-                            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                                <table id="layout-list-table">
-                                    <thead>
-                                        <tr>
-                                            <th>ID Acción</th>
-                                            <th>Comentarios</th>
-                                            <th>Responsable</th>
-                                            <th>Estado</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="layout-list-table-body"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div> <!-- END LAYOUT MODULE -->
 
             <!-- VISTA DE HISTORIAL Y GRÁFICA COMPLETA (SPA) -->
             <div id="history-view" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
@@ -2925,7 +2713,7 @@
             const allViews = [
                 'view-data', 'view-dashboard', 'history-view', 
                 'detail-view', 'view-cross-audit', 
-                'view-layout-wrapper', 'view-actions-editor',
+                'view-actions-editor',
                 'view-calendar', 'view-areas', 'dashboard-content',
                 'view-gemba-dashboard', 'view-gemba-admin', 'view-gemba-participant',
                 'dashboard-empty-state'
@@ -2949,10 +2737,6 @@
                 document.getElementById('view-dashboard').classList.remove('hidden');
                 document.getElementById('view-actions-editor').classList.remove('hidden');
                 initActionsEditor();
-            } else if (tabId === 'layout') {
-                document.getElementById('view-dashboard').classList.remove('hidden');
-                document.getElementById('view-layout-wrapper').classList.remove('hidden');
-                initLayoutModule();
             } else if (tabId === 'calendar') {
                 document.getElementById('view-dashboard').classList.remove('hidden');
                 document.getElementById('view-calendar').classList.remove('hidden');
@@ -3340,11 +3124,19 @@
         // LIMPIEZA DE UBICACIÓN (Conserva el último valor tras '->')
         function cleanLocation(locStr) {
             if (!locStr) return 'N/A';
+            let loc = locStr;
             if (locStr.includes('->')) {
                 const parts = locStr.split('->');
-                return parts[parts.length - 1].trim();
+                loc = parts[parts.length - 1].trim();
+            } else {
+                loc = locStr.trim();
             }
-            return locStr.trim();
+            
+            const lowerLoc = loc.toLowerCase();
+            if (lowerLoc === 'equipment room') return 'Equipment room';
+            if (lowerLoc === 'assortment' || lowerLoc === 'surtido de material') return 'Surtido de material';
+            
+            return loc;
         }
 
         // LÓGICA DE UPSERT / SINCRONIZACIÓN HACIA SUPABASE
@@ -8131,31 +7923,59 @@
         }
 
         // ========================== PARTICIPANT LOGIC ==========================
+        let isJoiningGemba = false;
         async function joinGembaEvent() {
+            if (isJoiningGemba) return;
+            
             const name = document.getElementById('gemba-participant-name').value.trim();
             const pin = document.getElementById('gemba-participant-pin').value.trim();
             
             if (!name || !pin) return alert("Ingresa tu nombre y el PIN de la sala.");
             
-            const { data: events, error: errEvent } = await supabaseClient.from('gemba_events').select('*').eq('pin_code', pin).neq('status', 'completed');
-            if (errEvent || !events.length) return alert("PIN inválido o sala cerrada.");
+            isJoiningGemba = true;
             
-            const event = events[0];
-            currentGembaEventId = event.id;
-            
-            const { data: part, error: errPart } = await supabaseClient.from('gemba_participants').insert([{
-                event_id: currentGembaEventId,
-                participant_name: name
-            }]).select();
-            
-            if (errPart) return alert("Error al unirse.");
-            
-            participantId = part[0].id;
-            
-            document.getElementById('gemba-mobile-join').classList.add('hidden');
-            document.getElementById('gemba-mobile-waiting').classList.remove('hidden');
-            
-            subscribeToEventStatus();
+            try {
+                const { data: events, error: errEvent } = await supabaseClient.from('gemba_events').select('*').eq('pin_code', pin).neq('status', 'completed');
+                if (errEvent || !events.length) {
+                    alert("PIN inválido o sala cerrada.");
+                    isJoiningGemba = false;
+                    return;
+                }
+                
+                const event = events[0];
+                currentGembaEventId = event.id;
+                
+                const { data: existing } = await supabaseClient.from('gemba_participants')
+                    .select('*')
+                    .eq('event_id', currentGembaEventId)
+                    .eq('participant_name', name);
+                    
+                if (existing && existing.length > 0) {
+                    participantId = existing[0].id;
+                } else {
+                    const { data: part, error: errPart } = await supabaseClient.from('gemba_participants').insert([{
+                        event_id: currentGembaEventId,
+                        participant_name: name
+                    }]).select();
+                    
+                    if (errPart) {
+                        alert("Error al unirse.");
+                        isJoiningGemba = false;
+                        return;
+                    }
+                    
+                    participantId = part[0].id;
+                }
+                
+                document.getElementById('gemba-mobile-join').classList.add('hidden');
+                document.getElementById('gemba-mobile-waiting').classList.remove('hidden');
+                
+                subscribeToEventStatus();
+            } catch (e) {
+                console.error(e);
+            } finally {
+                isJoiningGemba = false;
+            }
         }
 
         function subscribeToEventStatus() {
