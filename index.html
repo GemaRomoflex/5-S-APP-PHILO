@@ -6496,20 +6496,67 @@
             const renderContainer = document.createElement('div');
             renderContainer.style.position = 'absolute';
             renderContainer.style.left = '-9999px';
-            renderContainer.style.background = '#ffffff';
-            renderContainer.style.width = '1400px';
-            renderContainer.style.padding = '40px';
+            renderContainer.style.background = '#f2f2f2'; // Light gray background
+            renderContainer.style.width = '1600px'; // Wider to match template
+            renderContainer.style.padding = '50px 40px';
             renderContainer.style.fontFamily = 'system-ui, -apple-system, sans-serif';
             
-            const title = document.createElement('h2');
-            title.textContent = finalTitleText;
-            title.style.textAlign = 'center';
-            title.style.color = '#111827';
-            title.style.fontSize = '32px';
-            title.style.marginBottom = '30px';
-            title.style.borderBottom = '2px solid #e5e7eb';
-            title.style.paddingBottom = '15px';
-            renderContainer.appendChild(title);
+            // Reformat Title to match template
+            const titleContainer = document.createElement('div');
+            titleContainer.style.textAlign = 'center';
+            titleContainer.style.marginBottom = '40px';
+            
+            const mainTitle = document.createElement('h1');
+            mainTitle.textContent = "AUDITORÍAS 5'S";
+            mainTitle.style.margin = '0';
+            mainTitle.style.fontSize = '55px';
+            mainTitle.style.fontWeight = '800';
+            mainTitle.style.letterSpacing = '2px';
+            mainTitle.style.color = '#222222';
+            mainTitle.style.textTransform = 'uppercase';
+            
+            const subtitle = document.createElement('h2');
+            subtitle.textContent = type === 'week' ? finalTitleText.replace("Auditorías Programadas de 5'S - ", "") : monthText;
+            subtitle.style.margin = '5px 0 0 0';
+            subtitle.style.fontSize = '50px';
+            subtitle.style.fontWeight = 'bold';
+            subtitle.style.color = '#1ea1d7'; // Light blue
+            
+            titleContainer.appendChild(mainTitle);
+            titleContainer.appendChild(subtitle);
+            renderContainer.appendChild(titleContainer);
+            
+            // Adjust grid styling
+            gridClone.style.border = 'none';
+            gridClone.style.backgroundColor = 'transparent';
+            gridClone.style.gap = '10px'; // Space between columns
+            
+            // Adjust headers
+            gridClone.querySelectorAll('.cal-day-header').forEach((h, index) => {
+                const daysEn = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+                h.textContent = daysEn[index];
+                h.style.backgroundColor = '#f2f2f2';
+                h.style.color = '#000000';
+                h.style.fontWeight = 'bold';
+                h.style.letterSpacing = '1px';
+                h.style.fontSize = '20px';
+                h.style.padding = '0 0 10px 0';
+                h.style.border = 'none';
+                h.style.borderBottom = '1px solid #ccc';
+            });
+            
+            // Adjust cells
+            gridClone.querySelectorAll('.cal-day').forEach(day => {
+                day.style.backgroundColor = '#eeeeee'; // Slightly darker gray for cells
+                day.style.border = '1px solid #dcdcdc';
+                day.style.borderRadius = '0';
+                day.style.minHeight = type === 'week' ? '500px' : '200px';
+                day.style.padding = '15px';
+                
+                // Hide date number in the template format
+                const dateNum = day.querySelector('.cal-date-number');
+                if(dateNum) dateNum.style.display = 'none';
+            });
             
             renderContainer.appendChild(gridClone);
             document.body.appendChild(renderContainer);
