@@ -2050,10 +2050,13 @@
                 <div id="view-calendar" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
                     <div class="chart-header" style="justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--color-border); margin-bottom: 10px;">
                         <h2 style="margin: 0; font-size: 24px; color: var(--color-text);">Calendario de Auditorías</h2>
-                        <div style="display: flex; gap: 15px; align-items: center;">
-                            <button class="btn btn-secondary" onclick="changeMonth(-1)">◀ Mes Anterior</button>
+                        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                            <button class="btn btn-secondary" onclick="exportCalendar('month')" style="background: #28a745; color: white; border: none; font-size: 13px;">📤 Mes (PNG)</button>
+                            <button class="btn btn-secondary" onclick="exportCalendar('week')" style="background: #28a745; color: white; border: none; font-size: 13px;">📤 Semana (PNG)</button>
+                            <div style="border-left: 1px solid var(--color-border); height: 25px; margin: 0 5px;"></div>
+                            <button class="btn btn-secondary" onclick="changeMonth(-1)">◀</button>
                             <h3 id="calendar-month-year" style="margin: 0; min-width: 150px; text-align: center; font-size: 18px;">Mes Año</h3>
-                            <button class="btn btn-secondary" onclick="changeMonth(1)">Mes Siguiente ▶</button>
+                            <button class="btn btn-secondary" onclick="changeMonth(1)">▶</button>
                         </div>
                     </div>
                     
@@ -6410,6 +6413,99 @@
         let currentMonth = new Date().getMonth();
         let currentYear = new Date().getFullYear();
         let calendarEvents = [];
+        async function exportCalendar(type) {
+            if (typeof html2canvas === 'undefined') {
+                alert("El módulo de exportación está cargando, por favor intenta en unos segundos.");
+                return;
+            }
+
+            const originalGrid = document.getElementById('calendar-grid-container');
+            const monthText = document.getElementById('calendar-month-year').textContent;
+            
+            const renderContainer = document.createElement('div');
+            renderContainer.style.position = 'absolute';
+            renderContainer.style.left = '-9999px';
+            renderContainer.style.background = '#ffffff';
+            renderContainer.style.width = '1400px';
+            renderContainer.style.padding = '40px';
+            renderContainer.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+            
+            const title = document.createElement('h2');
+            title.textContent = `Auditorías Programadas - ${type === 'week' ? 'Vista Semanal' : monthText}`;
+            title.style.textAlign = 'center';
+            title.style.color = '#111827';
+            title.style.fontSize = '32px';
+            title.style.marginBottom = '30px';
+            title.style.borderBottom = '2px solid #e5e7eb';
+            title.style.paddingBottom = '15px';
+            renderContainer.appendChild(title);
+            
+            const gridClone = originalGrid.cloneNode(true);
+            
+            // Clean up UI elements in clone (like + buttons)
+            gridClone.querySelectorAll('.cal-add-btn').forEach(btn => btn.remove());
+            
+            // Improve styling for export
+            gridClone.querySelectorAll('.cal-event').forEach(ev => {
+                ev.style.fontSize = '14px';
+                ev.style.padding = '6px';
+                ev.style.margin = '4px 0';
+                ev.style.whiteSpace = 'normal';
+                ev.style.wordBreak = 'break-word';
+            });
+            gridClone.querySelectorAll('.cal-day').forEach(day => {
+                day.style.minHeight = type === 'week' ? '300px' : '150px';
+            });
+
+            if (type === 'week') {
+                // Find which week to extract
+                const children = Array.from(gridClone.children);
+                const headers = children.slice(0, 7);
+                const days = children.slice(7);
+                
+                // Group into weeks
+                const weeks = [];
+                for (let i = 0; i < days.length; i += 7) {
+                    weeks.push(days.slice(i, i + 7));
+                }
+                
+                // Find week with 'today' or first week
+                let targetWeek = weeks.find(w => w.some(d => d.classList.contains('today')));
+                if (!targetWeek) {
+                    targetWeek = weeks.find(w => w.some(d => {
+                        const span = d.querySelector('.cal-date-number span');
+                        return span && span.textContent === '1';
+                    })) || weeks[0];
+                }
+
+                // Rebuild grid with just headers and target week
+                gridClone.innerHTML = '';
+                headers.forEach(h => {
+                    h.style.fontSize = '18px';
+                    h.style.padding = '15px';
+                    gridClone.appendChild(h);
+                });
+                targetWeek.forEach(d => gridClone.appendChild(d));
+            }
+
+            renderContainer.appendChild(gridClone);
+            document.body.appendChild(renderContainer);
+
+            try {
+                // Pequeño delay para asegurar que el DOM se actualizó
+                await new Promise(r => setTimeout(r, 100));
+                const canvas = await html2canvas(renderContainer, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false });
+                const link = document.createElement('a');
+                link.download = `Calendario_${type}_${monthText.replace(/\s+/g, '_')}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (err) {
+                console.error(err);
+                alert("Hubo un error al generar la imagen.");
+            } finally {
+                document.body.removeChild(renderContainer);
+            }
+        }
 
         async function initCalendar() {
             await loadCalendarEvents();
