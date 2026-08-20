@@ -2755,7 +2755,6 @@
                 document.getElementById('view-dashboard').classList.remove('hidden');
                 document.getElementById('dashboard-content').classList.add('hidden');
                 document.getElementById('view-actions-editor').classList.add('hidden');
-                document.getElementById('view-layout-wrapper').classList.add('hidden');
                 document.getElementById('view-calendar').classList.add('hidden');
                 document.getElementById('view-areas').classList.add('hidden');
                 document.getElementById('view-cross-audit').classList.remove('hidden');
@@ -6052,8 +6051,7 @@
             } else if (origin === 'areas') {
                 document.getElementById('view-areas').classList.add('hidden');
                 document.getElementById('view-dashboard').classList.remove('hidden'); // Fix: Encender el dashboard general
-                document.getElementById('view-layout-wrapper').classList.remove('hidden');
-                document.getElementById('view-layout-main').classList.add('hidden'); // Ocultar el mapa explícitamente
+                document.getElementById('view-layout-main')?.classList.add('hidden'); // Ocultar el mapa explícitamente
             }
 
             document.getElementById('view-layout-detail').classList.remove('hidden');
@@ -6136,7 +6134,6 @@
             if (layoutDetailOrigin === 'layout') {
                 document.getElementById('view-layout-main').classList.remove('hidden');
             } else if (layoutDetailOrigin === 'areas') {
-                document.getElementById('view-layout-wrapper').classList.add('hidden');
                 document.getElementById('view-dashboard').classList.add('hidden'); // Fix: Apagar el dashboard general
                 document.getElementById('view-areas').classList.remove('hidden');
             }
