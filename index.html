@@ -6422,24 +6422,6 @@
             const originalGrid = document.getElementById('calendar-grid-container');
             const monthText = document.getElementById('calendar-month-year').textContent;
             
-            const renderContainer = document.createElement('div');
-            renderContainer.style.position = 'absolute';
-            renderContainer.style.left = '-9999px';
-            renderContainer.style.background = '#ffffff';
-            renderContainer.style.width = '1400px';
-            renderContainer.style.padding = '40px';
-            renderContainer.style.fontFamily = 'system-ui, -apple-system, sans-serif';
-            
-            const title = document.createElement('h2');
-            title.textContent = `Auditorías Programadas - ${type === 'week' ? 'Vista Semanal' : monthText}`;
-            title.style.textAlign = 'center';
-            title.style.color = '#111827';
-            title.style.fontSize = '32px';
-            title.style.marginBottom = '30px';
-            title.style.borderBottom = '2px solid #e5e7eb';
-            title.style.paddingBottom = '15px';
-            renderContainer.appendChild(title);
-            
             const gridClone = originalGrid.cloneNode(true);
             
             // Clean up UI elements in clone (like + buttons)
@@ -6456,6 +6438,8 @@
             gridClone.querySelectorAll('.cal-day').forEach(day => {
                 day.style.minHeight = type === 'week' ? '300px' : '150px';
             });
+
+            let finalTitleText = `Auditorías Programadas - ${monthText}`;
 
             if (type === 'week') {
                 // Find which week to extract
@@ -6474,10 +6458,30 @@
                 
                 let targetIndex = parseInt(weekNum) - 1;
                 if (isNaN(targetIndex) || targetIndex < 0 || targetIndex >= weeks.length) {
-                    targetIndex = 0; // Default to first week if invalid
+                    targetIndex = 0;
                 }
                 
                 let targetWeek = weeks[targetIndex];
+
+                // Calculate week of the year
+                let weekOfYear = '?';
+                for (let dayDiv of targetWeek) {
+                    const span = dayDiv.querySelector('.cal-date-number span');
+                    if (span && span.textContent) {
+                        const dNum = parseInt(span.textContent);
+                        const dateObj = new Date(currentYear, currentMonth, dNum);
+                        
+                        // ISO Week Calculation
+                        const d = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
+                        const day = d.getUTCDay() || 7;
+                        d.setUTCDate(d.getUTCDate() + 4 - day);
+                        const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+                        weekOfYear = Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+                        break; // found the first valid day of this week
+                    }
+                }
+                
+                finalTitleText = `Auditorías Programadas de 5'S - Week ${weekOfYear}`;
 
                 // Rebuild grid with just headers and target week
                 gridClone.innerHTML = '';
@@ -6489,11 +6493,28 @@
                 targetWeek.forEach(d => gridClone.appendChild(d));
             }
 
+            const renderContainer = document.createElement('div');
+            renderContainer.style.position = 'absolute';
+            renderContainer.style.left = '-9999px';
+            renderContainer.style.background = '#ffffff';
+            renderContainer.style.width = '1400px';
+            renderContainer.style.padding = '40px';
+            renderContainer.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+            
+            const title = document.createElement('h2');
+            title.textContent = finalTitleText;
+            title.style.textAlign = 'center';
+            title.style.color = '#111827';
+            title.style.fontSize = '32px';
+            title.style.marginBottom = '30px';
+            title.style.borderBottom = '2px solid #e5e7eb';
+            title.style.paddingBottom = '15px';
+            renderContainer.appendChild(title);
+            
             renderContainer.appendChild(gridClone);
             document.body.appendChild(renderContainer);
 
             try {
-                // Pequeño delay para asegurar que el DOM se actualizó
                 await new Promise(r => setTimeout(r, 100));
                 const canvas = await html2canvas(renderContainer, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false });
                 const link = document.createElement('a');
