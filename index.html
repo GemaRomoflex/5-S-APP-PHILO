@@ -2085,7 +2085,8 @@
                             </div>
                             <div>
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--color-text-muted);">Área o Sector</label>
-                                <input type="text" id="cal-event-area" class="filter-select" placeholder="Ej. Línea 3" style="width: 100%; border: 1px solid var(--color-border);" required autocomplete="off">
+                                <select id="cal-event-area" class="filter-select" multiple size="6" style="width: 100%; border: 1px solid var(--color-border); padding: 5px; min-height: 120px;" required></select>
+                                <small style="color: var(--color-text-muted); font-size: 11px; margin-top: 5px; display: block;">Mantén presionado Ctrl (o Cmd) para seleccionar múltiples opciones</small>
                             </div>
                             <div>
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--color-text-muted);">Estado</label>
@@ -6506,17 +6507,51 @@
             const modal = document.getElementById('calendar-event-modal');
             const title = document.getElementById('cal-modal-title');
             const btnDelete = document.getElementById('btn-delete-event');
+            const areaSelect = document.getElementById('cal-event-area');
+
+            // Poblar las opciones si está vacío
+            if (areaSelect.options.length === 0) {
+                const allAreas = new Set();
+                Object.values(sectorMapping).forEach(arr => {
+                    arr.forEach(a => allAreas.add(a));
+                });
+                if (window.calendarEvents) {
+                    window.calendarEvents.forEach(ev => {
+                        if (ev.area_name) {
+                            ev.area_name.split(',').forEach(a => allAreas.add(a.trim()));
+                        }
+                    });
+                }
+                
+                Array.from(allAreas).sort().forEach(area => {
+                    if(!area) return;
+                    const opt = document.createElement('option');
+                    opt.value = area;
+                    opt.textContent = area;
+                    areaSelect.appendChild(opt);
+                });
+            }
+
+            // Resetear seleccion
+            Array.from(areaSelect.options).forEach(opt => opt.selected = false);
 
             if (eventObj) {
                 title.textContent = 'Editar Auditoría';
                 document.getElementById('cal-event-id').value = eventObj.id;
-                document.getElementById('cal-event-area').value = eventObj.area_name;
                 document.getElementById('cal-event-status').value = eventObj.status;
+                
+                // Seleccionar las areas previas
+                const selectedAreas = eventObj.area_name.split(',').map(s => s.trim());
+                Array.from(areaSelect.options).forEach(opt => {
+                    if (selectedAreas.includes(opt.value)) {
+                        opt.selected = true;
+                    }
+                });
+                
                 btnDelete.style.display = 'block';
             } else {
                 title.textContent = 'Programar Auditoría';
                 document.getElementById('cal-event-id').value = '';
-                document.getElementById('cal-event-area').value = '';
                 document.getElementById('cal-event-status').value = 'Programada';
                 btnDelete.style.display = 'none';
             }
@@ -6536,7 +6571,8 @@
 
             const id = document.getElementById('cal-event-id').value;
             const date = document.getElementById('cal-event-date').value;
-            const area = document.getElementById('cal-event-area').value.trim();
+            const areaSelect = document.getElementById('cal-event-area');
+            const area = Array.from(areaSelect.selectedOptions).map(opt => opt.value).join(', ');
             const status = document.getElementById('cal-event-status').value;
 
             if (!date || !area) {
