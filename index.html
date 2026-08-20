@@ -2881,7 +2881,7 @@
                         ...item,
                         auditId: item.auditId !== undefined ? item.auditId : item.auditid,
                         actionId: item.actionId !== undefined ? item.actionId : item.actionid,
-                        cleanLocation: item.cleanLocation !== undefined ? item.cleanLocation : item.cleanlocation,
+                        cleanLocation: cleanLocation(item.cleanLocation !== undefined ? item.cleanLocation : item.cleanlocation),
                         responseScore: item.responseScore !== undefined ? item.responseScore : item.responsescore,
                         dueDate: dDate,
                         openDate: oDate,
@@ -3137,6 +3137,8 @@
             if (lowerLoc === 'assortment' || lowerLoc === 'surtido de material') return 'Surtido de material';
             if (lowerLoc === 'assembly 1' || lowerLoc === 'assembly') return 'Assembly';
             if (lowerLoc === 'ist debug' || lowerLoc === 'ist') return 'IST';
+            if (lowerLoc === 'dissasembly' || lowerLoc === 'dissasy' || lowerLoc === 'disassembly') return 'Disassembly';
+            if (lowerLoc === 'clean room' || lowerLoc === 'cuarto limpio') return 'Cuarto limpio';
             
             return loc;
         }
@@ -3368,7 +3370,7 @@
             'critical repair 1': 'Wario', 'critical repair 2': 'Mario', 'critical repair 3': 'Bowser', 'l11 top': 'Baby Mario',
             'l11 bottom': 'Baby Rosalina', 'l12 bottom': 'Birdo', 'l12 top': 'Bowser Jr.', 'l13': 'Chargin Chuck',
             'l14 bottom': 'Toadette', 'l14 top': 'Peachette', 'ict': 'Daisy', 'control tower': 'Iggy', 'bonepile': 'Koopa Troopa',
-            'assembly': 'Donkey Kong', 'assembly 2': 'King Bob-omb', 'dissasembly': 'Baby Luigi', 'debug': 'Baby Peach',
+            'assembly': 'Donkey Kong', 'assembly 2': 'King Bob-omb', 'disassembly': 'Baby Luigi', 'debug': 'Baby Peach',
             'ist': 'Peach', 'cuarto limpio': 'Diddy Kong', 'pack': 'Funky Kong', 'conteos internos': 'Hammer Bro',
             'embarque': 'Waluigi', 'fresh market': 'King Boo', 'hv alto valor': 'Baby Daisy', 'incoming': 'Luigi',
             'receipt': 'Petey Piranha', 'smkt backend': 'Lakitu', 'smkt smt': 'Dry Bones', 'surtido de material': 'Pauline',
@@ -5632,7 +5634,7 @@
         const sectorMapping = {
             'Sector 1': ['Linea 15', 'Linea 16', 'Equipment room', 'Test room 1', 'Tool room', 'Critical repair 1', 'Critical repair 2'],
             'Sector 2': ['Linea 11', 'Linea 12', 'Linea 13', 'Linea 14', 'ICT', 'Control tower', 'Bonepile'],
-            'Sector 3': ['Assembly', 'Dissasy', 'Debug', 'IST'],
+            'Sector 3': ['Assembly', 'Disassembly', 'Debug', 'IST'],
             'Sector 4': ['Cuarto limpio', 'Pack'],
             'Sector 5': ['Conteos internos', 'Embarque', 'Fresh market', 'HV alto valor', 'Incoming', 'Receipt', 'SMKT Backend', 'SMKT SMT', 'Surtido de material', 'Usis'],
             'Sector 6': ['Lobby', 'Monitores', 'Oficinas'],
