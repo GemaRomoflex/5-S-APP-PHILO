@@ -2085,8 +2085,7 @@
                             </div>
                             <div>
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--color-text-muted);">Área o Sector</label>
-                                <select id="cal-event-area" class="filter-select" multiple size="6" style="width: 100%; border: 1px solid var(--color-border); padding: 5px; min-height: 120px;" required></select>
-                                <small style="color: var(--color-text-muted); font-size: 11px; margin-top: 5px; display: block;">Mantén presionado Ctrl (o Cmd) para seleccionar múltiples opciones</small>
+                                <div id="cal-event-area-container" style="border: 1px solid var(--color-border); border-radius: 4px; max-height: 180px; overflow-y: auto; padding: 10px; background: white; display: flex; flex-direction: column; gap: 8px;"></div>
                             </div>
                             <div>
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--color-text-muted);">Estado</label>
@@ -6507,10 +6506,10 @@
             const modal = document.getElementById('calendar-event-modal');
             const title = document.getElementById('cal-modal-title');
             const btnDelete = document.getElementById('btn-delete-event');
-            const areaSelect = document.getElementById('cal-event-area');
+            const container = document.getElementById('cal-event-area-container');
 
             // Poblar las opciones si está vacío
-            if (areaSelect.options.length === 0) {
+            if (container.children.length === 0) {
                 const allAreas = new Set();
                 Object.values(sectorMapping).forEach(arr => {
                     arr.forEach(a => allAreas.add(a));
@@ -6523,17 +6522,29 @@
                     });
                 }
                 
-                Array.from(allAreas).sort().forEach(area => {
+                Array.from(allAreas).sort().forEach((area, index) => {
                     if(!area) return;
-                    const opt = document.createElement('option');
-                    opt.value = area;
-                    opt.textContent = area;
-                    areaSelect.appendChild(opt);
+                    const label = document.createElement('label');
+                    label.style.display = 'flex';
+                    label.style.alignItems = 'center';
+                    label.style.gap = '8px';
+                    label.style.cursor = 'pointer';
+                    label.style.fontSize = '14px';
+
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.value = area;
+                    cb.className = 'cal-area-checkbox';
+
+                    label.appendChild(cb);
+                    label.appendChild(document.createTextNode(area));
+                    container.appendChild(label);
                 });
             }
 
             // Resetear seleccion
-            Array.from(areaSelect.options).forEach(opt => opt.selected = false);
+            const checkboxes = container.querySelectorAll('.cal-area-checkbox');
+            checkboxes.forEach(cb => cb.checked = false);
 
             if (eventObj) {
                 title.textContent = 'Editar Auditoría';
@@ -6542,9 +6553,9 @@
                 
                 // Seleccionar las areas previas
                 const selectedAreas = eventObj.area_name.split(',').map(s => s.trim());
-                Array.from(areaSelect.options).forEach(opt => {
-                    if (selectedAreas.includes(opt.value)) {
-                        opt.selected = true;
+                checkboxes.forEach(cb => {
+                    if (selectedAreas.includes(cb.value)) {
+                        cb.checked = true;
                     }
                 });
                 
@@ -6571,8 +6582,9 @@
 
             const id = document.getElementById('cal-event-id').value;
             const date = document.getElementById('cal-event-date').value;
-            const areaSelect = document.getElementById('cal-event-area');
-            const area = Array.from(areaSelect.selectedOptions).map(opt => opt.value).join(', ');
+            const container = document.getElementById('cal-event-area-container');
+            const checkboxes = container.querySelectorAll('.cal-area-checkbox:checked');
+            const area = Array.from(checkboxes).map(cb => cb.value).join(', ');
             const status = document.getElementById('cal-event-status').value;
 
             if (!date || !area) {
