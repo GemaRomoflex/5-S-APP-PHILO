@@ -6469,14 +6469,15 @@
                     weeks.push(days.slice(i, i + 7));
                 }
                 
-                // Find week with 'today' or first week
-                let targetWeek = weeks.find(w => w.some(d => d.classList.contains('today')));
-                if (!targetWeek) {
-                    targetWeek = weeks.find(w => w.some(d => {
-                        const span = d.querySelector('.cal-date-number span');
-                        return span && span.textContent === '1';
-                    })) || weeks[0];
+                let weekNum = prompt(`¿Qué semana del mes deseas exportar?\n(Escribe un número del 1 al ${weeks.length})`, "1");
+                if (weekNum === null) return; // User cancelled
+                
+                let targetIndex = parseInt(weekNum) - 1;
+                if (isNaN(targetIndex) || targetIndex < 0 || targetIndex >= weeks.length) {
+                    targetIndex = 0; // Default to first week if invalid
                 }
+                
+                let targetWeek = weeks[targetIndex];
 
                 // Rebuild grid with just headers and target week
                 gridClone.innerHTML = '';
@@ -6569,13 +6570,17 @@
 
                 const dayEvents = calendarEvents.filter(e => e.audit_date === dateStr);
                 dayEvents.forEach(ev => {
-                    const evDiv = document.createElement('div');
                     const statusClass = ev.status.toLowerCase().replace(/[^a-z]/g, '');
-                    evDiv.className = `cal-event status-${statusClass}`;
-                    evDiv.textContent = `${ev.area_name}`;
-                    evDiv.title = `${ev.area_name} (${ev.status})`;
-                    evDiv.onclick = () => openCalendarModal(dateStr, ev);
-                    dayDiv.appendChild(evDiv);
+                    const areas = ev.area_name.split(',').map(s => s.trim()).filter(s => s);
+                    
+                    areas.forEach(areaName => {
+                        const evDiv = document.createElement('div');
+                        evDiv.className = `cal-event status-${statusClass}`;
+                        evDiv.textContent = areaName;
+                        evDiv.title = `${areaName} (${ev.status})`;
+                        evDiv.onclick = () => openCalendarModal(dateStr, ev);
+                        dayDiv.appendChild(evDiv);
+                    });
                 });
 
                 container.appendChild(dayDiv);
@@ -6676,27 +6681,27 @@
             const id = document.getElementById('cal-event-id').value;
             const date = document.getElementById('cal-event-date').value;
             const container = document.getElementById('cal-event-area-container');
-            const checkboxes = container.querySelectorAll('.cal-area-checkbox:checked');
-            const area = Array.from(checkboxes).map(cb => cb.value).join(', ');
+            const checkboxes = Array.from(container.querySelectorAll('.cal-area-checkbox:checked'));
             const status = document.getElementById('cal-event-status').value;
 
-            if (!date || !area) {
-                alert("Por favor completa la fecha y el área.");
+            if (!date || checkboxes.length === 0) {
+                alert("Por favor completa la fecha y selecciona al menos un área.");
                 return;
             }
 
-            const payload = {
-                audit_date: date,
-                area_name: area,
-                status: status
-            };
-
             let error = null;
             if (id) {
-                const res = await supabaseClient.from('calendar_events').update(payload).eq('id', id);
-                error = res.error;
-            } else {
-                const res = await supabaseClient.from('calendar_events').insert([payload]);
+                const { error: delError } = await supabaseClient.from('calendar_events').delete().eq('id', id);
+                if (delError) error = delError;
+            }
+
+            if (!error) {
+                const payloads = checkboxes.map(cb => ({
+                    audit_date: date,
+                    area_name: cb.value,
+                    status: status
+                }));
+                const res = await supabaseClient.from('calendar_events').insert(payloads);
                 error = res.error;
             }
 
