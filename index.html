@@ -3135,6 +3135,8 @@
             const lowerLoc = loc.toLowerCase();
             if (lowerLoc === 'equipment room') return 'Equipment room';
             if (lowerLoc === 'assortment' || lowerLoc === 'surtido de material') return 'Surtido de material';
+            if (lowerLoc === 'assembly 1' || lowerLoc === 'assembly') return 'Assembly';
+            if (lowerLoc === 'ist debug' || lowerLoc === 'ist') return 'IST';
             
             return loc;
         }
@@ -3366,7 +3368,7 @@
             'critical repair 1': 'Wario', 'critical repair 2': 'Mario', 'critical repair 3': 'Bowser', 'l11 top': 'Baby Mario',
             'l11 bottom': 'Baby Rosalina', 'l12 bottom': 'Birdo', 'l12 top': 'Bowser Jr.', 'l13': 'Chargin Chuck',
             'l14 bottom': 'Toadette', 'l14 top': 'Peachette', 'ict': 'Daisy', 'control tower': 'Iggy', 'bonepile': 'Koopa Troopa',
-            'assembly 1': 'Donkey Kong', 'assembly 2': 'King Bob-omb', 'dissasembly': 'Baby Luigi', 'debug': 'Baby Peach',
+            'assembly': 'Donkey Kong', 'assembly 2': 'King Bob-omb', 'dissasembly': 'Baby Luigi', 'debug': 'Baby Peach',
             'ist': 'Peach', 'cuarto limpio': 'Diddy Kong', 'pack': 'Funky Kong', 'conteos internos': 'Hammer Bro',
             'embarque': 'Waluigi', 'fresh market': 'King Boo', 'hv alto valor': 'Baby Daisy', 'incoming': 'Luigi',
             'receipt': 'Petey Piranha', 'smkt backend': 'Lakitu', 'smkt smt': 'Dry Bones', 'surtido de material': 'Pauline',
