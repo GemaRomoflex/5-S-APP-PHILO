@@ -3199,7 +3199,7 @@
 
         // LIMPIEZA DE UBICACIÓN (Conserva el último valor tras '->')
         function cleanLocation(locStr) {
-            if (!locStr) return 'N/A';
+            if (!locStr) return 'N/a';
             let loc = locStr;
             if (locStr.includes('->')) {
                 const parts = locStr.split('->');
@@ -3209,12 +3209,25 @@
             }
             
             const lowerLoc = loc.toLowerCase();
-            if (lowerLoc === 'equipment room') return 'Equipment room';
-            if (lowerLoc === 'assortment' || lowerLoc === 'surtido de material' || lowerLoc === 'surtido material') return 'Surtido de material';
-            if (lowerLoc === 'assembly 1' || lowerLoc === 'assembly') return 'Assembly';
-            if (lowerLoc === 'ist debug' || lowerLoc === 'ist') return 'IST';
-            if (lowerLoc === 'dissasembly' || lowerLoc === 'dissasy' || lowerLoc === 'disassembly') return 'Disassembly';
-            if (lowerLoc === 'clean room' || lowerLoc === 'cuarto limpio') return 'Cuarto limpio';
+            
+            // Delete areas mapping (if they somehow come up in CSV, we map them to a hidden name or drop them, 
+            // but returning them as "Eliminar" might be better so they can be filtered out later if needed, 
+            // or just let them pass but they won't match any sector.
+            if (lowerLoc === 'l12' || lowerLoc === 'linea 12' || lowerLoc === 'l14' || lowerLoc === 'linea 14' || lowerLoc.includes('test room')) {
+                return 'Eliminar';
+            }
+            
+            if (lowerLoc === 'equipment room') loc = 'Equipment room';
+            else if (lowerLoc === 'assortment' || lowerLoc === 'surtido de material' || lowerLoc === 'surtido material') loc = 'Surtido de material';
+            else if (lowerLoc === 'assembly 1' || lowerLoc === 'assembly') loc = 'Assembly';
+            else if (lowerLoc === 'ist debug' || lowerLoc === 'ist') loc = 'Ist';
+            else if (lowerLoc === 'dissasembly' || lowerLoc === 'dissasy' || lowerLoc === 'disassembly') loc = 'Disassembly';
+            else if (lowerLoc === 'clean room' || lowerLoc === 'cuarto limpio') loc = 'Cuarto limpio';
+            
+            // Enforce Capitalize First Letter only
+            if (loc.length > 0) {
+                loc = loc.charAt(0).toUpperCase() + loc.slice(1).toLowerCase();
+            }
             
             return loc;
         }
@@ -5708,13 +5721,13 @@
 
         // Diccionario de Sectores
         const sectorMapping = {
-            'Sector 1': ['Linea 15', 'Linea 16', 'Equipment room', 'Test room 1', 'Tool room', 'Critical repair 1', 'Critical repair 2'],
-            'Sector 2': ['Linea 11', 'Linea 12', 'Linea 13', 'Linea 14', 'ICT', 'Control tower', 'Bonepile'],
-            'Sector 3': ['Assembly', 'Disassembly', 'Debug', 'IST'],
+            'Sector 1': ['Linea 15', 'Linea 16', 'Equipment room', 'Tool room', 'Critical repair 1', 'Critical repair 2', 'Critical repair 3'],
+            'Sector 2': ['Linea 11', 'Linea 13', 'Ict', 'Control tower', 'Bonepile'],
+            'Sector 3': ['Assembly', 'Disassembly', 'Debug', 'Ist'],
             'Sector 4': ['Cuarto limpio', 'Pack'],
-            'Sector 5': ['Conteos internos', 'Embarque', 'Fresh market', 'HV alto valor', 'Incoming', 'Receipt', 'SMKT Backend', 'SMKT SMT', 'Surtido de material', 'Usis'],
+            'Sector 5': ['Conteos internos', 'Embarque', 'Fresh market', 'Hv alto valor', 'Incoming', 'Receipt', 'Smkt backend', 'Smkt smt', 'Surtido de material', 'Usis'],
             'Sector 6': ['Lobby', 'Monitores', 'Oficinas'],
-            'Sector 7': ['RMA VLP', 'RMA GLP', 'MRB', 'MOONSHINE']
+            'Sector 7': ['Rma vlp', 'Rma glp', 'Mrb', 'Moonshine']
         };
 
         // Coordenadas harcodeadas por defecto (se sobreescriben al cargar desde Supabase)
@@ -6716,10 +6729,13 @@
                     const areas = ev.area_name.split(',').map(s => s.trim()).filter(s => s);
                     
                     areas.forEach(areaName => {
+                        const mappedAreaName = cleanLocation(areaName);
+                        if (mappedAreaName === 'Eliminar') return; // Hide deleted areas from view entirely
+                        
                         const evDiv = document.createElement('div');
                         evDiv.className = `cal-event status-${statusClass}`;
-                        evDiv.textContent = areaName;
-                        evDiv.title = `${areaName} (${ev.status})`;
+                        evDiv.textContent = mappedAreaName;
+                        evDiv.title = `${mappedAreaName} (${ev.status})`;
                         evDiv.onclick = () => openCalendarModal(dateStr, ev);
                         dayDiv.appendChild(evDiv);
                     });
@@ -6757,7 +6773,14 @@
                 if (window.calendarEvents) {
                     window.calendarEvents.forEach(ev => {
                         if (ev.area_name) {
-                            ev.area_name.split(',').forEach(a => allAreas.add(a.trim()));
+                            ev.area_name.split(',').forEach(a => {
+                                const clean = a.trim();
+                                // Clean up dynamically using our global rules so older records get capitalized too
+                                const mapped = cleanLocation(clean);
+                                if (mapped !== 'Eliminar') {
+                                    allAreas.add(mapped);
+                                }
+                            });
                         }
                     });
                 }
