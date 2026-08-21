@@ -2123,6 +2123,80 @@
                     </div>
                 </div>
 
+                <!-- VISTA DE DEEP DIVE (DETALLE DE ÁREA) -->
+                <div id="view-layout-detail" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
+                    <div class="chart-header" style="justify-content: flex-start; gap: 15px; border-bottom: 1px solid var(--color-border); padding-bottom: 10px; margin-bottom: 0;">
+                        <button class="btn btn-primary" id="btn-back-deepdive" onclick="closeLayoutDetail()">
+                            ◀ Volver a la Lista
+                        </button>
+                        <h2 id="layout-detail-title" style="margin: 0; font-size: 20px; color: var(--color-text);">Detalle de Área</h2>
+                    </div>
+
+                    <section class="kpis-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                        <div class="kpi-card score" style="cursor: default;">
+                            <span class="kpi-title">Score Últimas 3 Audits</span>
+                            <span class="kpi-value" id="ld-kpi-score">0.0%</span>
+                        </div>
+                        <div class="kpi-card" id="ld-kpi-improvement-card" style="cursor: default; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                            <span class="kpi-title" style="color: rgba(255,255,255,0.9);">Mejora Continua</span>
+                            <span class="kpi-value" id="ld-kpi-improvement">N/A</span>
+                        </div>
+                        <div class="kpi-card" style="cursor: default; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white;">
+                            <span class="kpi-title" style="color: rgba(255,255,255,0.9);">On-Time Closure</span>
+                            <span class="kpi-value" id="ld-kpi-ontime">0.0%</span>
+                        </div>
+                        <div class="kpi-card warning interactive-card" onclick="openLayoutListModal('wip')" style="cursor: pointer; transition: transform 0.2s;">
+                            <span class="kpi-title">Acciones en Proceso (WIP)</span>
+                            <span class="kpi-value" id="ld-kpi-wip">0</span>
+                            <span style="font-size: 12px; opacity: 0.8; margin-top: 5px;">👆 Clic para ver lista</span>
+                        </div>
+                        <div class="kpi-card overdue interactive-card" onclick="openLayoutListModal('overdue')" style="cursor: pointer; transition: transform 0.2s;">
+                            <span class="kpi-title">Acciones Vencidas (Overdue)</span>
+                            <span class="kpi-value" id="ld-kpi-overdue">0</span>
+                            <span style="font-size: 12px; opacity: 0.8; margin-top: 5px;">👆 Clic para ver lista</span>
+                        </div>
+                    </section>
+                    <section class="charts-grid" style="grid-template-columns: 1fr;">
+                        <div class="table-card">
+                            <div class="chart-header"><span class="chart-title">Responsables del Área (Owners)</span></div>
+                            <div class="table-responsive">
+                                <table id="layout-owners-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Responsable</th>
+                                            <th>Departamento</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="layout-owners-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- MODAL PARA LISTA DE ACCIONES -->
+                    <div class="modal" id="layout-list-modal">
+                        <div class="modal-content" style="max-width: 800px;">
+                            <div class="modal-header">
+                                <h3 id="layout-list-title">Lista de Acciones</h3>
+                                <button class="btn btn-primary" onclick="closeLayoutListModal()" style="background: transparent; color: var(--color-text); border: none; font-size: 20px;">×</button>
+                            </div>
+                            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                <table id="layout-list-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID Acción</th>
+                                            <th>Comentarios</th>
+                                            <th>Responsable</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="layout-list-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- EMPTY STATE (GLOBAL) -->
                 <div id="dashboard-empty-state" class="empty-state">
                     <svg class="empty-state-icon" viewBox="0 0 24 24">
@@ -6135,7 +6209,7 @@
         function closeLayoutDetail() {
             document.getElementById('view-layout-detail').classList.add('hidden');
             if (layoutDetailOrigin === 'layout') {
-                document.getElementById('view-layout-main').classList.remove('hidden');
+                document.getElementById('view-layout-main')?.classList.remove('hidden');
             } else if (layoutDetailOrigin === 'areas') {
                 document.getElementById('view-dashboard').classList.add('hidden'); // Fix: Apagar el dashboard general
                 document.getElementById('view-areas').classList.remove('hidden');
