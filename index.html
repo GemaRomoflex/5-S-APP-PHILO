@@ -3217,7 +3217,7 @@
                 return 'Eliminar';
             }
             
-            if (lowerLoc === 'equipment room') loc = 'Equipment room';
+            if (lowerLoc === 'equipment room' || lowerLoc === 'equpment room') loc = 'Equipment room';
             else if (lowerLoc === 'assortment' || lowerLoc === 'surtido de material' || lowerLoc === 'surtido material') loc = 'Surtido de material';
             else if (lowerLoc === 'assembly 1' || lowerLoc === 'assembly') loc = 'Assembly';
             else if (lowerLoc === 'ist debug' || lowerLoc === 'ist') loc = 'Ist';
@@ -6902,7 +6902,7 @@
             
             const uniqueAreas = new Set();
             allAuditData.forEach(row => {
-                if (row.cleanLocation && row.cleanLocation.trim() !== '') {
+                if (row.cleanLocation && row.cleanLocation.trim() !== '' && row.cleanLocation !== 'Eliminar') {
                     uniqueAreas.add(row.cleanLocation.trim());
                 }
             });
@@ -8902,7 +8902,7 @@
             if (!select || !allAuditData) return;
             
             // Extraer áreas únicas de la BD general
-            const uniqueAreas = [...new Set(allAuditData.map(item => item.cleanLocation).filter(loc => loc && loc.trim() !== ''))];
+            const uniqueAreas = [...new Set(allAuditData.map(item => item.cleanLocation).filter(loc => loc && loc.trim() !== '' && loc !== 'Eliminar'))];
             uniqueAreas.sort(); // Orden alfabético
             
             let html = '<option value="">Seleccione el Área...</option>';
