@@ -2060,6 +2060,14 @@
                         </div>
                     </div>
                     
+                    <div class="calendar-legend" style="display: flex; gap: 15px; margin-bottom: 5px; font-size: 13px; font-weight: bold; padding: 0 10px;">
+                        <span style="color: var(--color-text-muted); margin-right: 10px;">Auditores:</span>
+                        <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 15px; height: 15px; background-color: #C8A2C8; border: 1px solid #a382a3; border-radius: 3px;"></div> Gema</div>
+                        <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 15px; height: 15px; background-color: #FFD1DC; border: 1px solid #d8b0b8; border-radius: 3px;"></div> Alisson</div>
+                        <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 15px; height: 15px; background-color: #800080; border: 1px solid #5a005a; border-radius: 3px;"></div> Montse</div>
+                        <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 15px; height: 15px; background-color: #0070C0; border: 1px solid #00508a; border-radius: 3px;"></div> Jose</div>
+                    </div>
+
                     <div class="calendar-grid" id="calendar-grid-container">
                         <!-- Days of week -->
                         <div class="cal-day-header">Dom</div>
@@ -6729,13 +6737,46 @@
                     const areas = ev.area_name.split(',').map(s => s.trim()).filter(s => s);
                     
                     areas.forEach(areaName => {
+                        const auditorMap = {
+                            "TEST ROOM 2": "Alisson", "L12 TOP": "Jose", "L14 TOP": "Alisson", "CRITICAL REPAIR 2": "Montse",
+                            "IST": "Gema", "TOOL ROOM": "Jose", "CRITICAL REPAIR 3": "Montse", "ASSEMBLY 1": "Gema",
+                            "MOONSHINE": "Alisson", "PACK": "Gema", "OFFICES": "Alisson", "L16": "Jose", "INCOMING": "Montse",
+                            "USIS": "Montse", "SMKT SMT": "Montse", "EQUIPMENT ROOM": "Jose", "RECEIPT": "Montse",
+                            "EMBARQUE": "Gema", "SURTIDO MATERIAL": "Montse", "L14 BOTTOM": "Alisson", "CONTEOS INTERNOS": "Gema",
+                            "L11 TOP": "Jose", "DISSASEMBLY": "Gema", "L15": "Montse", "SMKT BACKEND": "Montse",
+                            "HV ALTO VALOR": "Montse", "TEST ROOM 1": "Jose", "RMA GLP": "Alisson", "L12 BOTTOM": "Jose",
+                            "MONITORES": "Alisson", "CRITICAL REPAIR 1": "Montse", "ASSEMBLY 2": "Gema", "CONTROL TOWER": "Jose",
+                            "LOBBY": "Alisson", "L13": "Alisson", "RMA VLP": "Alisson", "L11 BOTTOM": "Jose", "FRESH MARKET": "Gema",
+                            "DEBUG": "Gema", "CLEAN ROOM": "Gema", "BONEPILE": "Montse", "ICT": "Jose"
+                        };
                         const mappedAreaName = cleanLocation(areaName);
                         if (mappedAreaName === 'Eliminar') return; // Hide deleted areas from view entirely
                         
                         const evDiv = document.createElement('div');
                         evDiv.className = `cal-event status-${statusClass}`;
-                        evDiv.textContent = mappedAreaName;
-                        evDiv.title = `${mappedAreaName} (${ev.status})`;
+                        
+                        // Aplicar colores personalizados
+                        const auditor = auditorMap[areaName.toUpperCase()] || auditorMap[mappedAreaName.toUpperCase()] || 'Desconocido';
+                        if (auditor === 'Gema') {
+                            evDiv.style.setProperty('background-color', '#C8A2C8', 'important');
+                            evDiv.style.setProperty('color', '#000', 'important');
+                            evDiv.style.setProperty('border', '1px solid #a382a3', 'important');
+                        } else if (auditor === 'Alisson') {
+                            evDiv.style.setProperty('background-color', '#FFD1DC', 'important');
+                            evDiv.style.setProperty('color', '#000', 'important');
+                            evDiv.style.setProperty('border', '1px solid #d8b0b8', 'important');
+                        } else if (auditor === 'Montse') {
+                            evDiv.style.setProperty('background-color', '#800080', 'important');
+                            evDiv.style.setProperty('color', '#FFF', 'important');
+                            evDiv.style.setProperty('border', '1px solid #5a005a', 'important');
+                        } else if (auditor === 'Jose') {
+                            evDiv.style.setProperty('background-color', '#0070C0', 'important');
+                            evDiv.style.setProperty('color', '#FFF', 'important');
+                            evDiv.style.setProperty('border', '1px solid #00508a', 'important');
+                        }
+                        
+                        evDiv.textContent = mappedAreaName + (auditor !== 'Desconocido' ? ` (${auditor})` : '');
+                        evDiv.title = `${mappedAreaName} - Auditor: ${auditor} (${ev.status})`;
                         evDiv.onclick = () => openCalendarModal(dateStr, ev);
                         dayDiv.appendChild(evDiv);
                     });
