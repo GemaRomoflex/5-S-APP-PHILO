@@ -7385,7 +7385,7 @@
                     Les comparto el reporte mensual de auditorías 5S correspondiente a <strong>${months[month]} ${year}</strong>.<br><br>
                     <strong>Calificación General del Site: <span style="color: #005A9C; font-size: 18px;">${metrics.avgScore}%</span></strong><br>
                     <strong>Porcentaje de Cierre de Acciones: <span style="color: #005A9C; font-size: 18px;">${closureRate}%</span></strong><br><br>
-                    Agradeceremos que revisen sus áreas asignadas y cierren las acciones vencidas a la brevedad posible.
+                    Agradeceremos que revisen sus áreas asignadas y cierren las acciones vencidas a la brevedad posible, dando prioridad a cerrar las acciones con mayor antigüedad.
                 `;
                 
                 await renderMonthlyCharts(reportData, prevReportData, dynamicContent, lastDay);
@@ -7458,9 +7458,9 @@
                     if (s === 'closed' || s === 'close' || s === 'cerrada' || s === 'cerrado') return false;
                     
                     let isOverdue = false;
-                    if (s === 'overdue' || s === 'vencida') {
-                        isOverdue = true;
-                    } else if (item.dueDate && item.dueDate !== 'Sin Fecha') {
+                    let daysOverdue = 0;
+                    
+                    if (item.dueDate && item.dueDate !== 'Sin Fecha') {
                         let cleanStr = item.dueDate.replace(/-/g, '/').split(' ')[0];
                         let dDate = new Date(cleanStr);
                         if (isNaN(dDate.getTime())) {
@@ -7469,19 +7469,32 @@
                         }
                         if (!isNaN(dDate.getTime())) {
                             dDate.setHours(0,0,0,0);
-                            if (dDate < today) isOverdue = true;
+                            if (dDate < today) {
+                                isOverdue = true;
+                                const diffTime = today - dDate;
+                                daysOverdue = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                            }
                         }
                     }
+                    
+                    if (s === 'overdue' || s === 'vencida') {
+                        isOverdue = true;
+                    }
+                    
+                    if (isOverdue) {
+                        item.daysOverdue = daysOverdue;
+                    }
+                    
                     return isOverdue;
                 });
                 
                 greetingText.innerHTML = `
-                    Equipo,<br>Se muestra a continuación el conteo de acciones que ya se encuentran VENCIDAS (fuera de SLA).<br>
+                    Equipo,<br>Se muestra a continuación las acciones que ya se encuentran VENCIDAS (fuera de SLA).<br>
                     <strong>Total de acciones vencidas: <span style="color: #dc2626; font-size: 18px;">${reportData.length}</span></strong><br><br>
-                    Por favor, pónganse en contacto con los responsables mencionados para el cierre y plan de contingencia inmediato.
+                    Por favor, pónganse en contacto con los responsables mencionados para el cierre y plan de contingencia inmediato, dando prioridad a cerrar las acciones con mayor antigüedad.
                 `;
                 
-                renderActionChart(reportData, dynamicContent, '#dc2626', 'Acciones Vencidas (Overdue) por Responsable');
+                renderAgeActionChart(reportData, dynamicContent, '#dc2626', 'Máx. Antigüedad de Acciones Vencidas por Responsable');
             }
             
             setTimeout(() => {
@@ -7960,6 +7973,85 @@
                             },
                             scales: {
                                 y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 16 } } },
+                                x: { ticks: { font: { size: 14 } } }
+                            }
+                        }
+                    });
+                }
+            }, 100);
+        }
+
+        function renderAgeActionChart(data, container, color, title) {
+            if(data.length === 0) {
+                container.innerHTML = '<p style="text-align:center; font-size: 24px; color: #10b981; font-weight: bold; margin-top: 50px;">¡Felicidades! No hay acciones críticas.</p>';
+                return;
+            }
+            
+            // Agrupar por Responsable (Owner) y obtener la máxima antigüedad
+            const agePerOwner = {};
+            data.forEach(item => {
+                if (isValidAction(item)) {
+                    const owner = item.owner;
+                    const age = item.daysOverdue || 0;
+                    if (!agePerOwner[owner] || age > agePerOwner[owner]) {
+                        agePerOwner[owner] = age;
+                    }
+                }
+            });
+            
+            // Ordenar de mayor a menor (más días vencidos primero)
+            const sortedOwners = Object.keys(agePerOwner).sort((a, b) => agePerOwner[b] - agePerOwner[a]);
+            const sortedData = sortedOwners.map(owner => agePerOwner[owner]);
+            
+            const html = `
+                <div style="width: 100%; text-align: center; margin-top: 20px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+                    <h3 style="margin: 0 0 20px 0; color: #333; font-size: 26px;">${title}</h3>
+                    <div style="width: 100%; height: 500px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
+                        <canvas id="chart-age-actions"></canvas>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+            
+            setTimeout(() => {
+                const ctx = document.getElementById('chart-age-actions');
+                if (ctx) {
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: sortedOwners,
+                            datasets: [{
+                                label: 'Días Vencidos (Máx)',
+                                data: sortedData,
+                                backgroundColor: color,
+                                borderColor: color,
+                                borderWidth: 2,
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            animation: false,
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                datalabels: {
+                                    anchor: 'end',
+                                    align: 'bottom',
+                                    color: '#ffffff',
+                                    font: { weight: 'bold', size: 24 },
+                                    formatter: function(value) {
+                                        return value + 'd';
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: { 
+                                    beginAtZero: true,
+                                    title: { display: true, text: 'Días Vencidos' },
+                                    ticks: { font: { size: 16 } } 
+                                },
                                 x: { ticks: { font: { size: 14 } } }
                             }
                         }
