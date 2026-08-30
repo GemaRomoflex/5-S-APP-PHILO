@@ -7987,21 +7987,8 @@
                 return;
             }
             
-            // Agrupar por Responsable (Owner) y obtener la máxima antigüedad
-            const agePerOwner = {};
-            data.forEach(item => {
-                if (isValidAction(item)) {
-                    const owner = item.owner;
-                    const age = item.daysOverdue || 0;
-                    if (!agePerOwner[owner] || age > agePerOwner[owner]) {
-                        agePerOwner[owner] = age;
-                    }
-                }
-            });
-            
-            // Ordenar de mayor a menor (más días vencidos primero)
-            const sortedOwners = Object.keys(agePerOwner).sort((a, b) => agePerOwner[b] - agePerOwner[a]);
-            const sortedData = sortedOwners.map(owner => agePerOwner[owner]);
+            // Usamos la misma función del dashboard para obtener los datos apilados por antigüedad
+            const dataObj = getStackedAgingData(data, 'owner');
             
             const html = `
                 <div style="width: 100%; text-align: center; margin-top: 20px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
@@ -8019,40 +8006,47 @@
                 if (ctx) {
                     new Chart(ctx, {
                         type: 'bar',
-                        data: {
-                            labels: sortedOwners,
-                            datasets: [{
-                                label: 'Días Vencidos (Máx)',
-                                data: sortedData,
-                                backgroundColor: color,
-                                borderColor: color,
-                                borderWidth: 2,
-                                borderRadius: 4
-                            }]
-                        },
+                        data: dataObj,
                         options: {
                             animation: false,
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false },
-                                datalabels: {
-                                    anchor: 'end',
-                                    align: 'bottom',
-                                    color: '#ffffff',
-                                    font: { weight: 'bold', size: 24 },
-                                    formatter: function(value) {
-                                        return value + 'd';
-                                    }
+                            scales: {
+                                x: {
+                                    stacked: true,
+                                    grid: { display: false },
+                                    ticks: { font: { family: 'Century Gothic', size: 14 } }
+                                },
+                                y: {
+                                    stacked: true,
+                                    beginAtZero: true,
+                                    grid: { color: '#EAEAEA' },
+                                    ticks: { precision: 0, font: { family: 'Century Gothic', size: 16 } }
                                 }
                             },
-                            scales: {
-                                y: { 
-                                    beginAtZero: true,
-                                    title: { display: true, text: 'Días Vencidos' },
-                                    ticks: { font: { size: 16 } } 
+                            plugins: {
+                                datalabels: { 
+                                    color: '#FFFFFF', 
+                                    anchor: 'center', 
+                                    align: 'center',
+                                    font: { weight: 'bold', size: 16 },
+                                    formatter: (value) => value > 0 ? value : ''
                                 },
-                                x: { ticks: { font: { size: 14 } } }
+                                legend: {
+                                    display: true,
+                                    position: 'bottom',
+                                    labels: {
+                                        boxWidth: 15,
+                                        font: { size: 14, family: 'Century Gothic' }
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return `${context.dataset.label}: ${context.raw} acc`;
+                                        }
+                                    }
+                                }
                             }
                         }
                     });
