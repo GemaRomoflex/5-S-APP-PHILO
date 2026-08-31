@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Importador de Owners a Supabase</title>
+    <!-- Librerías desde unpkg (permitido por Flex) -->
+    <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; background-color: #f8fafc; color: #334155; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); max-width: 600px; margin: 0 auto; }
+        h2 { color: #005A9C; margin-top: 0; }
+        .btn { padding: 12px 24px; background: #005A9C; color: white; border: none; cursor: pointer; border-radius: 6px; font-weight: bold; font-size: 16px; width: 100%; margin-top: 20px;}
+        .btn:hover { background: #00457a; }
+        #log { margin-top: 20px; background: #1e293b; color: #22c55e; padding: 15px; border-radius: 8px; max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 13px;}
+        input[type="file"] { display: block; margin-top: 15px; padding: 10px; border: 2px dashed #cbd5e1; width: 100%; box-sizing: border-box; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🚀 Importador de Owners V2</h2>
+        <p>Selecciona tu archivo <b>Directorio de owners.xlsx</b> para inyectar a los responsables.</p>
+        
+        <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" />
+        
+        <button class="btn" onclick="importData()">Ejecutar Importación</button>
+        
+        <div id="log">Esperando archivo...</div>
+    </div>
+
+    <script>
+        // Credenciales de Supabase
+        const SUPABASE_URL = 'https://sfwjaetqufgjgfxqucjm.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmd2phZXRxdWZnamdmeHF1Y2ptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMjcxMzEsImV4cCI6MjA5ODcwMzEzMX0.LUXt1oFSAI1w7LVheU32Hctq32J0ClZK_BjiKeLXTIM';
+
+        function logMsg(msg) {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML += `<div>> ${msg}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        async function importData() {
+            if (typeof window.supabase === 'undefined') {
+                alert("⚠️ Error: La red de tu empresa bloqueó la conexión a Supabase. Recarga la página o revisa tu conexión.");
+                return;
+            }
+            if (typeof XLSX === 'undefined') {
+                alert("⚠️ Error: La red de tu empresa bloqueó la librería de Excel. Recarga la página.");
+                return;
+            }
+            
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) {
+                alert("⚠️ Por favor selecciona el archivo de Excel primero.");
+                return;
+            }
+            
+            document.getElementById('log').innerHTML = ''; // Limpiar
+            logMsg("Analizando archivo: " + file.name + "...");
+            
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const rows = XLSX.utils.sheet_to_json(worksheet, {header: "A", defval: ""});
+                    
+                    logMsg(`Se detectaron ${rows.length} filas en total en el Excel.`);
+                    logMsg(`Forzando mapeo exacto: B = Área, D = Owner, E = Turno, F = Correo...`);
+                    logMsg(`Limpiando tabla anterior en Supabase para evitar duplicados...`);
+                    
+                    await supabase.from('owners_directory').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                    
+                    const ownersSet = new Set();
+                    let currentArea = "General";
+                    const inserts = [];
+                    
+                    for (let i = 0; i < rows.length; i++) {
+                        const row = rows[i];
+                        
+                        // Lógica de celdas combinadas para el Área (Columna B)
+                        if (row.B && String(row.B).trim() !== '' && !String(row.B).toUpperCase().includes('REA')) {
+                            currentArea = String(row.B).trim();
+                        }
+                        
+                        // Procesar datos a partir de la fila 3 (índice 2)
+                        if (i >= 2) {
+                            const deptRaw = String(row.C || '').trim(); // Columna C (Departamento)
+                            const ownerRaw = String(row.D || '').trim(); // Columna D
+                            const shiftRaw = String(row.E || '').trim(); // Columna E
+                            const emailRaw = String(row.F || '').trim(); // Columna F
+                            
+                            if (ownerRaw && !ownerRaw.toUpperCase().includes('OWNER')) {
+                                const uniqueKey = currentArea + '|' + ownerRaw;
+                                if (!ownersSet.has(uniqueKey)) {
+                                    ownersSet.add(uniqueKey);
+                                    inserts.push({
+                                        area_id: currentArea,
+                                        owner_name: ownerRaw,
+                                        department: deptRaw, // Usar la columna C real
+                                        correo_responsable: emailRaw
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (inserts.length === 0) {
+                        logMsg(`<span style="color:#ef4444">No se encontró ningún Owner válido en la columna D.</span>`);
+                        return;
+                    }
+
+                    logMsg(`Encontrados ${inserts.length} owners únicos. Inyectando...`);
+                    
+                    // Inserción Masiva
+                    const { error } = await supabase.from('owners_directory').insert(inserts);
+                    
+                    if (error) {
+                        logMsg(`<span style="color:#ef4444">Error inyectando a BD: ${error.message}</span>`);
+                    } else {
+                        logMsg(`<br><span style="color:#22c55e; font-weight:bold;">¡ÉXITO! ${inserts.length} owners importados correctamente.</span>`);
+                        logMsg(`Puedes volver a tu Dashboard y presionar F5 para ver la lista completa.`);
+                    }
+                } catch (err) {
+                    logMsg(`<span style="color:#ef4444">Error crítico en el script: ${err.message}</span>`);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+    </script>
+</body>
+</html>
