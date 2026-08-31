@@ -2722,6 +2722,23 @@
         // --- VARIABLES GLOBALES DE ESTADO ---
         const STORAGE_KEY = 'flex_5s_audits_v6';
         let allAuditData = [];
+
+        function parseDateRobust(dateStr) {
+            if (!dateStr || dateStr === 'Sin Fecha' || dateStr === 'null' || dateStr === 'undefined') return new Date(NaN);
+            let cleanStr = String(dateStr).replace(/-/g, '/').split(' ')[0];
+            let parts = cleanStr.split('/');
+            let d;
+            if (parts.length === 3 && parts[2].length === 4) {
+                // DD/MM/YYYY
+                d = new Date(parts[2], parseInt(parts[1]) - 1, parts[0]);
+            } else if (parts.length === 3 && parts[0].length === 4) {
+                // YYYY/MM/DD
+                d = new Date(parts[0], parseInt(parts[1]) - 1, parts[2]);
+            } else {
+                d = new Date(cleanStr);
+            }
+            return d;
+        }
         
         let arrClosed = [];
         let arrOverdue = [];
@@ -3314,12 +3331,7 @@
 
                 globalFilteredData = globalFilteredData.filter(item => {
                     if (!item.openDate || item.openDate === 'Sin Fecha') return true;
-                    let cleanStr = item.openDate.replace(/-/g, '/').split(' ')[0];
-                    let d = new Date(cleanStr);
-                    if (isNaN(d.getTime())) {
-                        const parts = cleanStr.split('/');
-                        if (parts.length === 3) d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
-                    }
+                    let d = parseDateRobust(item.openDate);
                     if (isNaN(d.getTime())) return true;
                     
                     if (startDate && d < startDate) return false;
@@ -3350,15 +3362,15 @@
                     if (s === 'overdue' || s === 'vencida') {
                         isOverdue = true;
                     } else if (item.dueDate && item.dueDate !== 'Sin Fecha') {
-                        let cleanStr = item.dueDate.replace(/-/g, '/').split(' ')[0];
-                        let d = new Date(cleanStr);
-                        if (isNaN(d.getTime())) {
-                            const parts = cleanStr.split('/');
-                            if (parts.length === 3) d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
-                        }
+                        let d = parseDateRobust(item.dueDate);
                         if (!isNaN(d.getTime())) {
                             d.setHours(0,0,0,0);
-                            if (d < today) isOverdue = true;
+                            if (d < today) {
+                                isOverdue = true;
+                                if (['open', 'abierta', 'abierto', 're-assigned', 'reasignada', 'reasignado', 'waiting for approval'].includes(s)) {
+                                    item.status = 'Overdue';
+                                }
+                            }
                         }
                     }
 
@@ -3370,12 +3382,7 @@
                         
                         // Verificar si está próxima a vencer (0 a 2 días)
                         if (item.dueDate && item.dueDate !== 'Sin Fecha') {
-                            let cleanStr = item.dueDate.replace(/-/g, '/').split(' ')[0];
-                            let d = new Date(cleanStr);
-                            if (isNaN(d.getTime())) {
-                                const parts = cleanStr.split('/');
-                                if (parts.length === 3) d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
-                            }
+                            let d = parseDateRobust(item.dueDate);
                             if (!isNaN(d.getTime())) {
                                 d.setHours(0,0,0,0);
                                 const diffTime = d - today;
@@ -3514,12 +3521,7 @@
                 // Filtrar para incluir solo auditorías a partir del 3 de julio de 2026 (mes 6 en índice cero)
                 areaActions = areaActions.filter(item => {
                     if (!item.openDate || item.openDate === 'Sin Fecha') return false;
-                    let cleanStr = item.openDate.replace(/-/g, '/').split(' ')[0];
-                    let d = new Date(cleanStr);
-                    if (isNaN(d.getTime())) {
-                        const parts = cleanStr.split('/');
-                        if (parts.length === 3) d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
-                    }
+                    let d = parseDateRobust(item.openDate);
                     if (isNaN(d.getTime())) return false;
                     
                     const compStart = new Date(2026, 6, 3); // 3 de Julio de 2026
@@ -3547,8 +3549,10 @@
                     const avg = audit.scores.reduce((sum, s) => sum + s, 0) / audit.scores.length;
                     let d = new Date(0);
                     if (audit.openDate && audit.openDate !== 'Sin Fecha') {
-                        let cleanStr = audit.openDate.replace(/-/g, '/').split(' ')[0];
-                        d = new Date(cleanStr);
+                        let parsedDate = parseDateRobust(audit.openDate);
+                        if (!isNaN(parsedDate.getTime())) {
+                            d = parsedDate;
+                        }
                     }
                     return { ...audit, avg, dateObj: d };
                 });
@@ -4903,12 +4907,7 @@
             if (dateFilter) {
                 filtered = filtered.filter(item => {
                     if (!item.dueDate || item.dueDate === 'Sin Fecha') return false;
-                    let itemDateStr = item.dueDate.replace(/-/g, '/').split(' ')[0];
-                    let d = new Date(itemDateStr);
-                    if (isNaN(d.getTime())) {
-                        const parts = itemDateStr.split('/');
-                        if (parts.length === 3) d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
-                    }
+                    let d = parseDateRobust(item.dueDate);
                     if (!isNaN(d.getTime())) {
                         const selD = new Date(dateFilter + 'T00:00:00');
                         return d.getTime() === selD.getTime();
@@ -6040,11 +6039,9 @@
                 const avg = audit.scores.reduce((sum, s) => sum + s, 0) / audit.scores.length;
                 let d = new Date(0);
                 if (audit.openDate && audit.openDate !== 'Sin Fecha') {
-                    let cleanStr = audit.openDate.replace(/-/g, '/').split(' ')[0];
-                    d = new Date(cleanStr);
-                    if (isNaN(d.getTime())) {
-                        const parts = cleanStr.split('/');
-                        if (parts.length === 3) d = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                    let parsedDate = parseDateRobust(audit.openDate);
+                    if (!isNaN(parsedDate.getTime())) {
+                        d = parsedDate;
                     }
                 }
                 return { ...audit, avgScore: avg, dateObj: d };
@@ -7284,16 +7281,7 @@
                 
                 reportData = baseForReport.filter(item => {
                     if (!item.openDate || item.openDate === 'Sin Fecha') return false;
-                    let cleanStr = item.openDate.replace(/-/g, '/').split(' ')[0];
-                    let parts = cleanStr.split('/');
-                    let d;
-                    if (parts.length === 3 && parts[2].length === 4) {
-                        // Formato DD/MM/YYYY
-                        d = new Date(parts[2], parseInt(parts[1]) - 1, parts[0]);
-                    } else {
-                        // Formato YYYY/MM/DD (Nativo)
-                        d = new Date(cleanStr);
-                    }
+                    let d = parseDateRobust(item.openDate);
                     if (isNaN(d.getTime())) return false;
                     
                     d.setHours(0,0,0,0);
@@ -7342,16 +7330,7 @@
                 const getReportDataForRange = (dStart, dEnd) => {
                     return baseForReport.filter(item => {
                         if (!item.openDate || item.openDate === 'Sin Fecha') return false;
-                        let cleanStr = item.openDate.replace(/-/g, '/').split(' ')[0];
-                        let parts = cleanStr.split('/');
-                        let d;
-                        if (parts.length === 3 && parts[2].length === 4) {
-                            // Formato DD/MM/YYYY
-                            d = new Date(parts[2], parseInt(parts[1]) - 1, parts[0]);
-                        } else {
-                            // Formato YYYY/MM/DD (Nativo)
-                            d = new Date(cleanStr);
-                        }
+                        let d = parseDateRobust(item.openDate);
                         if (isNaN(d.getTime())) return false;
                         
                         d.setHours(0,0,0,0);
@@ -7405,12 +7384,7 @@
                     if (s === 'overdue' || s === 'vencida') {
                         isOverdue = true;
                     } else if (item.dueDate && item.dueDate !== 'Sin Fecha') {
-                        let cleanStr = item.dueDate.replace(/-/g, '/').split(' ')[0];
-                        let dDate = new Date(cleanStr);
-                        if (isNaN(dDate.getTime())) {
-                            const parts = cleanStr.split('/');
-                            if (parts.length === 3) dDate = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
-                        }
+                        let dDate = parseDateRobust(item.dueDate);
                         if (!isNaN(dDate.getTime())) {
                             dDate.setHours(0,0,0,0);
                             if (dDate < today) isOverdue = true;
@@ -7420,12 +7394,7 @@
                     if (isOverdue) return false;
                     
                     if (item.dueDate && item.dueDate !== 'Sin Fecha') {
-                        let cleanStr = item.dueDate.replace(/-/g, '/').split(' ')[0];
-                        let dDate = new Date(cleanStr);
-                        if (isNaN(dDate.getTime())) {
-                            const parts = cleanStr.split('/');
-                            if (parts.length === 3) dDate = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
-                        }
+                        let dDate = parseDateRobust(item.dueDate);
                         if (!isNaN(dDate.getTime())) {
                             dDate.setHours(0,0,0,0);
                             const diffTime = dDate - today;
@@ -7460,12 +7429,7 @@
                     let daysOverdue = 0;
                     
                     if (item.dueDate && item.dueDate !== 'Sin Fecha') {
-                        let cleanStr = item.dueDate.replace(/-/g, '/').split(' ')[0];
-                        let dDate = new Date(cleanStr);
-                        if (isNaN(dDate.getTime())) {
-                            const parts = cleanStr.split('/');
-                            if (parts.length === 3) dDate = new Date(`${parts[2]}/${parts[1]}/${parts[0]}`);
-                        }
+                        let dDate = parseDateRobust(item.dueDate);
                         if (!isNaN(dDate.getTime())) {
                             dDate.setHours(0,0,0,0);
                             if (dDate < today) {
