@@ -2975,8 +2975,7 @@
                         daysToClose: item.daysToClose !== undefined ? item.daysToClose : item.daystoclose
                     };
                 });
-                
-                allAuditData = mappedData;
+                allAuditData = mappedData.filter(item => item.cleanLocation !== 'Eliminar');
                 document.getElementById('btn-reset').classList.remove('hidden');
                 updateDashboard();
             } else {
@@ -3089,7 +3088,7 @@
 
                 // FILTRO INTELIGENTE: Eliminamos los -1 (No aplica) para no hacer basura en BD.
                 // PERO DEJAMOS LOS 5, porque son necesarios para que la matemática del Score sea correcta.
-                newItems = newItems.filter(item => item.responseScore !== -1);
+                newItems = newItems.filter(item => item.responseScore !== -1 && item.cleanLocation !== 'Eliminar');
 
                 if (newItems.length === 0) {
                     alert('No se encontraron registros válidos en este archivo.');
