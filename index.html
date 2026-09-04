@@ -6264,18 +6264,6 @@
         }
 
         async function checkSession() {
-            // MODO GEMBA ABIERTO: Bypass temporal de login
-            window.currentUserId = '00000000-0000-0000-0000-000000000000';
-            window.currentUserRole = 'Administrador';
-            window.currentUserEmail = 'auditor_gemba@flex.com'; 
-            
-            document.getElementById('login-overlay').style.display = 'none';
-            document.querySelector('.app-layout').style.display = 'flex';
-            
-            startApplication();
-            return;
-            
-            // --- CÓDIGO ORIGINAL DESACTIVADO ---
             if (!supabaseClient) {
                 document.getElementById('login-error-msg').textContent = 'Error crítico: La red de tu empresa bloquea la conexión a Supabase. No se puede iniciar sesión.';
                 document.getElementById('login-error-msg').style.display = 'block';
@@ -7083,6 +7071,18 @@
         // GENERADOR DE REPORTES (HTML2CANVAS)
         // ==========================================
         function isValidAction(item) {
+            const owner = (item.owner || '').trim();
+            const dueDate = (item.dueDate || '').trim();
+            const dept = (item.department || '').trim();
+
+            // Filtro para eliminar acciones que no tienen fecha ni owner asignado (e.g., solo fotos)
+            const isOwnerMissing = owner === '' || owner.toLowerCase() === 'sin asignar';
+            const isDateMissing = dueDate === '' || dueDate.toLowerCase() === 'sin fecha';
+            
+            if (isOwnerMissing && isDateMissing) {
+                return false;
+            }
+
             // Siempre aceptar acciones de Gemba
             if (item.department === 'Gemba' || item.department === 'Gemba Walk') return true;
             
@@ -7095,8 +7095,6 @@
             
             // Filtro Anti-Fantasmas: Una acción real reprobatoria debe tener responsable o departamento.
             // Si la app externa inyecta un falso "4" pero vacío, lo ignoramos.
-            const owner = (item.owner || '').trim();
-            const dept = (item.department || '').trim();
             if (owner === '' && dept === '') return false;
             
             return true;
