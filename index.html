@@ -1269,17 +1269,23 @@
         #layout-owners-table {
             width: 100%;
             border-collapse: collapse;
+            background: var(--color-bg-white);
         }
         #layout-owners-table th, #layout-owners-table td {
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid var(--color-border);
-            color: var(--color-text-muted);
+            color: var(--color-text);
+            font-weight: 500;
+            font-size: 1.05em;
         }
         #layout-owners-table th {
-            background: rgba(0,0,0,0.02);
-            color: var(--color-text);
-            font-weight: 600;
+            background: var(--color-primary);
+            color: var(--color-bg-white);
+            font-weight: 700;
+        }
+        #layout-owners-table tbody tr:nth-child(even) {
+            background-color: var(--color-bg-light);
         }
         /* ESTILOS DEL CALENDARIO 5S */
         .calendar-grid {
