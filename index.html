@@ -1378,6 +1378,118 @@
             text-decoration: line-through;
             opacity: 0.8;
         }
+        /* ESTILOS DE DRAG & DROP EN CALENDARIO */
+        .cal-event.dragging {
+            opacity: 0.4;
+            transform: scale(0.95);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            cursor: grabbing !important;
+        }
+
+        .cal-day.drag-over {
+            background-color: rgba(0, 154, 221, 0.12) !important;
+            outline: 2px dashed var(--color-primary);
+            outline-offset: -2px;
+        }
+
+        .cal-day.drag-over.cant-drop {
+            background-color: rgba(236, 112, 99, 0.1) !important;
+            outline-color: var(--color-danger);
+        }
+
+        .cal-event[draggable="true"] {
+            cursor: grab;
+        }
+
+        .cal-event[draggable="true"]:active {
+            cursor: grabbing;
+        }
+
+        /* Drag hint tooltip */
+        .cal-drag-hint {
+            position: absolute;
+            bottom: 4px;
+            right: 6px;
+            font-size: 10px;
+            opacity: 0;
+            color: var(--color-text-muted);
+            transition: opacity 0.2s;
+            pointer-events: none;
+            user-select: none;
+        }
+        .cal-day:hover .cal-drag-hint { opacity: 0.6; }
+
+        /* ESTILOS DE EDICIÓN DE AUDITOR (ÁREA DETAIL) */
+        .cal-assignment-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: #f8f9fa;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            gap: 12px;
+            transition: box-shadow 0.2s;
+        }
+        .cal-assignment-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .cal-assignment-info { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+        .cal-assignment-date { font-weight: bold; font-size: 13px; color: var(--color-text); }
+        .cal-assignment-status { font-size: 12px; color: var(--color-text-muted); }
+        .cal-assignment-auditor-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            min-width: 70px;
+            text-align: center;
+        }
+        .auditor-select-inline {
+            padding: 5px 8px;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .auditor-select-inline:focus { outline: none; border-color: var(--color-primary); }
+        .btn-save-auditor {
+            padding: 5px 12px;
+            border: none;
+            border-radius: 6px;
+            background: var(--color-primary);
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .btn-save-auditor:hover { background: var(--color-primary-hover); }
+        .btn-save-auditor.saving { opacity: 0.6; pointer-events: none; }
+        .area-calendar-section { margin-top: 20px; }
+        .area-calendar-section .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--color-border);
+        }
+        .area-calendar-section .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--color-text);
+        }
+        .area-calendar-assignments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
         /* ESTILOS DE CONTROL DE ÁREAS */
         .area-card {
             background: var(--color-bg-white);
@@ -2111,6 +2223,15 @@
                                     <option value="Cancelada">Cancelada</option>
                                 </select>
                             </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--color-text-muted);">Auditor Asignado</label>
+                                <select id="cal-event-auditor" class="filter-select" style="width: 100%; border: 1px solid var(--color-border);">
+                                    <option value="Gema">Gema</option>
+                                    <option value="Alisson">Alisson</option>
+                                    <option value="Jose">Jose</option>
+                                    <option value="Montse">Montse</option>
+                                </select>
+                            </div>
                             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
                                 <button class="btn btn-secondary" onclick="deleteCalendarEvent()" id="btn-delete-event" style="display: none; background: #fee2e2; color: #dc2626; border-color: #fca5a5;">Eliminar</button>
                                 <button class="btn btn-secondary" onclick="closeCalendarModal()">Cancelar</button>
@@ -2182,6 +2303,16 @@
                                     </thead>
                                     <tbody id="layout-owners-table-body"></tbody>
                                 </table>
+                            </div>
+                        </div>
+                        <!-- NUEVA SECCIÓN: Auditorías Programadas en Calendario -->
+                        <div class="table-card area-calendar-section" id="area-calendar-section">
+                            <div class="section-header">
+                                <span class="section-title">📅 Auditorías en Calendario</span>
+                                <span style="font-size: 12px; color: var(--color-text-muted);">Puedes cambiar el auditor asignado aquí</span>
+                            </div>
+                            <div class="area-calendar-assignments-list" id="area-calendar-assignments-list">
+                                <p style="color: var(--color-text-muted); text-align: center; padding: 20px;">No hay auditorías programadas para esta área.</p>
                             </div>
                         </div>
                     </section>
@@ -6156,7 +6287,7 @@
             document.getElementById('view-layout-detail').classList.remove('hidden');
             
             // Cambiar texto del botón Atrás
-            document.getElementById('btn-back-deepdive').textContent = origin === 'layout' ? '◀ Volver al Mapa' : '◀ Volver a la Lista';
+            document.getElementById('btn-back-deepdive').textContent = origin === 'layout' ? '◄ Volver al Mapa' : '◄ Volver a la Lista';
             
             const labelStr = currentViewMode === 'sectors' ? 'Sector' : 'Área';
             document.getElementById('layout-detail-title').textContent = `Detalle Ejecutivo: ${areaId} (${labelStr})`;
@@ -6195,7 +6326,140 @@
             // Guardar para el modal
             currentLayoutLists.wip = stats.wipActions;
             currentLayoutLists.overdue = stats.overdueActions;
+
+            // Cargar auditorías del calendario para esta área
+            loadAreaCalendarAssignments(areaId);
         }
+
+        // Carga y renderiza las auditorías del calendario correspondientes a un área
+        async function loadAreaCalendarAssignments(areaId) {
+            const listEl = document.getElementById('area-calendar-assignments-list');
+            listEl.innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 20px;">Cargando...</p>';
+
+            // Buscar en calendarEvents (ya cargados globalmente)
+            const areaIdNorm = areaId.trim().toLowerCase();
+
+            // Filtrar eventos donde area_name contenga el área (con o sin pipe)
+            const matches = [];
+            (calendarEvents || []).forEach(ev => {
+                if (!ev.area_name) return;
+                const parts = ev.area_name.split(',').map(s => s.trim()).filter(s => s);
+                parts.forEach(part => {
+                    let aName = part;
+                    let auditor = '';
+                    if (part.includes('|')) {
+                        const [a, b] = part.split('|');
+                        aName = a.trim();
+                        auditor = b.trim();
+                    }
+                    const mapped = cleanLocation(aName);
+                    if (mapped.trim().toLowerCase() === areaIdNorm || aName.trim().toLowerCase() === areaIdNorm) {
+                        matches.push({ ev, aName: part, auditor, mappedName: mapped });
+                    }
+                });
+            });
+
+            if (matches.length === 0) {
+                listEl.innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 20px;">No hay auditorías programadas para esta área en el calendario.</p>';
+                return;
+            }
+
+            // Ordenar por fecha
+            matches.sort((a, b) => a.ev.audit_date.localeCompare(b.ev.audit_date));
+
+            listEl.innerHTML = '';
+            const AUDITORS = ['Gema', 'Alisson', 'Jose', 'Montse'];
+            const AUDITOR_COLORS = {
+                Gema:   { bg: '#C8A2C8', color: '#000', border: '#a382a3' },
+                Alisson:{ bg: '#FFD1DC', color: '#000', border: '#d8b0b8' },
+                Jose:   { bg: '#0070C0', color: '#FFF', border: '#00508a' },
+                Montse: { bg: '#800080', color: '#FFF', border: '#5a005a' },
+            };
+
+            matches.forEach(({ ev, auditor, mappedName }) => {
+                const card = document.createElement('div');
+                card.className = 'cal-assignment-card';
+
+                // Badge de auditor actual
+                const ac = AUDITOR_COLORS[auditor] || { bg: '#e5e7eb', color: '#374151', border: '#d1d5db' };
+
+                // Formatear fecha
+                const [y, m, d] = ev.audit_date.split('-');
+                const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+                const fechaStr = `${d} ${months[parseInt(m,10)-1]} ${y}`;
+
+                // Status badge
+                const statusColors = { Programada: '#f59e0b', Completada: '#10b981', Cancelada: '#ef4444' };
+                const stColor = statusColors[ev.status] || '#6b7280';
+
+                card.innerHTML = `
+                    <div class="cal-assignment-info">
+                        <span class="cal-assignment-date">&#x1F4C5; ${fechaStr}</span>
+                        <span class="cal-assignment-status" style="color: ${stColor}; font-weight: bold;">● ${ev.status}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                        <select class="auditor-select-inline" data-event-id="${ev.id}" data-area-raw="${mappedName}" data-area-full="${ev.area_name}">
+                            ${AUDITORS.map(a => `<option value="${a}" ${a === auditor ? 'selected' : ''}>${a}</option>`).join('')}
+                        </select>
+                        <button class="btn-save-auditor" onclick="saveAreaAuditor(this)" title="Guardar cambio de auditor">
+                            ✓ Guardar
+                        </button>
+                    </div>
+                `;
+
+                listEl.appendChild(card);
+            });
+        }
+
+        // Guarda el cambio de auditor de un evento de calendario para un área
+        async function saveAreaAuditor(btn) {
+            if (!supabaseClient) {
+                alert('Debes iniciar sesión para guardar cambios.');
+                return;
+            }
+
+            const card = btn.closest('.cal-assignment-card');
+            const select = card.querySelector('.auditor-select-inline');
+            const eventId = select.dataset.eventId;
+            const areaRaw = select.dataset.areaRaw;  // Nombre del área mapeado (display)
+            const areaFull = select.dataset.areaFull; // area_name completo original del evento
+            const newAuditor = select.value;
+
+            btn.classList.add('saving');
+            btn.textContent = 'Guardando...';
+
+            // Reconstruir area_name: reemplazar la parte que corresponde a este área
+            // El campo area_name puede ser solo "Area|Auditor"
+            const newAreaName = areaFull.includes('|')
+                ? areaFull.replace(/\|[^,]*/g, match => `|${newAuditor}`)
+                : `${areaFull}|${newAuditor}`;
+
+            const { error } = await supabaseClient
+                .from('calendar_events')
+                .update({ area_name: newAreaName })
+                .eq('id', eventId);
+
+            btn.classList.remove('saving');
+
+            if (error) {
+                btn.textContent = '✓ Guardar';
+                alert('Error al guardar: ' + error.message);
+            } else {
+                btn.textContent = '✔ Guardado!';
+                btn.style.background = '#10b981';
+                // Actualizar calendarEvents en memoria
+                const idx = calendarEvents.findIndex(e => e.id === eventId);
+                if (idx !== -1) calendarEvents[idx].area_name = newAreaName;
+                // Refrescar calendario en el fondo
+                renderCalendar(currentMonth, currentYear);
+                showCalendarToast(`✅ Auditor actualizado a ${newAuditor}`);
+                setTimeout(() => {
+                    btn.textContent = '✓ Guardar';
+                    btn.style.background = '';
+                }, 2000);
+            }
+        }
+
 
         // Lógica de Modals de Layout
         function openLayoutListModal(type) {
@@ -6673,6 +6937,9 @@
             }
         }
 
+        // --- ESTADO DRAG & DROP ---
+        let calDragData = null; // { eventId, areaName, oldDate, status }
+
         function renderCalendar(month, year) {
             const container = document.getElementById('calendar-grid-container');
             const monthYearLabel = document.getElementById('calendar-month-year');
@@ -6704,6 +6971,7 @@
                 }
 
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                dayDiv.dataset.date = dateStr;
 
                 const topBar = document.createElement('div');
                 topBar.className = 'cal-date-number';
@@ -6719,6 +6987,17 @@
                 topBar.appendChild(addBtn);
 
                 dayDiv.appendChild(topBar);
+
+                // Hint de arrastre
+                const dragHint = document.createElement('span');
+                dragHint.className = 'cal-drag-hint';
+                dragHint.textContent = '↕ arrastrar';
+                dayDiv.appendChild(dragHint);
+
+                // DROP ZONE: escuchar eventos en cada celda
+                dayDiv.addEventListener('dragover', calDragOver);
+                dayDiv.addEventListener('dragleave', calDragLeave);
+                dayDiv.addEventListener('drop', calDrop);
 
                 const dayEvents = calendarEvents.filter(e => e.audit_date === dateStr);
                 dayEvents.forEach(ev => {
@@ -6754,6 +7033,16 @@
                         
                         const evDiv = document.createElement('div');
                         evDiv.className = `cal-event status-${statusClass}`;
+
+                        // Configurar Drag & Drop en el chip
+                        evDiv.draggable = true;
+                        evDiv.dataset.eventId = ev.id;
+                        evDiv.dataset.areaName = ev.area_name; // El campo completo del evento
+                        evDiv.dataset.date = dateStr;
+                        evDiv.dataset.status = ev.status;
+
+                        evDiv.addEventListener('dragstart', calDragStart);
+                        evDiv.addEventListener('dragend', calDragEnd);
                         
                         // Aplicar colores personalizados
                         if (auditor === 'Gema') {
@@ -6775,14 +7064,112 @@
                         }
                         
                         evDiv.textContent = mappedAreaName + (auditor !== 'Desconocido' ? ` (${auditor})` : '');
-                        evDiv.title = `${mappedAreaName} - Auditor: ${auditor} (${ev.status})`;
-                        evDiv.onclick = () => openCalendarModal(dateStr, ev);
+                        evDiv.title = `${mappedAreaName} - Auditor: ${auditor} (${ev.status}) — Arrastra para mover a otro día`;
+                        evDiv.onclick = (e) => {
+                            // No abrir modal si fue un drag
+                            if (!calDragData) openCalendarModal(dateStr, ev);
+                        };
                         dayDiv.appendChild(evDiv);
                     });
                 });
 
                 container.appendChild(dayDiv);
             }
+        }
+
+        // --- HANDLERS DE DRAG & DROP ---
+        function calDragStart(e) {
+            const evDiv = e.currentTarget;
+            calDragData = {
+                eventId: evDiv.dataset.eventId,
+                areaName: evDiv.dataset.areaName,
+                oldDate: evDiv.dataset.date,
+                status: evDiv.dataset.status
+            };
+            evDiv.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', evDiv.dataset.eventId);
+            // Pequeño delay para que se vea el ghost
+            setTimeout(() => evDiv.style.opacity = '0.3', 0);
+        }
+
+        function calDragEnd(e) {
+            e.currentTarget.classList.remove('dragging');
+            e.currentTarget.style.opacity = '';
+            // Limpiar estado drag
+            document.querySelectorAll('.cal-day.drag-over').forEach(d => d.classList.remove('drag-over'));
+            // NO limpiar calDragData aquí, lo limpiamos en calDrop o en el click handler
+            setTimeout(() => { calDragData = null; }, 150);
+        }
+
+        function calDragOver(e) {
+            e.preventDefault();
+            const dayDiv = e.currentTarget;
+            if (!dayDiv.dataset.date) return; // celdas vacías
+            dayDiv.classList.add('drag-over');
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function calDragLeave(e) {
+            // Solo remover si realmente salimos del día (no entramos a un hijo)
+            if (!e.currentTarget.contains(e.relatedTarget)) {
+                e.currentTarget.classList.remove('drag-over');
+            }
+        }
+
+        async function calDrop(e) {
+            e.preventDefault();
+            const dayDiv = e.currentTarget;
+            dayDiv.classList.remove('drag-over');
+
+            if (!calDragData) return;
+            const newDate = dayDiv.dataset.date;
+            if (!newDate || newDate === calDragData.oldDate) {
+                calDragData = null;
+                return;
+            }
+
+            if (!supabaseClient) {
+                alert('Debes iniciar sesión para mover auditorías.');
+                calDragData = null;
+                return;
+            }
+
+            // Mover en Supabase: actualizar audit_date del evento
+            const { error } = await supabaseClient
+                .from('calendar_events')
+                .update({ audit_date: newDate })
+                .eq('id', calDragData.eventId);
+
+            if (error) {
+                console.error('Error al mover auditoría:', error);
+                alert('No se pudo mover la auditoría: ' + error.message);
+            } else {
+                // Mostrar feedback visual
+                showCalendarToast(`✅ Auditoría movida al ${newDate}`);
+                await initCalendar();
+            }
+            calDragData = null;
+        }
+
+        function showCalendarToast(msg) {
+            let toast = document.getElementById('cal-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'cal-toast';
+                toast.style.cssText = `
+                    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+                    background: #1a1a2e; color: white; padding: 12px 24px; border-radius: 30px;
+                    font-size: 14px; font-weight: bold; z-index: 99999; opacity: 0;
+                    transition: opacity 0.3s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                    pointer-events: none;
+                `;
+                document.body.appendChild(toast);
+            }
+            toast.textContent = msg;
+            toast.style.opacity = '1';
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => { toast.style.opacity = '0'; }, 2800);
         }
 
         function changeMonth(step) {
@@ -6854,8 +7241,20 @@
                 document.getElementById('cal-event-id').value = eventObj.id;
                 document.getElementById('cal-event-status').value = eventObj.status;
                 
-                // Seleccionar las areas previas
-                const selectedAreas = eventObj.area_name.split(',').map(s => s.trim());
+                // Detectar auditor del evento y pre-seleccionarlo en el dropdown
+                let detectedAuditor = 'Gema';
+                if (eventObj.area_name && eventObj.area_name.includes('|')) {
+                    const parts = eventObj.area_name.split('|');
+                    detectedAuditor = parts[1].trim() || 'Gema';
+                }
+                const auditorSelect = document.getElementById('cal-event-auditor');
+                if (auditorSelect) auditorSelect.value = detectedAuditor;
+
+                // Seleccionar las areas previas (strip the |Auditor part for matching)
+                const selectedAreas = eventObj.area_name.split(',').map(s => {
+                    const cleaned = s.trim();
+                    return cleaned.includes('|') ? cleaned.split('|')[0].trim() : cleaned;
+                });
                 checkboxes.forEach(cb => {
                     if (selectedAreas.includes(cb.value)) {
                         cb.checked = true;
@@ -6867,6 +7266,8 @@
                 title.textContent = 'Programar Auditoría';
                 document.getElementById('cal-event-id').value = '';
                 document.getElementById('cal-event-status').value = 'Programada';
+                const auditorSelect = document.getElementById('cal-event-auditor');
+                if (auditorSelect) auditorSelect.value = 'Gema'; // default
                 btnDelete.style.display = 'none';
             }
 
@@ -6888,6 +7289,7 @@
             const container = document.getElementById('cal-event-area-container');
             const checkboxes = Array.from(container.querySelectorAll('.cal-area-checkbox:checked'));
             const status = document.getElementById('cal-event-status').value;
+            const auditor = document.getElementById('cal-event-auditor').value;
 
             if (!date || checkboxes.length === 0) {
                 alert("Por favor completa la fecha y selecciona al menos un área.");
@@ -6901,9 +7303,10 @@
             }
 
             if (!error) {
+                // Guardar en formato "NombreArea|NombreAuditor" para que el calendario muestre el color correcto
                 const payloads = checkboxes.map(cb => ({
                     audit_date: date,
-                    area_name: cb.value,
+                    area_name: `${cb.value}|${auditor}`,
                     status: status
                 }));
                 const res = await supabaseClient.from('calendar_events').insert(payloads);
