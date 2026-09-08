@@ -6999,11 +6999,28 @@
                 dayDiv.addEventListener('dragleave', calDragLeave);
                 dayDiv.addEventListener('drop', calDrop);
 
+                // Orden fijo de auditores para que siempre se vea igual en cada día
+                const AUDITOR_ORDER = { 'Gema': 0, 'Jose': 1, 'Alisson': 2, 'Montse': 3, 'Desconocido': 4 };
+                const auditorFallbackMap = {
+                    "TEST ROOM 2": "Alisson", "L12 TOP": "Jose", "L14 TOP": "Alisson", "CRITICAL REPAIR 2": "Montse",
+                    "IST": "Gema", "TOOL ROOM": "Jose", "CRITICAL REPAIR 3": "Montse", "ASSEMBLY 1": "Gema",
+                    "MOONSHINE": "Alisson", "PACK": "Gema", "OFFICES": "Alisson", "L16": "Jose", "INCOMING": "Montse",
+                    "USIS": "Montse", "SMKT SMT": "Montse", "EQUIPMENT ROOM": "Jose", "RECEIPT": "Montse",
+                    "EMBARQUE": "Gema", "SURTIDO MATERIAL": "Montse", "L14 BOTTOM": "Alisson", "CONTEOS INTERNOS": "Gema",
+                    "L11 TOP": "Jose", "DISSASEMBLY": "Gema", "L15": "Montse", "SMKT BACKEND": "Montse",
+                    "HV ALTO VALOR": "Montse", "TEST ROOM 1": "Jose", "RMA GLP": "Alisson", "L12 BOTTOM": "Jose",
+                    "MONITORES": "Alisson", "CRITICAL REPAIR 1": "Montse", "ASSEMBLY 2": "Gema", "CONTROL TOWER": "Jose",
+                    "LOBBY": "Alisson", "L13": "Alisson", "RMA VLP": "Alisson", "L11 BOTTOM": "Jose", "FRESH MARKET": "Gema",
+                    "DEBUG": "Gema", "CLEAN ROOM": "Gema", "BONEPILE": "Montse", "ICT": "Jose"
+                };
+
+                // Recopilar todos los chips del día en un array para poder ordenarlos
                 const dayEvents = calendarEvents.filter(e => e.audit_date === dateStr);
+                const dayChips = [];
+
                 dayEvents.forEach(ev => {
                     const statusClass = ev.status.toLowerCase().replace(/[^a-z]/g, '');
                     const areas = ev.area_name.split(',').map(s => s.trim()).filter(s => s);
-                    
                     areas.forEach(areaName => {
                         let actualAreaName = areaName;
                         let auditor = 'Desconocido';
@@ -7012,65 +7029,62 @@
                             actualAreaName = parts[0].trim();
                             auditor = parts[1].trim();
                         } else {
-                            // Fallback to older events if needed
-                            const auditorMap = {
-                                "TEST ROOM 2": "Alisson", "L12 TOP": "Jose", "L14 TOP": "Alisson", "CRITICAL REPAIR 2": "Montse",
-                                "IST": "Gema", "TOOL ROOM": "Jose", "CRITICAL REPAIR 3": "Montse", "ASSEMBLY 1": "Gema",
-                                "MOONSHINE": "Alisson", "PACK": "Gema", "OFFICES": "Alisson", "L16": "Jose", "INCOMING": "Montse",
-                                "USIS": "Montse", "SMKT SMT": "Montse", "EQUIPMENT ROOM": "Jose", "RECEIPT": "Montse",
-                                "EMBARQUE": "Gema", "SURTIDO MATERIAL": "Montse", "L14 BOTTOM": "Alisson", "CONTEOS INTERNOS": "Gema",
-                                "L11 TOP": "Jose", "DISSASEMBLY": "Gema", "L15": "Montse", "SMKT BACKEND": "Montse",
-                                "HV ALTO VALOR": "Montse", "TEST ROOM 1": "Jose", "RMA GLP": "Alisson", "L12 BOTTOM": "Jose",
-                                "MONITORES": "Alisson", "CRITICAL REPAIR 1": "Montse", "ASSEMBLY 2": "Gema", "CONTROL TOWER": "Jose",
-                                "LOBBY": "Alisson", "L13": "Alisson", "RMA VLP": "Alisson", "L11 BOTTOM": "Jose", "FRESH MARKET": "Gema",
-                                "DEBUG": "Gema", "CLEAN ROOM": "Gema", "BONEPILE": "Montse", "ICT": "Jose"
-                            };
-                            auditor = auditorMap[actualAreaName.toUpperCase()] || 'Desconocido';
+                            auditor = auditorFallbackMap[actualAreaName.toUpperCase()] || 'Desconocido';
                         }
-                        
                         const mappedAreaName = cleanLocation(actualAreaName);
-                        if (mappedAreaName === 'Eliminar') return; // Hide deleted areas from view entirely
-                        
-                        const evDiv = document.createElement('div');
-                        evDiv.className = `cal-event status-${statusClass}`;
-
-                        // Configurar Drag & Drop en el chip
-                        evDiv.draggable = true;
-                        evDiv.dataset.eventId = ev.id;
-                        evDiv.dataset.areaName = ev.area_name; // El campo completo del evento
-                        evDiv.dataset.date = dateStr;
-                        evDiv.dataset.status = ev.status;
-
-                        evDiv.addEventListener('dragstart', calDragStart);
-                        evDiv.addEventListener('dragend', calDragEnd);
-                        
-                        // Aplicar colores personalizados
-                        if (auditor === 'Gema') {
-                            evDiv.style.setProperty('background-color', '#C8A2C8', 'important');
-                            evDiv.style.setProperty('color', '#000', 'important');
-                            evDiv.style.setProperty('border', '1px solid #a382a3', 'important');
-                        } else if (auditor === 'Alisson') {
-                            evDiv.style.setProperty('background-color', '#FFD1DC', 'important');
-                            evDiv.style.setProperty('color', '#000', 'important');
-                            evDiv.style.setProperty('border', '1px solid #d8b0b8', 'important');
-                        } else if (auditor === 'Montse') {
-                            evDiv.style.setProperty('background-color', '#800080', 'important');
-                            evDiv.style.setProperty('color', '#FFF', 'important');
-                            evDiv.style.setProperty('border', '1px solid #5a005a', 'important');
-                        } else if (auditor === 'Jose') {
-                            evDiv.style.setProperty('background-color', '#0070C0', 'important');
-                            evDiv.style.setProperty('color', '#FFF', 'important');
-                            evDiv.style.setProperty('border', '1px solid #00508a', 'important');
-                        }
-                        
-                        evDiv.textContent = mappedAreaName + (auditor !== 'Desconocido' ? ` (${auditor})` : '');
-                        evDiv.title = `${mappedAreaName} - Auditor: ${auditor} (${ev.status}) — Arrastra para mover a otro día`;
-                        evDiv.onclick = (e) => {
-                            // No abrir modal si fue un drag
-                            if (!calDragData) openCalendarModal(dateStr, ev);
-                        };
-                        dayDiv.appendChild(evDiv);
+                        if (mappedAreaName === 'Eliminar') return;
+                        dayChips.push({ ev, statusClass, actualAreaName, auditor, mappedAreaName });
                     });
+                });
+
+                // Ordenar: primero por auditor (Gema→Jose→Alisson→Montse), luego alfabéticamente por área
+                dayChips.sort((a, b) => {
+                    const oA = AUDITOR_ORDER[a.auditor] ?? 99;
+                    const oB = AUDITOR_ORDER[b.auditor] ?? 99;
+                    if (oA !== oB) return oA - oB;
+                    return a.mappedAreaName.localeCompare(b.mappedAreaName);
+                });
+
+                // Renderizar chips ya ordenados
+                dayChips.forEach(({ ev, statusClass, auditor, mappedAreaName }) => {
+                    const evDiv = document.createElement('div');
+                    evDiv.className = `cal-event status-${statusClass}`;
+
+                    // Configurar Drag & Drop en el chip
+                    evDiv.draggable = true;
+                    evDiv.dataset.eventId = ev.id;
+                    evDiv.dataset.areaName = ev.area_name;
+                    evDiv.dataset.date = dateStr;
+                    evDiv.dataset.status = ev.status;
+
+                    evDiv.addEventListener('dragstart', calDragStart);
+                    evDiv.addEventListener('dragend', calDragEnd);
+
+                    // Aplicar colores por auditor
+                    if (auditor === 'Gema') {
+                        evDiv.style.setProperty('background-color', '#C8A2C8', 'important');
+                        evDiv.style.setProperty('color', '#000', 'important');
+                        evDiv.style.setProperty('border', '1px solid #a382a3', 'important');
+                    } else if (auditor === 'Alisson') {
+                        evDiv.style.setProperty('background-color', '#FFD1DC', 'important');
+                        evDiv.style.setProperty('color', '#000', 'important');
+                        evDiv.style.setProperty('border', '1px solid #d8b0b8', 'important');
+                    } else if (auditor === 'Montse') {
+                        evDiv.style.setProperty('background-color', '#800080', 'important');
+                        evDiv.style.setProperty('color', '#FFF', 'important');
+                        evDiv.style.setProperty('border', '1px solid #5a005a', 'important');
+                    } else if (auditor === 'Jose') {
+                        evDiv.style.setProperty('background-color', '#0070C0', 'important');
+                        evDiv.style.setProperty('color', '#FFF', 'important');
+                        evDiv.style.setProperty('border', '1px solid #00508a', 'important');
+                    }
+
+                    evDiv.textContent = mappedAreaName + (auditor !== 'Desconocido' ? ` (${auditor})` : '');
+                    evDiv.title = `${mappedAreaName} - Auditor: ${auditor} (${ev.status}) — Arrastra para mover a otro día`;
+                    evDiv.onclick = (e) => {
+                        if (!calDragData) openCalendarModal(dateStr, ev);
+                    };
+                    dayDiv.appendChild(evDiv);
                 });
 
                 container.appendChild(dayDiv);
