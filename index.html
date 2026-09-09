@@ -3128,7 +3128,14 @@
                         daysToClose: item.daysToClose !== undefined ? item.daysToClose : item.daystoclose
                     };
                 });
-                allAuditData = mappedData.filter(item => item.cleanLocation !== 'Eliminar');
+                // Deduplicar acciones para evitar duplicados en la app
+                const uniqueActions = new Map();
+                mappedData.forEach(item => {
+                    const id = `${item.auditId}-${item.actionId}`;
+                    uniqueActions.set(id, item);
+                });
+                
+                allAuditData = Array.from(uniqueActions.values()).filter(item => item.cleanLocation !== 'Eliminar');
                 document.getElementById('btn-reset').classList.remove('hidden');
                 updateDashboard();
             } else {
@@ -5159,9 +5166,9 @@
                 if (currentAppMode === '5s' && (item.department === 'Gemba' || item.department === 'Gemba Walk')) return false;
                 if (currentAppMode === 'gemba' && item.department !== 'Gemba' && item.department !== 'Gemba Walk') return false;
 
-                // Excluir Descartes (-1) y Perfectos (5)
+                // Excluir Descartes (-1) y Perfectos/Aceptables (4, 5)
                 const score = parseInt(item.responseScore);
-                if (score === 5 || score === -1) return false;
+                if (score >= 4 || score === -1) return false;
 
                 let match = true;
                 if (ownerVal !== 'All' && (item.owner || 'Sin Asignar') !== ownerVal) match = false;
@@ -6228,7 +6235,9 @@
 
             areaActions.forEach(a => {
                 const score = parseInt(a.responseScore);
-                if (score >= 1 && score <= 4) {
+                // Si la calificación es 1 a 3, es una acción reprobatoria
+                // (La 4 y 5 no generan acciones)
+                if (score >= 1 && score <= 3) {
                     const status = (a.status || 'open').toLowerCase().replace(/[^a-z0-9]/g, '-');
                     if (status === 'overdue' || status === 'vencida') {
                         overdue++;
@@ -7508,10 +7517,11 @@
             // Siempre aceptar acciones de Gemba
             if (item.department === 'Gemba' || item.department === 'Gemba Walk') return true;
             
-            // Para el resto (5S), requerimos estrictamente una calificación reprobatoria explícita (1 a 4)
+            // Para el resto (5S), requerimos estrictamente una calificación reprobatoria (1 a 3)
+            // (La calificación 4 ahora se comporta como la 5, no genera acción realizable)
             const score = parseInt(item.responseScore, 10);
             if (isNaN(score)) return false;
-            if (score < 1 || score > 4) return false;
+            if (score < 1 || score > 3) return false;
             
             if (!item.cleanLocation) return false;
             
