@@ -1825,6 +1825,13 @@
             <p style="margin-bottom: 20px; font-size: 14px; color: var(--color-text-muted);">Selecciona el tipo de reporte para descargar la imagen PNG.</p>
             
             <div style="margin-bottom: 15px; text-align: left;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Departamento (Filtro para Gráficas):</label>
+                <select id="report-dept-select" class="login-input" style="cursor: pointer;">
+                    <option value="">Todos los Departamentos</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 15px; text-align: left;">
                 <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Tipo de Reporte:</label>
                 <select id="report-type-select" class="login-input" onchange="toggleReportDate()" style="cursor: pointer;">
                     <option value="daily">Reporte Diario</option>
@@ -1832,6 +1839,11 @@
                     <option value="monthly">Reporte Mensual</option>
                     <option value="due_soon">Acciones Por Vencer</option>
                     <option value="overdue">Acciones Vencidas</option>
+                    <option value="chart_scores">Gráfica - Score 5S por Área</option>
+                    <option value="chart_dept_overdue">Gráfica - Acciones Vencidas por Depto</option>
+                    <option value="chart_aging">Gráfica - Aging de Acciones Vencidas</option>
+                    <option value="chart_upcoming">Gráfica - Acciones por Vencer</option>
+                    <option value="chart_history">Gráfica - Historial de Scores</option>
                 </select>
             </div>
             
@@ -5166,9 +5178,8 @@
                 if (currentAppMode === '5s' && (item.department === 'Gemba' || item.department === 'Gemba Walk')) return false;
                 if (currentAppMode === 'gemba' && item.department !== 'Gemba' && item.department !== 'Gemba Walk') return false;
 
-                // Excluir Descartes (-1) y Perfectos/Aceptables (4, 5)
-                const score = parseInt(item.responseScore);
-                if (score >= 4 || score === -1) return false;
+                // Excluir acciones que no son válidas (ej. sin asignar + sin fecha, o score >= 4)
+                if (!isValidAction(item)) return false;
 
                 let match = true;
                 if (ownerVal !== 'All' && (item.owner || 'Sin Asignar') !== ownerVal) match = false;
@@ -7558,6 +7569,26 @@
             document.getElementById('report-modal').style.display = 'flex';
             document.getElementById('report-date-input').valueAsDate = new Date();
             
+            // Poblar select de departamento
+            const deptSelect = document.getElementById('report-dept-select');
+            if (deptSelect && typeof allAuditData !== 'undefined') {
+                const currentVal = deptSelect.value;
+                deptSelect.innerHTML = '<option value="">Todos los Departamentos</option>';
+                const depts = new Set();
+                allAuditData.forEach(item => {
+                    if (item.department && item.department !== 'Sin Departamento' && item.department !== 'Gemba' && item.department !== 'Gemba Walk') {
+                        depts.add(item.department);
+                    }
+                });
+                Array.from(depts).sort().forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d;
+                    opt.textContent = d;
+                    deptSelect.appendChild(opt);
+                });
+                deptSelect.value = currentVal;
+            }
+            
             // Configurar default a la semana actual para el input tipo week
             const today = new Date();
             const year = today.getFullYear();
@@ -7606,6 +7637,63 @@
             btn.disabled = true;
 
             const type = document.getElementById('report-type-select').value;
+            const reportDept = document.getElementById('report-dept-select') ? document.getElementById('report-dept-select').value : '';
+
+            if (type.startsWith('chart_')) {
+                // Generar gráfica del dashboard
+                if (window.currentTab !== 'dashboard') {
+                    switchTab('dashboard'); // Asegurar que las gráficas sean visibles
+                }
+                
+                const originalDept = document.getElementById('filter-department').value;
+                document.getElementById('filter-department').value = reportDept;
+                if (typeof onFilterChange === 'function') {
+                    onFilterChange();
+                }
+                
+                // Esperar a que la gráfica se renderice y anime
+                setTimeout(() => {
+                    let canvasId = '';
+                    let fileName = 'Grafica.png';
+                    if (type === 'chart_scores') { canvasId = 'chartAreaScores'; fileName = 'Score_5S_Area.png'; }
+                    if (type === 'chart_dept_overdue') { canvasId = 'chartDeptOverdue'; fileName = 'Acciones_Vencidas_Depto.png'; }
+                    if (type === 'chart_aging') { canvasId = 'chartAgingOverdue'; fileName = 'Aging_Acciones.png'; }
+                    if (type === 'chart_upcoming') { canvasId = 'chartUpcomingDue'; fileName = 'Acciones_por_Vencer.png'; }
+                    if (type === 'chart_history') { canvasId = 'chartHistoryAreaScores'; fileName = 'Historial_Scores.png'; }
+
+                    const canvas = document.getElementById(canvasId);
+                    if (canvas) {
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = canvas.width;
+                        tempCanvas.height = canvas.height;
+                        const ctx = tempCanvas.getContext('2d');
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                        ctx.drawImage(canvas, 0, 0);
+
+                        const link = document.createElement('a');
+                        const deptPrefix = reportDept ? reportDept.replace(/[^a-zA-Z0-9]/g, '_') : 'Todos';
+                        link.download = `${deptPrefix}_${fileName}`;
+                        link.href = tempCanvas.toDataURL('image/png');
+                        link.click();
+                    } else {
+                        alert('No se pudo encontrar la gráfica solicitada.');
+                    }
+
+                    // Restaurar el filtro
+                    document.getElementById('filter-department').value = originalDept;
+                    if (typeof onFilterChange === 'function') {
+                        onFilterChange();
+                    }
+
+                    document.getElementById('report-modal').style.display = 'none';
+                    btn.innerText = 'Generar PNG';
+                    btn.disabled = false;
+                }, 1200);
+                
+                return;
+            }
+
             const dateStr = document.getElementById('report-date-input').value; // YYYY-MM-DD
             const weekStr = document.getElementById('report-week-input').value; // YYYY-Www
             const monthStr = document.getElementById('report-month-input').value; // YYYY-MM
