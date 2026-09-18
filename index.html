@@ -409,6 +409,40 @@
             letter-spacing: 0.3px;
         }
 
+        /* Disclaimer banner entre top 4 y resto */
+        .tv-disclaimer-banner {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: linear-gradient(90deg, rgba(180,20,20,0.55) 0%, rgba(220,40,40,0.35) 100%);
+            border: 1.5px solid rgba(255,80,80,0.7);
+            border-left: 5px solid #ff4444;
+            border-radius: 10px;
+            padding: 9px 18px;
+            flex-shrink: 0;
+        }
+        .tv-disclaimer-icon {
+            font-size: 2.2vh;
+            flex-shrink: 0;
+            animation: tv-pulse-icon 1.8s ease-in-out infinite;
+        }
+        @keyframes tv-pulse-icon {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.7; transform: scale(1.15); }
+        }
+        .tv-disclaimer-text {
+            font-size: 1.7vh;
+            font-weight: 700;
+            color: #ffaaaa;
+            letter-spacing: 0.3px;
+            line-height: 1.35;
+        }
+        .tv-disclaimer-text strong {
+            color: #ff6b6b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
         /* Indicadores de diapositiva (bolitas abajo) */
         #tv-slide-indicators {
             position: fixed;
@@ -4348,7 +4382,13 @@
             const list = document.getElementById('tv-area-list');
             if (!list) return;
 
-            list.innerHTML = areaScores.map((area, i) => {
+            const disclaimerHtml = `
+                <div class="tv-disclaimer-banner">
+                    <span class="tv-disclaimer-icon">🚨</span>
+                    <span class="tv-disclaimer-text"><strong>Recuerda:</strong> cualquier salida anticipada deberá realizarse únicamente con el acompañamiento de tu supervisor inmediato.</span>
+                </div>`;
+
+            const rows = areaScores.map((area, i) => {
                 const rank = i + 1;
                 const tierClass = getTvTierClass(rank);
                 const medal = getTvMedalEmoji(rank);
@@ -4358,6 +4398,9 @@
                     ? `<span class="tv-early-badge">Sal 5 min antes</span>`
                     : `<span class="tv-ontime-badge">Salida a la hora · ${shift.time}</span>`;
 
+                // Insertar el disclaimer justo después de la fila 4
+                const separator = (rank === 4) ? disclaimerHtml : '';
+
                 return `<div class="tv-area-row ${tierClass}">
                     <span class="tv-area-rank">${medal}</span>
                     <span class="tv-area-name">${area.location}</span>
@@ -4366,8 +4409,10 @@
                     </div>
                     <span class="tv-area-score">${area.avg.toFixed(1)}%</span>
                     ${badgeHtml}
-                </div>`;
-            }).join('');
+                </div>${separator}`;
+            });
+
+            list.innerHTML = rows.join('');
         }
 
         // Salir de modo TV presionando ESC
