@@ -60,68 +60,412 @@
         body.tv-mode .sidebar { display: none !important; }
         body.tv-mode .btn-toggle-sidebar-mobile { display: none !important; }
         body.tv-mode .header { display: none !important; }
-        body.tv-mode .main-content { margin-left: 0 !important; width: 100vw !important; height: 100vh !important; padding: 10px !important; overflow: hidden !important; }
-        body.tv-mode #dashboard-content > section:first-of-type { display: none !important; } /* Ocultar Filtros Globales */
+        body.tv-mode .main-content { margin-left: 0 !important; width: 100vw !important; height: 100vh !important; padding: 0 !important; overflow: hidden !important; }
         body.tv-mode #btn-competition-mode, body.tv-mode #btn-tv-mode, body.tv-mode #btn-manage-owners { display: none !important; }
-        
-        /* Ajustes TV Dashboard Normal */
-        body.tv-mode:not([data-theme="competition"]) #dashboard-content { 
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 20px !important; 
-            height: 100vh !important;
-            padding-bottom: 20px !important;
-            box-sizing: border-box !important;
+
+        /* Ocultar el dashboard original en TV mode (lo reemplazamos con nuestro slide) */
+        body.tv-mode #dashboard-content { display: none !important; }
+        body.tv-mode .main-content > main { display: none !important; }
+
+        /* =========================================
+           TV MODE — PRESENTACIÓN DIAPOSITIVAS
+           ========================================= */
+
+        /* Wrapper que envuelve ambas diapositivas */
+        #tv-slideshow-wrapper {
+            position: fixed;
+            inset: 0;
+            z-index: 9000;
+            background: #0a0e1a;
+            display: none;
+            font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
         }
-        body.tv-mode:not([data-theme="competition"]) .kpis-grid { 
-            display: flex !important;
-            flex: 0 0 18vh !important;
-            justify-content: space-between !important;
-            gap: 15px !important;
-            margin-bottom: 0 !important;
-            width: 100% !important;
-        }
-        body.tv-mode:not([data-theme="competition"]) .kpi-card { 
-            flex: 1 !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: center !important;
-            align-items: center !important;
-            margin: 0 !important;
-            padding: 10px !important;
-            transform: none !important;
-        }
-        body.tv-mode:not([data-theme="competition"]) .kpi-card .kpi-title { font-size: 2.2vh !important; }
-        body.tv-mode:not([data-theme="competition"]) .kpi-card .kpi-value { font-size: 5vh !important; }
-        
-        body.tv-mode:not([data-theme="competition"]) .charts-grid {
-            flex: 0 0 35vh !important; /* Estirar gráfica principal */
-            display: flex !important;
-            margin: 0 !important;
-            min-height: 0 !important;
-        }
-        body.tv-mode:not([data-theme="competition"]) .charts-three-grid { 
-            flex: 1 !important; /* Estirar gráficas inferiores */
-            display: flex !important;
-            gap: 20px !important;
-            margin: 0 !important;
-            min-height: 0 !important;
-        }
-        
-        body.tv-mode:not([data-theme="competition"]) .chart-card { 
-            flex: 1 !important;
-            padding: 15px !important; 
-            height: 100% !important; 
-            margin: 0 !important; 
-            display: flex !important;
-            flex-direction: column !important;
-        }
-        body.tv-mode:not([data-theme="competition"]) .chart-container {
-            flex: 1 !important;
-            min-height: 0 !important;
+        body.tv-mode #tv-slideshow-wrapper {
+            display: block;
         }
 
-        /* Ajustes TV Modo Competencia (Mario Kart) */
+        /* Cada diapositiva */
+        .tv-slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 1.2s ease;
+            pointer-events: none;
+        }
+        .tv-slide.tv-active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* ---- DIAPOSITIVA 1: Dashboard completo ---- */
+        #tv-slide-dashboard {
+            background: linear-gradient(160deg, #080c18 0%, #0d1428 50%, #080f1c 100%);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 18px 20px 36px;
+            box-sizing: border-box;
+            gap: 14px;
+        }
+
+        /* Header del slide dashboard */
+        .tv-dash-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .tv-dash-title {
+            font-size: 1.8vh;
+            font-weight: 700;
+            color: rgba(255,255,255,0.65);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+        .tv-dash-logo {
+            font-size: 1.6vh;
+            color: #009ADD;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .tv-dash-clock {
+            font-size: 1.6vh;
+            color: rgba(255,255,255,0.45);
+            letter-spacing: 1px;
+        }
+
+        /* KPIs row en slide dashboard */
+        .tv-kpis-row {
+            display: flex;
+            gap: 14px;
+            flex-shrink: 0;
+            height: 17vh;
+        }
+        .tv-kpi-card {
+            flex: 1;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .tv-kpi-card.score  { background: linear-gradient(135deg, #003d6b 0%, #005fa3 100%); border-color: #009ADD44; }
+        .tv-kpi-card.warning{ background: linear-gradient(135deg, #4a2800 0%, #7a4100 100%); border-color: #F5B04144; }
+        .tv-kpi-card.overdue{ background: linear-gradient(135deg, #4a0a0a 0%, #7a1515 100%); border-color: #EC706344; }
+        .tv-kpi-card.closed { background: linear-gradient(135deg, #0a3d20 0%, #155a30 100%); border-color: #52BE8044; }
+        .tv-kpi-title {
+            font-size: 1.6vh;
+            color: rgba(255,255,255,0.65);
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .tv-kpi-value {
+            font-size: 5.5vh;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1;
+        }
+        .tv-kpi-card.score  .tv-kpi-value { color: #5bc8f5; }
+        .tv-kpi-card.warning .tv-kpi-value { color: #ffd07a; }
+        .tv-kpi-card.overdue .tv-kpi-value { color: #ff8a80; }
+        .tv-kpi-card.closed  .tv-kpi-value { color: #80e8a8; }
+
+        /* Chart cards en slide dashboard */
+        .tv-charts-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-height: 0;
+        }
+        .tv-charts-row {
+            display: flex;
+            gap: 14px;
+            min-height: 0;
+        }
+        .tv-charts-row.main { flex: 0 0 34vh; }
+        .tv-charts-row.secondary { flex: 1; min-height: 0; }
+        .tv-chart-card {
+            flex: 1;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .tv-chart-label {
+            font-size: 1.4vh;
+            color: rgba(255,255,255,0.5);
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+            text-transform: uppercase;
+        }
+        .tv-chart-inner {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+        }
+
+        /* ---- DIAPOSITIVA 2: Top 10 Mejores Áreas ---- */
+        #tv-slide-top10 {
+            background: linear-gradient(160deg, #080c18 0%, #0d1428 50%, #080f1c 100%);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 28px 40px 36px;
+            box-sizing: border-box;
+            gap: 0;
+        }
+
+        .tv-top10-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 22px;
+            flex-shrink: 0;
+        }
+        .tv-top10-title-block {}
+        .tv-top10-eyebrow {
+            font-size: 1.7vh;
+            color: #009ADD;
+            font-weight: 700;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .tv-top10-title {
+            font-size: 5.5vh;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1;
+            letter-spacing: 1px;
+        }
+        .tv-top10-shift-badge {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 10px 20px;
+            text-align: center;
+        }
+        .tv-shift-label {
+            font-size: 1.4vh;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .tv-shift-time {
+            font-size: 4.5vh;
+            font-weight: 800;
+            color: #5bc8f5;
+            line-height: 1.1;
+        }
+        .tv-shift-name {
+            font-size: 1.5vh;
+            color: rgba(255,255,255,0.55);
+            margin-top: 4px;
+        }
+
+        /* Lista de áreas */
+        .tv-area-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            min-height: 0;
+            overflow: hidden;
+        }
+        .tv-area-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-radius: 12px;
+            padding: 7px 16px;
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        /* Tier normal (5-10) */
+        .tv-area-row.tier-normal {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            opacity: 0.72;
+        }
+
+        /* Tier medalleros (1-4) */
+        .tv-area-row.tier-diamond {
+            background: linear-gradient(90deg, rgba(185,215,255,0.14) 0%, rgba(120,180,255,0.05) 100%);
+            border: 1px solid #b9d7ff44;
+            border-left: 4px solid #b9d7ff;
+        }
+        .tv-area-row.tier-gold {
+            background: linear-gradient(90deg, rgba(255,215,0,0.14) 0%, rgba(255,180,0,0.05) 100%);
+            border: 1px solid #ffd70044;
+            border-left: 4px solid #ffd700;
+        }
+        .tv-area-row.tier-silver {
+            background: linear-gradient(90deg, rgba(192,192,192,0.14) 0%, rgba(150,150,150,0.05) 100%);
+            border: 1px solid #c0c0c044;
+            border-left: 4px solid #c0c0c0;
+        }
+        .tv-area-row.tier-bronze {
+            background: linear-gradient(90deg, rgba(205,127,50,0.14) 0%, rgba(160,90,30,0.05) 100%);
+            border: 1px solid #cd7f3244;
+            border-left: 4px solid #cd7f32;
+        }
+
+        /* Glow sutil en medalleros */
+        .tv-area-row.tier-diamond::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse at left, rgba(185,215,255,0.07) 0%, transparent 55%); pointer-events:none; }
+        .tv-area-row.tier-gold::before   { content:''; position:absolute; inset:0; background: radial-gradient(ellipse at left, rgba(255,215,0,0.07) 0%, transparent 55%); pointer-events:none; }
+        .tv-area-row.tier-silver::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse at left, rgba(192,192,192,0.07) 0%, transparent 55%); pointer-events:none; }
+        .tv-area-row.tier-bronze::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse at left, rgba(205,127,50,0.07) 0%, transparent 55%); pointer-events:none; }
+
+        .tv-area-rank {
+            font-size: 3.2vh;
+            min-width: 52px;
+            text-align: center;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .tv-area-name {
+            flex: 1;
+            font-size: 2.5vh;
+            font-weight: 700;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .tv-area-row.tier-normal .tv-area-name { color: rgba(255,255,255,0.6); font-weight: 600; }
+
+        /* Barra de score */
+        .tv-area-bar-wrap {
+            width: 24%;
+            flex-shrink: 0;
+            background: rgba(255,255,255,0.07);
+            border-radius: 30px;
+            height: 1.6vh;
+            overflow: hidden;
+        }
+        .tv-area-bar-fill {
+            height: 100%;
+            border-radius: 30px;
+            transition: width 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .tier-diamond .tv-area-bar-fill { background: linear-gradient(90deg, #b9d7ff, #6ab0ff); box-shadow: 0 0 8px #6ab0ff88; }
+        .tier-gold    .tv-area-bar-fill { background: linear-gradient(90deg, #ffd700, #ffaa00); box-shadow: 0 0 8px #ffd70088; }
+        .tier-silver  .tv-area-bar-fill { background: linear-gradient(90deg, #d0d0d0, #a0a0a0); box-shadow: 0 0 8px #c0c0c088; }
+        .tier-bronze  .tv-area-bar-fill { background: linear-gradient(90deg, #cd7f32, #a05a1a); box-shadow: 0 0 8px #cd7f3288; }
+        .tier-normal  .tv-area-bar-fill { background: rgba(255,255,255,0.2); }
+
+        .tv-area-score {
+            font-size: 2.8vh;
+            font-weight: 800;
+            min-width: 72px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .tier-diamond .tv-area-score { color: #b9d7ff; }
+        .tier-gold    .tv-area-score { color: #ffd700; }
+        .tier-silver  .tv-area-score { color: #d0d0d0; }
+        .tier-bronze  .tv-area-score { color: #cd7f32; }
+        .tier-normal  .tv-area-score { color: rgba(255,255,255,0.45); font-size: 2.2vh; }
+
+        /* Badge "Sal 5 min antes" */
+        .tv-early-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(90deg, #00c853, #00e676);
+            color: #002a10;
+            font-size: 1.8vh;
+            font-weight: 800;
+            padding: 5px 14px;
+            border-radius: 20px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            box-shadow: 0 0 16px rgba(0,200,83,0.6);
+            letter-spacing: 0.3px;
+        }
+        .tv-early-badge::before { content: '⚡'; font-size: 1.6vh; }
+
+        /* Badge "salida a la hora" */
+        .tv-ontime-badge {
+            font-size: 1.5vh;
+            color: rgba(255,255,255,0.4);
+            white-space: nowrap;
+            flex-shrink: 0;
+            letter-spacing: 0.3px;
+        }
+
+        /* Indicadores de diapositiva (bolitas abajo) */
+        #tv-slide-indicators {
+            position: fixed;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            gap: 10px;
+            z-index: 9100;
+            align-items: center;
+        }
+        body.tv-mode #tv-slide-indicators {
+            display: flex;
+        }
+        .tv-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: background 0.4s, transform 0.4s, width 0.4s;
+        }
+        .tv-dot.active {
+            background: #009ADD;
+            transform: scale(1.4);
+            width: 26px;
+            border-radius: 5px;
+        }
+
+        /* Barra de progreso inferior del timer */
+        #tv-timer-bar-wrap {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: rgba(255,255,255,0.07);
+            z-index: 9200;
+            display: none;
+        }
+        body.tv-mode #tv-timer-bar-wrap {
+            display: block;
+        }
+        #tv-timer-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #009ADD, #00e5ff);
+            width: 100%;
+            transform-origin: left;
+        }
+
+        /* En modo competencia, ocultar el slideshow TV y mostrar la pista normal */
+        body.tv-mode[data-theme="competition"] #tv-slideshow-wrapper { display: none !important; }
+        body.tv-mode[data-theme="competition"] #tv-slide-indicators { display: none !important; }
+        body.tv-mode[data-theme="competition"] #tv-timer-bar-wrap { display: none !important; }
+        body.tv-mode[data-theme="competition"] .main-content > main { display: block !important; }
+        body.tv-mode[data-theme="competition"] #dashboard-content { display: flex !important; }
+
+        /* Ajustes TV Modo Competencia (mantener funcional) */
         body.tv-mode[data-theme="competition"] .main-content {
             padding: 0 !important;
         }
@@ -2503,6 +2847,101 @@
             </section>
         </main> <!-- END CONTENIDO DASHBOARD -->
 
+        <!-- =============================================
+             TV MODE — SLIDESHOW WRAPPER
+             (Controlled by JS; hidden when not in TV mode)
+             ============================================= -->
+        <div id="tv-slideshow-wrapper">
+            <!-- DIAPOSITIVA 1: Dashboard con KPIs + Gráficas -->
+            <div id="tv-slide-dashboard" class="tv-slide tv-active">
+                <div class="tv-dash-header">
+                    <span class="tv-dash-title">📊 Dashboard 5S — Acciones y Métricas</span>
+                    <span class="tv-dash-logo">LeanView · Flex</span>
+                </div>
+                <div class="tv-kpis-row">
+                    <div class="tv-kpi-card score">
+                        <span class="tv-kpi-title">Calificación General 5S</span>
+                        <span class="tv-kpi-value" id="tv-kpi-avg-score">—</span>
+                    </div>
+                    <div class="tv-kpi-card warning">
+                        <span class="tv-kpi-title">Acciones en Proceso</span>
+                        <span class="tv-kpi-value" id="tv-kpi-open-actions">—</span>
+                    </div>
+                    <div class="tv-kpi-card closed">
+                        <span class="tv-kpi-title">Acciones Cerradas</span>
+                        <span class="tv-kpi-value" id="tv-kpi-closed-actions">—</span>
+                    </div>
+                    <div class="tv-kpi-card overdue">
+                        <span class="tv-kpi-title">Acciones Vencidas</span>
+                        <span class="tv-kpi-value" id="tv-kpi-overdue-actions">—</span>
+                    </div>
+                    <div class="tv-kpi-card closed">
+                        <span class="tv-kpi-title">% de Cierre</span>
+                        <span class="tv-kpi-value" id="tv-kpi-closed-percent">—</span>
+                    </div>
+                </div>
+                <div class="tv-charts-area">
+                    <div class="tv-charts-row main">
+                        <div class="tv-chart-card">
+                            <span class="tv-chart-label">📈 Calificación Promedio por Área (Top 10 Peores)</span>
+                            <div class="tv-chart-inner">
+                                <canvas id="tv-chartAreaScores"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tv-charts-row secondary">
+                        <div class="tv-chart-card">
+                            <span class="tv-chart-label">⚠️ Acciones Vencidas por Departamento</span>
+                            <div class="tv-chart-inner">
+                                <canvas id="tv-chartDeptOverdue"></canvas>
+                            </div>
+                        </div>
+                        <div class="tv-chart-card">
+                            <span class="tv-chart-label">🕐 Antigüedad de Acciones Vencidas</span>
+                            <div class="tv-chart-inner">
+                                <canvas id="tv-chartAgingOverdue"></canvas>
+                            </div>
+                        </div>
+                        <div class="tv-chart-card">
+                            <span class="tv-chart-label">⏳ Próximas a Vencer (&lt;= 2 días)</span>
+                            <div class="tv-chart-inner">
+                                <canvas id="tv-chartUpcomingDue"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DIAPOSITIVA 2: Top 10 Mejores Áreas -->
+            <div id="tv-slide-top10" class="tv-slide">
+                <div class="tv-top10-header">
+                    <div class="tv-top10-title-block">
+                        <div class="tv-top10-eyebrow">Reconocimiento RH · 5S</div>
+                        <div class="tv-top10-title">🏆 Top 10 Mejores Áreas</div>
+                    </div>
+                    <div class="tv-top10-shift-badge" id="tv-shift-info">
+                        <div class="tv-shift-label">Hora de Salida</div>
+                        <div class="tv-shift-time" id="tv-shift-time">—</div>
+                        <div class="tv-shift-name" id="tv-shift-name">—</div>
+                    </div>
+                </div>
+                <div class="tv-area-list" id="tv-area-list">
+                    <!-- Inyectado dinámicamente por JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Indicadores de diapositiva -->
+        <div id="tv-slide-indicators">
+            <div class="tv-dot active" data-slide="0"></div>
+            <div class="tv-dot" data-slide="1"></div>
+        </div>
+
+        <!-- Barra de progreso de timer -->
+        <div id="tv-timer-bar-wrap" style="position:fixed;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.07);z-index:9200;display:none;">
+            <div id="tv-timer-bar" style="height:100%;background:linear-gradient(90deg,#009ADD,#00e5ff);width:100%;transition:width linear;"></div>
+        </div>
+
             <!-- VISTA ACTIONS EDITOR -->
             <div id="view-actions-editor" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
                 <div class="chart-header" style="justify-content: flex-start; gap: 15px; border-bottom: 1px solid var(--color-border); padding-bottom: 10px; margin-bottom: 0;">
@@ -3590,26 +4029,354 @@
             }
         }
 
-        // --- MODO TV ---
+        // =====================================================
+        // --- MODO TV — SLIDESHOW CON PRESENTACIÓN AUTOMÁTICA ---
+        // =====================================================
+
+        const TV_SLIDE_DURATION = 30000; // 30 segundos por diapositiva
+        const TV_REFRESH_INTERVAL = 10 * 60 * 1000; // Auto-refresh datos cada 10 minutos
+
         let isTvMode = false;
+        let tvCurrentSlide = 0;
+        let tvSlideInterval = null;
+        let tvRefreshInterval = null;
+        let tvTimerStart = null;
+        let tvTimerRAF = null;
+
+        // Instancias de Chart.js para el slide TV
+        let tvChartArea = null;
+        let tvChartDeptOverdue = null;
+        let tvChartAgingOverdue = null;
+        let tvChartUpcomingDue = null;
+
         function toggleTvMode() {
             isTvMode = !isTvMode;
             if (isTvMode) {
                 document.body.classList.add('tv-mode');
+                // Mostrar barra de timer
+                const wrap = document.getElementById('tv-timer-bar-wrap');
+                if (wrap) wrap.style.display = 'block';
+                // Actualizar datos y arrancar slideshow
+                updateDashboard();
+                renderTvSlides();
+                startTvSlideshow();
+                // Auto-refresh de datos cada 10 min (para pantalla sin tocar)
+                tvRefreshInterval = setInterval(function() {
+                    if (isTvMode) {
+                        updateDashboard();
+                        renderTvSlides();
+                    }
+                }, TV_REFRESH_INTERVAL);
             } else {
                 document.body.classList.remove('tv-mode');
-            }
-            if (window.currentTab === 'dashboard' || !window.currentTab) {
-                updateDashboard();
+                stopTvSlideshow();
+                clearInterval(tvRefreshInterval);
+                tvRefreshInterval = null;
+                const wrap = document.getElementById('tv-timer-bar-wrap');
+                if (wrap) wrap.style.display = 'none';
+                // Destruir instancias de chart TV para liberar memoria
+                if (tvChartArea) { tvChartArea.destroy(); tvChartArea = null; }
+                if (tvChartDeptOverdue) { tvChartDeptOverdue.destroy(); tvChartDeptOverdue = null; }
+                if (tvChartAgingOverdue) { tvChartAgingOverdue.destroy(); tvChartAgingOverdue = null; }
+                if (tvChartUpcomingDue) { tvChartUpcomingDue.destroy(); tvChartUpcomingDue = null; }
+                // Regresar a diapositiva 0 para la próxima vez
+                tvCurrentSlide = 0;
             }
         }
-        
+
+        function startTvSlideshow() {
+            stopTvSlideshow(); // Limpiar cualquier intervalo previo
+            showTvSlide(0);
+            tvSlideInterval = setInterval(function() {
+                tvCurrentSlide = (tvCurrentSlide + 1) % 2;
+                showTvSlide(tvCurrentSlide);
+            }, TV_SLIDE_DURATION);
+        }
+
+        function stopTvSlideshow() {
+            if (tvSlideInterval) { clearInterval(tvSlideInterval); tvSlideInterval = null; }
+            cancelAnimationFrame(tvTimerRAF);
+        }
+
+        function showTvSlide(index) {
+            const slides = document.querySelectorAll('.tv-slide');
+            const dots = document.querySelectorAll('#tv-slide-indicators .tv-dot');
+            slides.forEach((s, i) => {
+                s.classList.toggle('tv-active', i === index);
+            });
+            dots.forEach((d, i) => {
+                d.classList.toggle('active', i === index);
+            });
+            // Animar barra de progreso
+            animateTvTimerBar();
+        }
+
+        function animateTvTimerBar() {
+            cancelAnimationFrame(tvTimerRAF);
+            const bar = document.getElementById('tv-timer-bar');
+            if (!bar) return;
+            bar.style.transition = 'none';
+            bar.style.width = '100%';
+            const start = performance.now();
+            function step(now) {
+                const elapsed = now - start;
+                const pct = Math.max(0, 100 - (elapsed / TV_SLIDE_DURATION) * 100);
+                bar.style.width = pct + '%';
+                if (elapsed < TV_SLIDE_DURATION) {
+                    tvTimerRAF = requestAnimationFrame(step);
+                }
+            }
+            requestAnimationFrame(step);
+        }
+
+        // --- Detectar turno actual ---
+        function getTvShiftInfo() {
+            const now = new Date();
+            const h = now.getHours();
+            const m = now.getMinutes();
+            const totalMin = h * 60 + m;
+
+            // Turno 1: 7:10 – 15:10  → Salida 3:00 PM
+            // Turno 2: 15:10 – 23:10 → Salida 11:00 PM
+            // Turno 3: 23:10 – 7:10  → Salida 7:00 AM
+            const t1Start = 7 * 60 + 10;   // 430
+            const t2Start = 15 * 60 + 10;  // 910
+            const t3Start = 23 * 60 + 10;  // 1390
+
+            if (totalMin >= t1Start && totalMin < t2Start) {
+                return { time: '3:00 PM', name: 'Turno 1', early: '2:55 PM', badge: '⏰' };
+            } else if (totalMin >= t2Start && totalMin < t3Start) {
+                return { time: '11:00 PM', name: 'Turno 2', early: '10:55 PM', badge: '🌙' };
+            } else {
+                return { time: '7:00 AM', name: 'Turno 3', early: '6:55 AM', badge: '🌅' };
+            }
+        }
+
+        // --- Obtener medalla / emoji por posición ---
+        function getTvMedalEmoji(rank) {
+            if (rank === 1) return '💎';
+            if (rank === 2) return '🥇';
+            if (rank === 3) return '🥈';
+            if (rank === 4) return '🥉';
+            return rank + '.';
+        }
+
+        function getTvTierClass(rank) {
+            if (rank === 1) return 'tier-diamond';
+            if (rank === 2) return 'tier-gold';
+            if (rank === 3) return 'tier-silver';
+            if (rank === 4) return 'tier-bronze';
+            return 'tier-normal';
+        }
+
+        // --- Renderizar ambos slides con datos actuales ---
+        function renderTvSlides() {
+            renderTvDashboardSlide();
+            renderTvTop10Slide();
+        }
+
+        // ---- Slide 1: Copiar KPIs del dashboard y re-renderizar gráficas ----
+        function renderTvDashboardSlide() {
+            // Copiar valores de KPIs del dashboard original al TV slide
+            const ids = ['kpi-avg-score','kpi-open-actions','kpi-closed-actions','kpi-overdue-actions','kpi-closed-percent'];
+            ids.forEach(id => {
+                const src = document.getElementById(id);
+                const dst = document.getElementById('tv-' + id);
+                if (src && dst) dst.textContent = src.textContent;
+            });
+
+            // Re-renderizar Chart.js en los canvas del TV slide
+            const darkChart = {
+                scales: {
+                    y: { grid: { color: 'rgba(255,255,255,0.07)' }, ticks: { color: 'rgba(255,255,255,0.55)', font: { family: 'Century Gothic' }, callback: v => v + '%' }, beginAtZero: true, max: 100 },
+                    x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.55)', font: { family: 'Century Gothic' } } }
+                },
+                plugins: { legend: { labels: { color: 'rgba(255,255,255,0.55)', font: { family: 'Century Gothic' } } }, datalabels: { color: '#fff', font: { weight: 'bold' } }, tooltip: {} }
+            };
+            const darkChartNoYPct = {
+                scales: {
+                    y: { grid: { color: 'rgba(255,255,255,0.07)' }, ticks: { color: 'rgba(255,255,255,0.55)', font: { family: 'Century Gothic' } }, beginAtZero: true },
+                    x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.55)', font: { family: 'Century Gothic' } } }
+                },
+                plugins: { legend: { labels: { color: 'rgba(255,255,255,0.55)', font: { family: 'Century Gothic' } } }, datalabels: { color: '#fff', font: { weight: 'bold' } }, tooltip: {} }
+            };
+
+            // --- Gráfica 1: Área Scores (Top 10 Peores) ---
+            renderTvChartAreaScores();
+
+            // --- Gráfica 2: Dept Overdue ---
+            renderTvChartDeptOverdue(darkChartNoYPct);
+
+            // --- Gráfica 3: Aging Overdue ---
+            renderTvChartAgingOverdue(darkChartNoYPct);
+
+            // --- Gráfica 4: Upcoming Due ---
+            renderTvChartUpcomingDue(darkChartNoYPct);
+        }
+
+        function renderTvChartAreaScores() {
+            const audits = getAuditScores(globalFilteredData);
+            const areaGroups = {};
+            audits.forEach(a => {
+                if (!areaGroups[a.location]) areaGroups[a.location] = { sum: 0, count: 0 };
+                areaGroups[a.location].sum += a.percentage;
+                areaGroups[a.location].count += 1;
+            });
+            let areaScores = Object.keys(areaGroups).map(loc => ({
+                location: loc,
+                avg: Math.round((areaGroups[loc].sum / areaGroups[loc].count) * 10) / 10
+            }));
+            areaScores.sort((a, b) => a.avg - b.avg); // peores primero
+            areaScores = areaScores.slice(0, 10);
+            const labels = areaScores.map(a => a.location);
+            const scores = areaScores.map(a => a.avg);
+
+            const ctx = document.getElementById('tv-chartAreaScores');
+            if (!ctx) return;
+            if (tvChartArea) { tvChartArea.destroy(); tvChartArea = null; }
+            tvChartArea = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { type: 'line', label: 'Meta (95%)', datalabels: { display: false }, data: Array(labels.length).fill(95), borderColor: '#EC7063', borderWidth: 2, borderDash: [6,4], fill: false, pointRadius: 0, order: 1 },
+                        { type: 'bar', label: 'Calificación Promedio', data: scores, backgroundColor: 'rgba(0,154,221,0.75)', borderColor: '#009ADD', borderWidth: 1, borderRadius: 4, order: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.07)' }, ticks: { color: 'rgba(255,255,255,0.55)', font: { family: 'Century Gothic' }, callback: v => v + '%' } },
+                        x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.55)', font: { family: 'Century Gothic', size: 10 } } }
+                    },
+                    plugins: {
+                        legend: { display: true, position: 'top', labels: { color: 'rgba(255,255,255,0.55)', font: { family: 'Century Gothic', size: 11 } } },
+                        datalabels: { color: '#fff', anchor: 'center', align: 'center', font: { weight: 'bold' } }
+                    }
+                }
+            });
+        }
+
+        function renderTvChartDeptOverdue(opts) {
+            // Agrupar acciones vencidas por departamento
+            const deptCounts = {};
+            arrOverdue.forEach(item => {
+                const d = item.department || 'Sin Depto';
+                deptCounts[d] = (deptCounts[d] || 0) + 1;
+            });
+            const sorted = Object.entries(deptCounts).sort((a,b) => b[1]-a[1]).slice(0, 8);
+            const labels = sorted.map(x => x[0]);
+            const data = sorted.map(x => x[1]);
+            const ctx = document.getElementById('tv-chartDeptOverdue');
+            if (!ctx) return;
+            if (tvChartDeptOverdue) { tvChartDeptOverdue.destroy(); tvChartDeptOverdue = null; }
+            tvChartDeptOverdue = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: { labels, datasets: [{ label: 'Acciones Vencidas', data, backgroundColor: 'rgba(236,112,99,0.75)', borderColor: '#EC7063', borderWidth: 1, borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, ...opts, plugins: { ...opts.plugins, legend: { display: false } } }
+            });
+        }
+
+        function renderTvChartAgingOverdue(opts) {
+            const today = new Date(); today.setHours(0,0,0,0);
+            const buckets = { '1-7d': 0, '8-15d': 0, '16-30d': 0, '+30d': 0 };
+            arrOverdue.forEach(item => {
+                if (!item.dueDate || item.dueDate === 'Sin Fecha') return;
+                const d = parseDateRobust(item.dueDate); if (isNaN(d.getTime())) return;
+                d.setHours(0,0,0,0);
+                const days = Math.floor((today - d) / 86400000);
+                if (days <= 7) buckets['1-7d']++;
+                else if (days <= 15) buckets['8-15d']++;
+                else if (days <= 30) buckets['16-30d']++;
+                else buckets['+30d']++;
+            });
+            const labels = Object.keys(buckets);
+            const data = Object.values(buckets);
+            const ctx = document.getElementById('tv-chartAgingOverdue');
+            if (!ctx) return;
+            if (tvChartAgingOverdue) { tvChartAgingOverdue.destroy(); tvChartAgingOverdue = null; }
+            tvChartAgingOverdue = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: { labels, datasets: [{ label: 'Acciones Vencidas', data, backgroundColor: ['rgba(245,176,65,0.75)','rgba(236,112,99,0.75)','rgba(192,57,43,0.8)','rgba(125,30,20,0.85)'], borderWidth: 1, borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, ...opts, plugins: { ...opts.plugins, legend: { display: false } } }
+            });
+        }
+
+        function renderTvChartUpcomingDue(opts) {
+            const deptCounts = {};
+            arrUpcoming.forEach(item => {
+                const d = item.department || 'Sin Depto';
+                deptCounts[d] = (deptCounts[d] || 0) + 1;
+            });
+            const sorted = Object.entries(deptCounts).sort((a,b) => b[1]-a[1]).slice(0, 8);
+            const labels = sorted.map(x => x[0]);
+            const data = sorted.map(x => x[1]);
+            const ctx = document.getElementById('tv-chartUpcomingDue');
+            if (!ctx) return;
+            if (tvChartUpcomingDue) { tvChartUpcomingDue.destroy(); tvChartUpcomingDue = null; }
+            tvChartUpcomingDue = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: { labels, datasets: [{ label: 'Próximas a Vencer', data, backgroundColor: 'rgba(245,176,65,0.75)', borderColor: '#F5B041', borderWidth: 1, borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, ...opts, plugins: { ...opts.plugins, legend: { display: false } } }
+            });
+        }
+
+        // ---- Slide 2: Top 10 Mejores Áreas ----
+        function renderTvTop10Slide() {
+            // Calcular turno actual
+            const shift = getTvShiftInfo();
+            const timeEl = document.getElementById('tv-shift-time');
+            const nameEl = document.getElementById('tv-shift-name');
+            if (timeEl) timeEl.textContent = shift.badge + ' ' + shift.time;
+            if (nameEl) nameEl.textContent = shift.name + ' · Top 4 salen ' + shift.early;
+
+            // Calcular top 10 mejores áreas (misma lógica que renderChartAreaScores)
+            const audits = getAuditScores(globalFilteredData);
+            const areaGroups = {};
+            audits.forEach(a => {
+                if (!areaGroups[a.location]) areaGroups[a.location] = { sum: 0, count: 0 };
+                areaGroups[a.location].sum += a.percentage;
+                areaGroups[a.location].count += 1;
+            });
+            let areaScores = Object.keys(areaGroups).map(loc => ({
+                location: loc,
+                avg: Math.round((areaGroups[loc].sum / areaGroups[loc].count) * 10) / 10
+            }));
+            areaScores.sort((a, b) => b.avg - a.avg); // mejores primero
+            areaScores = areaScores.slice(0, 10);
+
+            const list = document.getElementById('tv-area-list');
+            if (!list) return;
+
+            list.innerHTML = areaScores.map((area, i) => {
+                const rank = i + 1;
+                const tierClass = getTvTierClass(rank);
+                const medal = getTvMedalEmoji(rank);
+                const isEarly = rank <= 4;
+                const barPct = Math.min(100, area.avg);
+                const badgeHtml = isEarly
+                    ? `<span class="tv-early-badge">Sal 5 min antes</span>`
+                    : `<span class="tv-ontime-badge">Salida a la hora · ${shift.time}</span>`;
+
+                return `<div class="tv-area-row ${tierClass}">
+                    <span class="tv-area-rank">${medal}</span>
+                    <span class="tv-area-name">${area.location}</span>
+                    <div class="tv-area-bar-wrap">
+                        <div class="tv-area-bar-fill" style="width:${barPct}%"></div>
+                    </div>
+                    <span class="tv-area-score">${area.avg.toFixed(1)}%</span>
+                    ${badgeHtml}
+                </div>`;
+            }).join('');
+        }
+
         // Salir de modo TV presionando ESC
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape' && isTvMode) {
                 toggleTvMode();
             }
         });
+
 
         // DICCIONARIOS DE MARIO KART (SPRITES)
         const kartSprites = {
