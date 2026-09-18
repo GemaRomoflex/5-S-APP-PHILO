@@ -386,61 +386,130 @@
         .tv-early-badge {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             background: linear-gradient(90deg, #00c853, #00e676);
             color: #002a10;
-            font-size: 1.8vh;
+            font-size: 2.1vh;
             font-weight: 800;
-            padding: 5px 14px;
+            padding: 7px 18px;
             border-radius: 20px;
             white-space: nowrap;
             flex-shrink: 0;
-            box-shadow: 0 0 16px rgba(0,200,83,0.6);
+            box-shadow: 0 0 18px rgba(0,200,83,0.6);
             letter-spacing: 0.3px;
         }
-        .tv-early-badge::before { content: '⚡'; font-size: 1.6vh; }
+        .tv-early-badge::before { content: '⚡'; font-size: 1.9vh; }
 
         /* Badge "salida a la hora" */
         .tv-ontime-badge {
-            font-size: 1.5vh;
-            color: rgba(255,255,255,0.4);
+            font-size: 1.6vh;
+            color: rgba(255,255,255,0.45);
             white-space: nowrap;
             flex-shrink: 0;
             letter-spacing: 0.3px;
         }
 
-        /* Disclaimer banner entre top 4 y resto */
-        .tv-disclaimer-banner {
+        /* Modal popup de aviso (aparece sobre el slide Top 10) */
+        #tv-disclaimer-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 9500;
             display: flex;
             align-items: center;
-            gap: 14px;
-            background: linear-gradient(90deg, rgba(180,20,20,0.55) 0%, rgba(220,40,40,0.35) 100%);
-            border: 1.5px solid rgba(255,80,80,0.7);
-            border-left: 5px solid #ff4444;
-            border-radius: 10px;
-            padding: 9px 18px;
-            flex-shrink: 0;
+            justify-content: center;
+            background: rgba(4, 7, 15, 0.78);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
         }
-        .tv-disclaimer-icon {
-            font-size: 2.2vh;
-            flex-shrink: 0;
-            animation: tv-pulse-icon 1.8s ease-in-out infinite;
+        #tv-disclaimer-modal.visible {
+            opacity: 1;
+            pointer-events: all;
         }
-        @keyframes tv-pulse-icon {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50%       { opacity: 0.7; transform: scale(1.15); }
+        .tv-disclaimer-box {
+            background: #0f131f;
+            border: 2px solid #ff3b30;
+            border-radius: 20px;
+            padding: 34px 44px 28px;
+            max-width: 680px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 45px rgba(255, 59, 48, 0.4), 0 25px 60px rgba(0,0,0,0.85);
+            animation: tv-modal-pulse 2.5s ease-in-out infinite;
+            transform: scale(0.92) translateY(20px);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
         }
-        .tv-disclaimer-text {
-            font-size: 1.7vh;
-            font-weight: 700;
-            color: #ffaaaa;
-            letter-spacing: 0.3px;
-            line-height: 1.35;
+        #tv-disclaimer-modal.visible .tv-disclaimer-box {
+            transform: scale(1) translateY(0);
         }
-        .tv-disclaimer-text strong {
-            color: #ff6b6b;
+        @keyframes tv-modal-pulse {
+            0%, 100% { box-shadow: 0 0 35px rgba(255, 59, 48, 0.35), 0 25px 60px rgba(0,0,0,0.85); }
+            50%       { box-shadow: 0 0 65px rgba(255, 59, 48, 0.65), 0 25px 60px rgba(0,0,0,0.85); }
+        }
+        .tv-disclaimer-close-btn {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #ffffff;
+            font-size: 16px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .tv-disclaimer-close-btn:hover {
+            background: #ff3b30;
+            transform: scale(1.1);
+        }
+        .tv-disclaimer-icon-big {
+            font-size: 5vh;
+            display: block;
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+        .tv-disclaimer-heading {
+            font-size: 2vh;
+            font-weight: 900;
+            color: #ff4d4d;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 3px;
+            margin-bottom: 12px;
+        }
+        .tv-disclaimer-body {
+            font-size: 2.6vh;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.45;
+        }
+        .tv-disclaimer-dismiss {
+            display: inline-block;
+            margin-top: 16px;
+            font-size: 1.4vh;
+            color: rgba(255,255,255,0.45);
+            letter-spacing: 0.5px;
+        }
+        .tv-disclaimer-timer {
+            display: block;
+            height: 4px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .tv-disclaimer-timer-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff3b30, #ff8077);
+            border-radius: 4px;
+            width: 100%;
         }
 
         /* Indicadores de diapositiva (bolitas abajo) */
@@ -2976,6 +3045,22 @@
             <div id="tv-timer-bar" style="height:100%;background:linear-gradient(90deg,#009ADD,#00e5ff);width:100%;transition:width linear;"></div>
         </div>
 
+        <!-- Popup modal de aviso para TV Mode (Top 10 slide) -->
+        <div id="tv-disclaimer-modal" onclick="hideTvDisclaimerModal()">
+            <div class="tv-disclaimer-box" onclick="event.stopPropagation()">
+                <button class="tv-disclaimer-close-btn" onclick="hideTvDisclaimerModal()" title="Cerrar">✕</button>
+                <span class="tv-disclaimer-icon-big">🚨</span>
+                <div class="tv-disclaimer-heading">Aviso Importante · Recursos Humanos</div>
+                <div class="tv-disclaimer-body">
+                    Recuerda: cualquier salida anticipada deberá realizarse únicamente con el acompañamiento de tu supervisor inmediato.
+                </div>
+                <div class="tv-disclaimer-timer">
+                    <div class="tv-disclaimer-timer-fill" id="tv-disclaimer-fill"></div>
+                </div>
+                <span class="tv-disclaimer-dismiss">Toca en cualquier parte para cerrar</span>
+            </div>
+        </div>
+
             <!-- VISTA ACTIONS EDITOR -->
             <div id="view-actions-editor" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
                 <div class="chart-header" style="justify-content: flex-start; gap: 15px; border-bottom: 1px solid var(--color-border); padding-bottom: 10px; margin-bottom: 0;">
@@ -3865,7 +3950,7 @@
             // Delete areas mapping (if they somehow come up in CSV, we map them to a hidden name or drop them, 
             // but returning them as "Eliminar" might be better so they can be filtered out later if needed, 
             // or just let them pass but they won't match any sector.
-            if (lowerLoc === 'l12' || lowerLoc === 'linea 12' || lowerLoc === 'l14' || lowerLoc === 'linea 14' || lowerLoc.includes('test room')) {
+            if (lowerLoc === 'l12' || lowerLoc === 'linea 12' || lowerLoc === 'l14' || lowerLoc === 'linea 14' || lowerLoc.includes('test room') || lowerLoc === 'wh2' || lowerLoc === 'qalab' || lowerLoc === 'qa lab' || lowerLoc === 'qa_lab' || lowerLoc.includes('wh2') || lowerLoc.includes('qalab')) {
                 return 'Eliminar';
             }
             
@@ -4127,9 +4212,46 @@
             }, TV_SLIDE_DURATION);
         }
 
+        let tvDisclaimerTimeout = null;
+
+        function showTvDisclaimerModal() {
+            hideTvDisclaimerModal();
+            const modal = document.getElementById('tv-disclaimer-modal');
+            const fill = document.getElementById('tv-disclaimer-fill');
+            if (!modal) return;
+            
+            modal.classList.add('visible');
+            const DURATION = 8000; // Visible 8 segundos antes de ocultarse
+            if (fill) {
+                fill.style.transition = 'none';
+                fill.style.width = '100%';
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        fill.style.transition = `width ${DURATION}ms linear`;
+                        fill.style.width = '0%';
+                    });
+                });
+            }
+            tvDisclaimerTimeout = setTimeout(() => {
+                hideTvDisclaimerModal();
+            }, DURATION);
+        }
+
+        function hideTvDisclaimerModal() {
+            if (tvDisclaimerTimeout) {
+                clearTimeout(tvDisclaimerTimeout);
+                tvDisclaimerTimeout = null;
+            }
+            const modal = document.getElementById('tv-disclaimer-modal');
+            if (modal) {
+                modal.classList.remove('visible');
+            }
+        }
+
         function stopTvSlideshow() {
             if (tvSlideInterval) { clearInterval(tvSlideInterval); tvSlideInterval = null; }
             cancelAnimationFrame(tvTimerRAF);
+            hideTvDisclaimerModal();
         }
 
         function showTvSlide(index) {
@@ -4143,6 +4265,13 @@
             });
             // Animar barra de progreso
             animateTvTimerBar();
+
+            // Gestionar popup de aviso en slide 1 (Top 10)
+            if (index === 1) {
+                setTimeout(showTvDisclaimerModal, 700);
+            } else {
+                hideTvDisclaimerModal();
+            }
         }
 
         function animateTvTimerBar() {
@@ -4382,12 +4511,6 @@
             const list = document.getElementById('tv-area-list');
             if (!list) return;
 
-            const disclaimerHtml = `
-                <div class="tv-disclaimer-banner">
-                    <span class="tv-disclaimer-icon">🚨</span>
-                    <span class="tv-disclaimer-text"><strong>Recuerda:</strong> cualquier salida anticipada deberá realizarse únicamente con el acompañamiento de tu supervisor inmediato.</span>
-                </div>`;
-
             const rows = areaScores.map((area, i) => {
                 const rank = i + 1;
                 const tierClass = getTvTierClass(rank);
@@ -4395,11 +4518,8 @@
                 const isEarly = rank <= 4;
                 const barPct = Math.min(100, area.avg);
                 const badgeHtml = isEarly
-                    ? `<span class="tv-early-badge">Sal 5 min antes</span>`
-                    : `<span class="tv-ontime-badge">Salida a la hora · ${shift.time}</span>`;
-
-                // Insertar el disclaimer justo después de la fila 4
-                const separator = (rank === 4) ? disclaimerHtml : '';
+                    ? `<span class="tv-early-badge">⚡ Puedes salir 5 min antes</span>`
+                    : `<span class="tv-ontime-badge">Salida normal · ${shift.time}</span>`;
 
                 return `<div class="tv-area-row ${tierClass}">
                     <span class="tv-area-rank">${medal}</span>
@@ -4409,7 +4529,7 @@
                     </div>
                     <span class="tv-area-score">${area.avg.toFixed(1)}%</span>
                     ${badgeHtml}
-                </div>${separator}`;
+                </div>`;
             });
 
             list.innerHTML = rows.join('');
@@ -5572,14 +5692,14 @@
                 { auditId: 'AUD-2026-002', actionId: 'ACT-106', location: 'Flex -> Building 1 -> SMT -> L16', cleanLocation: 'L16', responseScore: 2, department: 'Maintenance', owner: 'Luis Perez', status: 'Re-assigned', dueDate: dMinus(-20), openDate: dMinus(22) + ' 07:11:59', comments: 'Reassigned from Quality to Maintenance due to electrical issues.' }, 
                 
                 // Auditoría 3
-                { auditId: 'AUD-2026-003', actionId: 'ACT-107', location: 'Flex -> Building 2 -> Logistics -> WH2', cleanLocation: 'WH2', responseScore: 2, department: 'Logistics', owner: 'Luis Perez', status: 'Waiting for approval', dueDate: dMinus(-30), openDate: dMinus(15) + ' 15:30:22', comments: 'Waiting for supervisor approval on new racks layout.' }, 
-                { auditId: 'AUD-2026-003', actionId: 'ACT-108', location: 'Flex -> Building 2 -> Logistics -> WH2', cleanLocation: 'WH2', responseScore: 4, department: 'EHS', owner: 'Ana Martinez', status: '', dueDate: dMinus(-1), openDate: dMinus(8) + ' 12:00:00', comments: 'Fire extinguisher needs monthly check stamp.' }, 
-                { auditId: 'AUD-2026-003', actionId: 'ACT-109', location: 'Flex -> Building 2 -> Logistics -> WH2', cleanLocation: 'WH2', responseScore: 5, department: 'Logistics', owner: 'Luis Perez', status: 'Closed', dueDate: dMinus(-2), openDate: dMinus(25) + ' 08:30:00', comments: 'Everything complies with the 5S standard.' }, 
+                { auditId: 'AUD-2026-003', actionId: 'ACT-107', location: 'Flex -> Building 2 -> Logistics -> Incoming', cleanLocation: 'Incoming', responseScore: 2, department: 'Logistics', owner: 'Luis Perez', status: 'Waiting for approval', dueDate: dMinus(-30), openDate: dMinus(15) + ' 15:30:22', comments: 'Waiting for supervisor approval on new racks layout.' }, 
+                { auditId: 'AUD-2026-003', actionId: 'ACT-108', location: 'Flex -> Building 2 -> Logistics -> Incoming', cleanLocation: 'Incoming', responseScore: 4, department: 'EHS', owner: 'Ana Martinez', status: '', dueDate: dMinus(-1), openDate: dMinus(8) + ' 12:00:00', comments: 'Fire extinguisher needs monthly check stamp.' }, 
+                { auditId: 'AUD-2026-003', actionId: 'ACT-109', location: 'Flex -> Building 2 -> Logistics -> Incoming', cleanLocation: 'Incoming', responseScore: 5, department: 'Logistics', owner: 'Luis Perez', status: 'Closed', dueDate: dMinus(-2), openDate: dMinus(25) + ' 08:30:00', comments: 'Everything complies with the 5S standard.' }, 
                 
                 // Auditoría 4
-                { auditId: 'AUD-2026-004', actionId: 'ACT-110', location: 'Flex -> Building 2 -> Quality -> QALab', cleanLocation: 'QALab', responseScore: 4, department: 'Quality', owner: 'Maria Gomez', status: 'Overdue', dueDate: dMinus(5), openDate: dMinus(35) + ' 16:50:00', comments: 'Calibrations overdue by 2 weeks. Audit finding #12.' }, 
-                { auditId: 'AUD-2026-004', actionId: 'ACT-111', location: 'Flex -> Building 2 -> Quality -> QALab', cleanLocation: 'QALab', responseScore: -1, department: 'Production', owner: 'John Doe', status: 'nan', dueDate: dMinus(-10), openDate: dMinus(4) + ' 23:59:59', comments: 'N/A for this audit block.' }, 
-                { auditId: 'AUD-2026-004', actionId: 'ACT-112', location: 'Flex -> Building 2 -> Quality -> QALab', cleanLocation: 'QALab', responseScore: 3, department: 'EHS', owner: 'Ana Martinez', status: 'null', dueDate: dMinus(-20), openDate: dMinus(18) + ' 02:00:00', comments: 'Chemical waste bin is full, please arrange pickup.' }, 
+                { auditId: 'AUD-2026-004', actionId: 'ACT-110', location: 'Flex -> Building 2 -> Quality -> Cuarto Limpio', cleanLocation: 'Cuarto limpio', responseScore: 4, department: 'Quality', owner: 'Maria Gomez', status: 'Overdue', dueDate: dMinus(5), openDate: dMinus(35) + ' 16:50:00', comments: 'Calibrations overdue by 2 weeks. Audit finding #12.' }, 
+                { auditId: 'AUD-2026-004', actionId: 'ACT-111', location: 'Flex -> Building 2 -> Quality -> Cuarto Limpio', cleanLocation: 'Cuarto limpio', responseScore: -1, department: 'Production', owner: 'John Doe', status: 'nan', dueDate: dMinus(-10), openDate: dMinus(4) + ' 23:59:59', comments: 'N/A for this audit block.' }, 
+                { auditId: 'AUD-2026-004', actionId: 'ACT-112', location: 'Flex -> Building 2 -> Quality -> Cuarto Limpio', cleanLocation: 'Cuarto limpio', responseScore: 3, department: 'EHS', owner: 'Ana Martinez', status: 'null', dueDate: dMinus(-20), openDate: dMinus(18) + ' 02:00:00', comments: 'Chemical waste bin is full, please arrange pickup.' }, 
 
                 // Auditoría 5
                 { auditId: 'AUD-2026-005', actionId: 'ACT-113', location: 'Flex -> Building 1 -> Assembly -> L12', cleanLocation: 'L12', responseScore: 1, department: 'Production', owner: 'Carlos Ruiz', status: 'Overdue', dueDate: dMinus(20), openDate: dMinus(50) + ' 05:40:00', comments: 'Operator not wearing safety glasses in assembly area.' }, 
@@ -5591,7 +5711,7 @@
 
                 // Auditoría 7
                 { auditId: 'AUD-2026-007', actionId: 'ACT-117', location: 'Flex -> Building 1 -> SMT -> L16', cleanLocation: 'L16', responseScore: 3, department: 'Maintenance', owner: 'Jane Smith', status: 'Overdue', dueDate: dMinus(12), openDate: dMinus(32) + ' 21:00:00', comments: 'Preventive maintenance tag is missing on machine #3.' }, 
-                { auditId: 'AUD-2026-007', actionId: 'ACT-118', location: 'Flex -> Building 2 -> Logistics -> WH2', cleanLocation: 'WH2', responseScore: 1, department: 'Logistics', owner: 'Luis Perez', status: 'Open', dueDate: dMinus(-14), openDate: dMinus(20) + ' 20:01:07', comments: 'Pallets blocking emergency exit route.' } 
+                { auditId: 'AUD-2026-007', actionId: 'ACT-118', location: 'Flex -> Building 2 -> Logistics -> Incoming', cleanLocation: 'Incoming', responseScore: 1, department: 'Logistics', owner: 'Luis Perez', status: 'Open', dueDate: dMinus(-14), openDate: dMinus(20) + ' 20:01:07', comments: 'Pallets blocking emergency exit route.' } 
             ];
 
             const upsertResults = runUpsert(demoData);
@@ -5618,9 +5738,9 @@
                 ['AUD-2026-001', 'ACT-102', 'Flex -> Building 1 -> Assembly -> L10', '4', 'Maintenance', 'Jane Smith', 'Close', dMinus(-5), dMinus(12) + ' 09:30:00', 'Toolbox not in standard location. Checked and resolved.'],
                 ['AUD-2026-002', 'ACT-104', 'Flex -> Building 1 -> SMT -> L16', '1', 'Production', 'Carlos Ruiz', 'Overdue', dMinus(10), dMinus(40) + ' 10:00:00', 'ESD band test failed, "highly critical, needs retest \n immediately".'],
                 ['AUD-2026-002', 'ACT-106', 'Flex -> Building 1 -> SMT -> L16', '2', 'Maintenance', 'Luis Perez', 'Re-assigned', dMinus(-20), dMinus(22) + ' 11:00:00', 'Reassigned from Quality to Maintenance due to electrical issues.'],
-                ['AUD-2026-003', 'ACT-107', 'Flex -> Building 2 -> Logistics -> WH2', '2', 'Logistics', 'Luis Perez', 'Waiting for approval', dMinus(-30), dMinus(15) + ' 12:00:00', 'Waiting for supervisor approval on new racks layout, "layout plan A, B, and C".'],
-                ['AUD-2026-003', 'ACT-108', 'Flex -> Building 2 -> Logistics -> WH2', '4', 'EHS', 'Ana Martinez', '', dMinus(-1), dMinus(8) + ' 13:00:00', ''],
-                ['AUD-2026-004', 'ACT-110', 'Flex -> Building 2 -> Quality -> QALab', '4', 'Quality', 'Maria Gomez', 'Overdue', dMinus(5), dMinus(35) + ' 14:00:00', 'Calibrations overdue by 2 weeks. Audit finding #12.']
+                ['AUD-2026-003', 'ACT-107', 'Flex -> Building 2 -> Logistics -> Incoming', '2', 'Logistics', 'Luis Perez', 'Waiting for approval', dMinus(-30), dMinus(15) + ' 12:00:00', 'Waiting for supervisor approval on new racks layout, "layout plan A, B, and C".'],
+                ['AUD-2026-003', 'ACT-108', 'Flex -> Building 2 -> Logistics -> Incoming', '4', 'EHS', 'Ana Martinez', '', dMinus(-1), dMinus(8) + ' 13:00:00', ''],
+                ['AUD-2026-004', 'ACT-110', 'Flex -> Building 2 -> Quality -> Cuarto Limpio', '4', 'Quality', 'Maria Gomez', 'Overdue', dMinus(5), dMinus(35) + ' 14:00:00', 'Calibrations overdue by 2 weeks. Audit finding #12.']
             ];
 
             let csvContent = '\uFEFF';
