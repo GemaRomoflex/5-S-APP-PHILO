@@ -66,3 +66,10 @@ Todo cambio, mejora o corrección debe ser commiteado y subido al repositorio re
     *   **Inclusión de Restricción Médica:** Tarjeta informativa azul neón (`.tv-notice-medical`) con icono 🩺 estipulando que el personal con restricción médica vigente también cuenta con el beneficio de salida 5 minutos antes presentando su documento.
     *   **Comparador Visual de Horarios:** Bloques visuales lado a lado con relojes digitales gigantes comparando la **Salida 5 min antes** (en verde neón para Top 4 + Restricción Médica) frente a la **Salida Normal** (horario habitual de turno).
 *   **Paridad de Gráfica de Antigüedad de Acciones (Diapositiva 1):** Se unificó `renderTvChartAgingOverdue()` en `index.html` para invocar la misma lógica `getStackedAgingData(arrOverdue, agingOverdueGroupBy)` del dashboard principal, restaurando las barras apiladas por departamento clasificadas en rangos (`0-7 días`, `8-14 días`, `15-30 días`, `+30 días`).
+
+### [Septiembre 2026] - Modo TV: Exclusión de Áreas Comunes y Edificios Externos en Tops
+*   **Filtro de Áreas Inelegibles (`isTvExcludedArea`):** Se creó una función de filtrado para omitir áreas que no cuentan con personal asignado en la nave o cuyo personal checa su salida en otros edificios, evitando que aparezcan en los rankings de incentivos de RH y tops de TV.
+*   **Áreas Excluidas:** `RMA GLP`, `RMA VLP`, `LOBBY`, `MONITORES`, `OFFICES` (y variantes de oficina), `TEST ROOM 2`, `MOONSHINE`, `ENTRADA`, `PERIFERIAS`, `RECICLAJE`, `PASILLO SMKT-SMT`, `PASILLO PACK-WAREHOUSE`.
+*   **Alcance:**
+    *   **Diapositiva 2 (Top 10 Mejores Áreas):** Los incentivos de salida 5 minutos antes para los primeros 4 puestos ahora se asignan estrictamente a líneas de producción y áreas operativas con personal local (`TOOL ROOM`, `L11 BOTTOM`, `L14 BOTTOM`, `L12 BOTTOM`, etc.).
+    *   **Diapositiva 1 (Top 10 Peores Áreas):** Depuración de la gráfica de desempeño, sustituyendo áreas comunes (como `MONITORES`) por áreas productivas reales.

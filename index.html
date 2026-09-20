@@ -4502,10 +4502,52 @@
             renderTvChartUpcomingDue(darkChartNoYPct);
         }
 
+        // Filtro de áreas excluidas para Tops en diapositivas (áreas comunes, sin checador de salida o sin personal propio)
+        function isTvExcludedArea(locName) {
+            if (!locName) return true;
+            const norm = String(locName).toLowerCase().trim();
+            const simplified = norm.replace(/\s*-\s*/g, '-').replace(/\s+/g, ' ');
+
+            const excludedList = [
+                'rma glp',
+                'rma vlp',
+                'lobby',
+                'monitores',
+                'monitor',
+                'offices',
+                'office',
+                'oficinas',
+                'oficina',
+                'test room 2',
+                'moonshine',
+                'entrada',
+                'entradas',
+                'periferias',
+                'periferia',
+                'reciclaje',
+                'pasillo smkt-smt',
+                'pasillo pack-warehouse'
+            ];
+
+            if (excludedList.includes(simplified)) return true;
+            if (simplified.includes('pasillo smkt-smt') || simplified.includes('pasillo pack-warehouse')) return true;
+            if (simplified === 'rma glp' || simplified === 'rma vlp') return true;
+            if (simplified.includes('test room 2')) return true;
+            if (simplified === 'reciclaje' || simplified.startsWith('reciclaje')) return true;
+            if (simplified === 'periferia' || simplified === 'periferias') return true;
+            if (simplified === 'moonshine') return true;
+            if (simplified === 'lobby') return true;
+            if (simplified === 'monitores') return true;
+            if (simplified === 'offices' || simplified === 'oficinas' || simplified === 'office' || simplified === 'oficina') return true;
+
+            return false;
+        }
+
         function renderTvChartAreaScores() {
             const audits = getAuditScores(globalFilteredData);
             const areaGroups = {};
             audits.forEach(a => {
+                if (isTvExcludedArea(a.location)) return;
                 if (!areaGroups[a.location]) areaGroups[a.location] = { sum: 0, count: 0 };
                 areaGroups[a.location].sum += a.percentage;
                 areaGroups[a.location].count += 1;
@@ -4644,6 +4686,7 @@
             const audits = getAuditScores(globalFilteredData);
             const areaGroups = {};
             audits.forEach(a => {
+                if (isTvExcludedArea(a.location)) return;
                 if (!areaGroups[a.location]) areaGroups[a.location] = { sum: 0, count: 0 };
                 areaGroups[a.location].sum += a.percentage;
                 areaGroups[a.location].count += 1;
