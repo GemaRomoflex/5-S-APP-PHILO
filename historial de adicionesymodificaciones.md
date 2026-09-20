@@ -4,6 +4,7 @@
 > Este documento funciona como el mapa arquitectónico principal del proyecto. Tienes la obligación de leer estas reglas antes de modificar el código. Además:
 > 1. **CADA VEZ que realices una adición o modificación significativa en la aplicación, debes documentarla al final de este archivo** para mantener el contexto histórico actualizado y ahorrar tokens en futuras iteraciones.
 > 2. **OBLIGATORIO SUBIR A GITHUB AL TERMINAR:** Al concluir cualquier cambio, corrección o funcionalidad, es mandato obligatorio realizar commit y subir los cambios a GitHub (`git push origin main`) antes de finalizar la interacción.
+> 3. **PROHIBICIÓN ESTRICTA DE DATOS DE PRUEBA O DEMO:** La base de datos (Supabase) contiene información real y operativa de producción. Queda terminantemente prohibido inyectar o cargar registros de prueba/demo (ej. `ACT-*`, `AUD-*`, o invocar `loadDemoData()`) ya que alteran directamente los métricos reales.
 
 ---
 
@@ -31,6 +32,9 @@ Todo el control de vistas está centralizado en la función `applyRBAC()`.
 
 ### 5. Sincronización Obligatoria con GitHub
 Todo cambio, mejora o corrección debe ser commiteado y subido al repositorio remoto de GitHub (`git push origin main`) una vez finalizado y probado. No dejar trabajo local pendiente de sincronización.
+
+### 6. Prohibición Absoluta de Datos de Prueba / Demo
+La base de datos (Supabase) almacena exclusivamente métricas, hallazgos y auditorías reales de las líneas operativas. Está terminantemente prohibido ejecutar, invocar o reactivar funciones de inserción de datos de prueba (como `loadDemoData()`, registros `ACT-*`, `AUD-*` o similares), así como reincorporar botones o disparadores demo en la interfaz. Toda prueba de desarrollo debe limitarse a la inspección de datos existentes o mocks locales en memoria sin persistencia remota.
 
 ---
 
@@ -81,4 +85,11 @@ Todo cambio, mejora o corrección debe ser commiteado y subido al repositorio re
 *   **Tratamiento de Calificación 4 como Aprobatoria:**
     *   Se formalizó en `isValidAction()` y filtros de acciones que las calificaciones `4` y `5` se consideran conformes/aprobadas y no generan tickets ni acciones correctivas (no admiten fotos ni owner), pero **sí se incluyen y ponderan en los promedios y porcentajes del área** (donde un 4 equivale al 80%).
     *   Se permitió que hallazgos con calificación `0` a `3` puedan generar acciones correctivas reales siempre que cuenten con fecha compromiso o responsable asignado.
+
+### [Septiembre 2026] - Eliminación Definitiva de Datos de Prueba y Bloqueo de Carga Demo
+*   **Purga Completa en Base de Datos (Supabase):** Se eliminaron de forma permanente y definitiva todos los registros demo residuales (`ACT-101` a `ACT-118` / `AUD-2026-001` a `AUD-2026-007`) de la tabla `actions`, restaurando la pureza de las métricas reales del site.
+*   **Retiro del Botón de la UI:** Se eliminó por completo el botón "Cargar Datos Demo" del encabezado principal (`header-actions`) para imposibilitar disparos o clics accidentales.
+*   **Neutralización de `loadDemoData()`:** Se desmanteló el cuerpo de la función en `index.html` impidiendo que realice escrituras o llamadas `upsert` a Supabase bajo ninguna circunstancia.
+*   **Regla de Arquitectura Permanente:** Se integró formalmente la regla 6 de "Prohibición Absoluta de Datos de Prueba / Demo" en las directrices mandatorias del proyecto.
+
 

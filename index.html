@@ -2584,12 +2584,6 @@
                             </svg>
                             Descargar Plantilla CSV
                         </button>
-                        <button class="btn btn-primary" onclick="loadDemoData()">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-right:4px;">
-                                <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
-                            </svg>
-                            Cargar Datos Demo
-                        </button>
                         <button id="btn-reset" class="btn btn-danger hidden" onclick="resetDatabase()">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-right:4px;">
                                 <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
@@ -5870,56 +5864,10 @@
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         }
 
-        // 11. CARGA DE DATOS DEMO (AGING Y KPIS DINÁMICOS - CON TEXTO DE PRUEBA COMPLEJO Y COMAS INTERNAS)
+        // 11. CARGA DE DATOS DEMO (DESACTIVADA PERMANENTEMENTE - PROHIBICIÓN ESTRICTA DE DATOS DE PRUEBA)
         function loadDemoData() {
-            const today = new Date();
-            const dMinus = (days) => {
-                const d = new Date(today.getTime() - days * 24 * 60 * 60 * 1000);
-                return formatDate(d);
-            };
-
-            const demoData = [
-                // Auditoría 1
-                { auditId: 'AUD-2026-001', actionId: 'ACT-101', location: 'Flex -> Building 1 -> Assembly -> L11 TOP', cleanLocation: 'L11 TOP', responseScore: 3, department: 'Production', owner: 'John Doe', status: 'Open', dueDate: dMinus(-15), openDate: dMinus(5) + ' 10:15:30', comments: 'Requires urgent clean-up, floor has oil spills.' }, 
-                { auditId: 'AUD-2026-001', actionId: 'ACT-102', location: 'Flex -> Building 1 -> Assembly -> L11 TOP', cleanLocation: 'L11 TOP', responseScore: 4, department: 'Maintenance', owner: 'Jane Smith', status: 'Close', dueDate: dMinus(-5), openDate: dMinus(12) + ' 11:30:00', comments: 'Toolbox not in standard location. Checked and resolved.' }, 
-                { auditId: 'AUD-2026-001', actionId: 'ACT-103', location: 'Flex -> Building 1 -> Assembly -> L11 TOP', cleanLocation: 'L11 TOP', responseScore: -1, department: 'Quality', owner: 'Carlos Ruiz', status: 'Closed', dueDate: dMinus(-3), openDate: dMinus(2) + ' 09:45:12', comments: 'Not applicable for this specific line layout.' }, 
-                
-                // Auditoría 2
-                { auditId: 'AUD-2026-002', actionId: 'ACT-104', location: 'Flex -> Building 1 -> SMT -> L16', cleanLocation: 'L16', responseScore: 1, department: 'Production', owner: 'Carlos Ruiz', status: 'Overdue', dueDate: dMinus(10), openDate: dMinus(40) + ' 14:22:00', comments: 'ESD band test failed, highly critical, needs retest immediately.' }, 
-                { auditId: 'AUD-2026-002', actionId: 'ACT-105', location: 'Flex -> Building 1 -> SMT -> L16', cleanLocation: 'L16', responseScore: 5, department: 'Quality', owner: 'Maria Gomez', status: 'Closed', dueDate: dMinus(-10), openDate: dMinus(3) + ' 18:00:00', comments: 'Perfect conditions, no action needed.' }, 
-                { auditId: 'AUD-2026-002', actionId: 'ACT-106', location: 'Flex -> Building 1 -> SMT -> L16', cleanLocation: 'L16', responseScore: 2, department: 'Maintenance', owner: 'Luis Perez', status: 'Re-assigned', dueDate: dMinus(-20), openDate: dMinus(22) + ' 07:11:59', comments: 'Reassigned from Quality to Maintenance due to electrical issues.' }, 
-                
-                // Auditoría 3
-                { auditId: 'AUD-2026-003', actionId: 'ACT-107', location: 'Flex -> Building 2 -> Logistics -> Incoming', cleanLocation: 'Incoming', responseScore: 2, department: 'Logistics', owner: 'Luis Perez', status: 'Waiting for approval', dueDate: dMinus(-30), openDate: dMinus(15) + ' 15:30:22', comments: 'Waiting for supervisor approval on new racks layout.' }, 
-                { auditId: 'AUD-2026-003', actionId: 'ACT-108', location: 'Flex -> Building 2 -> Logistics -> Incoming', cleanLocation: 'Incoming', responseScore: 4, department: 'EHS', owner: 'Ana Martinez', status: '', dueDate: dMinus(-1), openDate: dMinus(8) + ' 12:00:00', comments: 'Fire extinguisher needs monthly check stamp.' }, 
-                { auditId: 'AUD-2026-003', actionId: 'ACT-109', location: 'Flex -> Building 2 -> Logistics -> Incoming', cleanLocation: 'Incoming', responseScore: 5, department: 'Logistics', owner: 'Luis Perez', status: 'Closed', dueDate: dMinus(-2), openDate: dMinus(25) + ' 08:30:00', comments: 'Everything complies with the 5S standard.' }, 
-                
-                // Auditoría 4
-                { auditId: 'AUD-2026-004', actionId: 'ACT-110', location: 'Flex -> Building 2 -> Quality -> Cuarto Limpio', cleanLocation: 'Cuarto limpio', responseScore: 4, department: 'Quality', owner: 'Maria Gomez', status: 'Overdue', dueDate: dMinus(5), openDate: dMinus(35) + ' 16:50:00', comments: 'Calibrations overdue by 2 weeks. Audit finding #12.' }, 
-                { auditId: 'AUD-2026-004', actionId: 'ACT-111', location: 'Flex -> Building 2 -> Quality -> Cuarto Limpio', cleanLocation: 'Cuarto limpio', responseScore: -1, department: 'Production', owner: 'John Doe', status: 'nan', dueDate: dMinus(-10), openDate: dMinus(4) + ' 23:59:59', comments: 'N/A for this audit block.' }, 
-                { auditId: 'AUD-2026-004', actionId: 'ACT-112', location: 'Flex -> Building 2 -> Quality -> Cuarto Limpio', cleanLocation: 'Cuarto limpio', responseScore: 3, department: 'EHS', owner: 'Ana Martinez', status: 'null', dueDate: dMinus(-20), openDate: dMinus(18) + ' 02:00:00', comments: 'Chemical waste bin is full, please arrange pickup.' }, 
-
-                // Auditoría 5
-                { auditId: 'AUD-2026-005', actionId: 'ACT-113', location: 'Flex -> Building 1 -> Assembly -> L12', cleanLocation: 'L12', responseScore: 1, department: 'Production', owner: 'Carlos Ruiz', status: 'Overdue', dueDate: dMinus(20), openDate: dMinus(50) + ' 05:40:00', comments: 'Operator not wearing safety glasses in assembly area.' }, 
-                { auditId: 'AUD-2026-005', actionId: 'ACT-114', location: 'Flex -> Building 1 -> Assembly -> L12', cleanLocation: 'L12', responseScore: 2, department: 'Quality', owner: 'John Doe', status: 'Open', dueDate: dMinus(-25), openDate: dMinus(6) + ' 13:13:13', comments: 'Shadow board is missing 3 main tools.' }, 
-
-                // Auditoría 6
-                { auditId: 'AUD-2026-006', actionId: 'ACT-115', location: 'Flex -> Building 2 -> SMT -> L14 TOP', cleanLocation: 'L14 TOP', responseScore: 5, department: 'Maintenance', owner: 'Jane Smith', status: 'Closed', dueDate: dMinus(-1), openDate: dMinus(10) + ' 04:20:00', comments: 'Area is completely clean and organized.' }, 
-                { auditId: 'AUD-2026-006', actionId: 'ACT-116', location: 'Flex -> Building 2 -> SMT -> L14 TOP', cleanLocation: 'L14 TOP', responseScore: 4, department: 'Production', owner: 'Carlos Ruiz', status: 'Open', dueDate: dMinus(-15), openDate: dMinus(11) + ' 19:15:00', comments: 'Slight dust accumulation near the feeder carts.' }, 
-
-                // Auditoría 7
-                { auditId: 'AUD-2026-007', actionId: 'ACT-117', location: 'Flex -> Building 1 -> SMT -> L16', cleanLocation: 'L16', responseScore: 3, department: 'Maintenance', owner: 'Jane Smith', status: 'Overdue', dueDate: dMinus(12), openDate: dMinus(32) + ' 21:00:00', comments: 'Preventive maintenance tag is missing on machine #3.' }, 
-                { auditId: 'AUD-2026-007', actionId: 'ACT-118', location: 'Flex -> Building 2 -> Logistics -> Incoming', cleanLocation: 'Incoming', responseScore: 1, department: 'Logistics', owner: 'Luis Perez', status: 'Open', dueDate: dMinus(-14), openDate: dMinus(20) + ' 20:01:07', comments: 'Pallets blocking emergency exit route.' } 
-            ];
-
-            const upsertResults = runUpsert(demoData);
-            
-            const statusDiv = document.getElementById('upload-status');
-            const statusText = document.getElementById('status-text');
-            statusText.innerHTML = `<strong>Modo Demostración:</strong> Se han cargado <strong>${demoData.length}</strong> registros simulados bajo la arquitectura de arrays V6 (Bugfix Aging & WIP).`;
-            statusDiv.classList.remove('hidden');
-
-            loadFromSupabase();
+            console.warn("La carga de datos demo está estrictamente deshabilitada para proteger los datos reales de producción.");
+            alert("La carga de datos de prueba ha sido deshabilitada de forma definitiva. El sistema opera exclusivamente con métricas y datos reales.");
         }
 
         // 12. DESCARGA DE ARCHIVO CSV DE EJEMPLO
