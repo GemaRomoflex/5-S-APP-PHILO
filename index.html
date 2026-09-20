@@ -3321,7 +3321,7 @@
                                     <thead>
                                         <tr>
                                             <th>Área (Limpia)</th>
-                                            <th>Calificación (1-4)</th>
+                                            <th>Calificación Promedio</th>
                                             <th>Fecha Auditoría (Apertura)</th>
                                             <th>Estado</th>
                                         </tr>
@@ -4222,8 +4222,8 @@
                 });
             }
 
-            // Filtrar descartes: Solo las calificaciones 1 a 4 generan una acción correctiva real.
-            // Además, filtramos los "fantasmas" (acciones sin departamento ni owner).
+            // Filtrar descartes: Solo las calificaciones 0 a 3 reprobatorias generan una acción correctiva real.
+            // Las calificaciones 4 y 5 son conformes y no generan acción. Además, filtramos los "fantasmas" (sin depto ni owner).
             const validActions = globalFilteredData.filter(item => isValidAction(item));
 
             // Generar y poblar tres arrays independientes
@@ -4821,8 +4821,8 @@
                 // Calcular "Últimas 3 auditorías" para esta área específicamente
                 const auditsMap = {};
                 areaActions.forEach(a => {
-                    const score = parseInt(a.responseScore);
-                    if (score >= 1 && score <= 5) {
+                    const score = parseInt(a.responseScore, 10);
+                    if (!isNaN(score) && score >= 0 && score <= 5) {
                         if (!auditsMap[a.auditId]) {
                             auditsMap[a.auditId] = { auditId: a.auditId, openDate: a.openDate, scores: [] };
                         }
@@ -4955,10 +4955,10 @@
 
         // 5. CÁLCULO DE KPIs METRICS
         function calculateKPIs() {
-            // KPI 1: Promedio de Score General 5S (Solo válidos del 1 al 5) convertido a porcentaje (Promedio / 5) * 100
+            // KPI 1: Promedio de Score General 5S (Válidos del 0 al 5, -1 excluido) convertido a porcentaje (Promedio / 5) * 100
             const scoreData = globalFilteredData.filter(item => {
                 const s = parseInt(item.responseScore, 10);
-                return !isNaN(s) && s >= 1 && s <= 5;
+                return !isNaN(s) && s >= 0 && s <= 5;
             });
             let avgPercent = 0;
             if (scoreData.length > 0) {
@@ -5046,7 +5046,7 @@
             const auditGroups = {}; 
             data.forEach(item => {
                 const score = parseInt(item.responseScore, 10);
-                if (isNaN(score) || score < 1 || score > 5) return; // Regla estricta 1 al 5
+                if (isNaN(score) || score < 0 || score > 5) return; // Regla estricta 0 al 5 (-1 es N/A)
                 
                 let dateKey = item.openDate ? item.openDate.split(' ')[0] : 'Sin Fecha';
                 let loc = item.cleanLocation || 'Sin Área';
@@ -7310,8 +7310,8 @@
             // 1. Agrupar por auditoría para calcular "Últimas 3"
             const auditsMap = {};
             areaActions.forEach(a => {
-                const score = parseInt(a.responseScore);
-                if (score >= 1 && score <= 5) {
+                const score = parseInt(a.responseScore, 10);
+                if (!isNaN(score) && score >= 0 && score <= 5) {
                     if (!auditsMap[a.auditId]) {
                         auditsMap[a.auditId] = { auditId: a.auditId, openDate: a.openDate, scores: [] };
                     }
@@ -7375,10 +7375,10 @@
             }
 
             areaActions.forEach(a => {
-                const score = parseInt(a.responseScore);
-                // Si la calificación es 1 a 3, es una acción reprobatoria
-                // (La 4 y 5 no generan acciones)
-                if (score >= 1 && score <= 3) {
+                const score = parseInt(a.responseScore, 10);
+                // Si la calificación es 0 a 3, es una acción reprobatoria
+                // (Las calificaciones 4 y 5 no generan acciones)
+                if (!isNaN(score) && score >= 0 && score <= 3) {
                     const status = (a.status || 'open').toLowerCase().replace(/[^a-z0-9]/g, '-');
                     if (status === 'overdue' || status === 'vencida') {
                         overdue++;
@@ -8658,11 +8658,11 @@
             // Siempre aceptar acciones de Gemba
             if (item.department === 'Gemba' || item.department === 'Gemba Walk') return true;
             
-            // Para el resto (5S), requerimos estrictamente una calificación reprobatoria (1 a 3)
-            // (La calificación 4 ahora se comporta como la 5, no genera acción realizable)
+            // Para el resto (5S), requerimos estrictamente una calificación reprobatoria (0 a 3)
+            // (Las calificaciones 4 y 5 son conformes y no generan acción realizable)
             const score = parseInt(item.responseScore, 10);
             if (isNaN(score)) return false;
-            if (score < 1 || score > 3) return false;
+            if (score < 0 || score > 3) return false;
             
             if (!item.cleanLocation) return false;
             
@@ -8688,9 +8688,12 @@
             
             const closureRate = totalActions > 0 ? Math.round((closed / totalActions) * 100) : 0;
             
-            const validScores = filteredData.filter(x => parseInt(x.responseScore) > 0);
-            const avgScoreRaw = validScores.length > 0 ? (validScores.reduce((s, x) => s + parseInt(x.responseScore), 0) / validScores.length) : 0;
-            const avgScore = avgScoreRaw > 0 ? Math.round((avgScoreRaw / 5) * 100) : 0;
+            const validScores = filteredData.filter(x => {
+                const s = parseInt(x.responseScore, 10);
+                return !isNaN(s) && s >= 0 && s <= 5;
+            });
+            const avgScoreRaw = validScores.length > 0 ? (validScores.reduce((s, x) => s + parseInt(x.responseScore, 10), 0) / validScores.length) : 0;
+            const avgScore = validScores.length > 0 ? Math.round((avgScoreRaw / 5) * 100) : 0;
             
             return { closureRate, avgScore, totalActions, closed };
         }
@@ -9141,9 +9144,12 @@
             const areaScores = {};
             areas.forEach(areaName => {
                 const areaData = data.filter(item => item.cleanLocation === areaName);
-                const validScores = areaData.filter(x => parseInt(x.responseScore) > 0);
-                const avgScoreRaw = validScores.length > 0 ? (validScores.reduce((s, x) => s + parseInt(x.responseScore), 0) / validScores.length) : 0;
-                areaScores[areaName] = avgScoreRaw > 0 ? Math.round((avgScoreRaw / 5) * 100) : 0;
+                const validScores = areaData.filter(x => {
+                    const s = parseInt(x.responseScore, 10);
+                    return !isNaN(s) && s >= 0 && s <= 5;
+                });
+                const avgScoreRaw = validScores.length > 0 ? (validScores.reduce((s, x) => s + parseInt(x.responseScore, 10), 0) / validScores.length) : 0;
+                areaScores[areaName] = validScores.length > 0 ? Math.round((avgScoreRaw / 5) * 100) : 0;
             });
             
             // 2. Acciones abiertas por responsable
@@ -9286,9 +9292,12 @@
             const areaScores = {};
             areas.forEach(areaName => {
                 const areaData = data.filter(item => item.cleanLocation === areaName);
-                const validScores = areaData.filter(x => parseInt(x.responseScore) > 0);
-                const avgScoreRaw = validScores.length > 0 ? (validScores.reduce((s, x) => s + parseInt(x.responseScore), 0) / validScores.length) : 0;
-                areaScores[areaName] = avgScoreRaw > 0 ? Math.round((avgScoreRaw / 5) * 100) : 0;
+                const validScores = areaData.filter(x => {
+                    const s = parseInt(x.responseScore, 10);
+                    return !isNaN(s) && s >= 0 && s <= 5;
+                });
+                const avgScoreRaw = validScores.length > 0 ? (validScores.reduce((s, x) => s + parseInt(x.responseScore, 10), 0) / validScores.length) : 0;
+                areaScores[areaName] = validScores.length > 0 ? Math.round((avgScoreRaw / 5) * 100) : 0;
             });
             
             // 4. Overdue Actions
@@ -9423,9 +9432,12 @@
                 const areaName = areas[i];
                 const areaData = data.filter(item => item.cleanLocation === areaName);
                 
-                const validScores = areaData.filter(x => parseInt(x.responseScore) > 0);
-                const avgScoreRaw = validScores.length > 0 ? (validScores.reduce((s, x) => s + parseInt(x.responseScore), 0) / validScores.length) : 0;
-                const avgScore = avgScoreRaw > 0 ? Math.round((avgScoreRaw / 5) * 100) : 0;
+                const validScores = areaData.filter(x => {
+                    const s = parseInt(x.responseScore, 10);
+                    return !isNaN(s) && s >= 0 && s <= 5;
+                });
+                const avgScoreRaw = validScores.length > 0 ? (validScores.reduce((s, x) => s + parseInt(x.responseScore, 10), 0) / validScores.length) : 0;
+                const avgScore = validScores.length > 0 ? Math.round((avgScoreRaw / 5) * 100) : 0;
                 
                 const actionsPerOwner = {};
                 areaData.forEach(item => {

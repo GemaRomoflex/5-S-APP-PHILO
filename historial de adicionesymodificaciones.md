@@ -73,3 +73,12 @@ Todo cambio, mejora o corrección debe ser commiteado y subido al repositorio re
 *   **Alcance:**
     *   **Diapositiva 2 (Top 10 Mejores Áreas):** Los incentivos de salida 5 minutos antes para los primeros 4 puestos ahora se asignan estrictamente a líneas de producción y áreas operativas con personal local (`TOOL ROOM`, `L11 BOTTOM`, `L14 BOTTOM`, `L12 BOTTOM`, etc.).
     *   **Diapositiva 1 (Top 10 Peores Áreas):** Depuración de la gráfica de desempeño, sustituyendo áreas comunes (como `MONITORES`) por áreas productivas reales.
+
+### [Septiembre 2026] - Calificaciones 0 y 4 en Promedios y Acciones Correctivas
+*   **Inclusión de Calificación 0 en Promedios (Escala 0-5):**
+    *   Se actualizó la lógica matemática en `getAuditScores()`, `calculateKPIs()`, `calculateGlobalMetrics()`, vista de Mapa/Layout y los generadores de reportes ejecutivos para que la calificación `0` (incumplimiento total) sea tomada en cuenta en los promedios como 0 puntos (0%), afectando proporcionalmente la calificación del área.
+    *   Se mantiene el valor `-1` como el único identificador para preguntas *"No Aplica"* (N/A) que quedan descartadas del cálculo.
+*   **Tratamiento de Calificación 4 como Aprobatoria:**
+    *   Se formalizó en `isValidAction()` y filtros de acciones que las calificaciones `4` y `5` se consideran conformes/aprobadas y no generan tickets ni acciones correctivas (no admiten fotos ni owner), pero **sí se incluyen y ponderan en los promedios y porcentajes del área** (donde un 4 equivale al 80%).
+    *   Se permitió que hallazgos con calificación `0` a `3` puedan generar acciones correctivas reales siempre que cuenten con fecha compromiso o responsable asignado.
+
