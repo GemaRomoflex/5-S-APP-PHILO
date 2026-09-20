@@ -275,21 +275,30 @@
             margin-top: 4px;
         }
 
-        /* Lista de áreas */
-        .tv-area-list {
+        /* Contenedor principal de la Diapositiva 2 (Top 10 + Panel Fijo RH) */
+        .tv-top10-content {
+            display: flex;
+            gap: 26px;
             flex: 1;
+            min-height: 0;
+            align-items: stretch;
+        }
+
+        /* Columna Izquierda: Lista / Ranking de Áreas (recorrida a la izquierda) */
+        .tv-area-list {
+            flex: 1.35;
             display: flex;
             flex-direction: column;
-            gap: 7px;
+            gap: 6px;
             min-height: 0;
             overflow: hidden;
         }
         .tv-area-row {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             border-radius: 12px;
-            padding: 7px 16px;
+            padding: 6px 14px;
             flex: 1;
             position: relative;
             overflow: hidden;
@@ -330,15 +339,15 @@
         .tv-area-row.tier-bronze::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse at left, rgba(205,127,50,0.07) 0%, transparent 55%); pointer-events:none; }
 
         .tv-area-rank {
-            font-size: 3.2vh;
-            min-width: 52px;
+            font-size: 2.8vh;
+            min-width: 44px;
             text-align: center;
             line-height: 1;
             flex-shrink: 0;
         }
         .tv-area-name {
             flex: 1;
-            font-size: 2.5vh;
+            font-size: 2.1vh;
             font-weight: 700;
             color: #ffffff;
             white-space: nowrap;
@@ -351,11 +360,11 @@
 
         /* Barra de score */
         .tv-area-bar-wrap {
-            width: 24%;
+            width: 20%;
             flex-shrink: 0;
             background: rgba(255,255,255,0.07);
             border-radius: 30px;
-            height: 1.6vh;
+            height: 1.4vh;
             overflow: hidden;
         }
         .tv-area-bar-fill {
@@ -370,9 +379,9 @@
         .tier-normal  .tv-area-bar-fill { background: rgba(255,255,255,0.2); }
 
         .tv-area-score {
-            font-size: 2.8vh;
+            font-size: 2.3vh;
             font-weight: 800;
-            min-width: 72px;
+            min-width: 62px;
             text-align: right;
             flex-shrink: 0;
         }
@@ -380,136 +389,262 @@
         .tier-gold    .tv-area-score { color: #ffd700; }
         .tier-silver  .tv-area-score { color: #d0d0d0; }
         .tier-bronze  .tv-area-score { color: #cd7f32; }
-        .tier-normal  .tv-area-score { color: rgba(255,255,255,0.45); font-size: 2.2vh; }
+        .tier-normal  .tv-area-score { color: rgba(255,255,255,0.45); font-size: 1.9vh; }
 
         /* Badge "Sal 5 min antes" */
         .tv-early-badge {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             background: linear-gradient(90deg, #00c853, #00e676);
             color: #002a10;
-            font-size: 2.1vh;
+            font-size: 1.6vh;
             font-weight: 800;
-            padding: 7px 18px;
+            padding: 5px 12px;
             border-radius: 20px;
             white-space: nowrap;
             flex-shrink: 0;
-            box-shadow: 0 0 18px rgba(0,200,83,0.6);
+            box-shadow: 0 0 14px rgba(0,200,83,0.5);
             letter-spacing: 0.3px;
         }
-        .tv-early-badge::before { content: '⚡'; font-size: 1.9vh; }
+        .tv-early-badge::before { content: '⚡'; font-size: 1.5vh; }
 
         /* Badge "salida a la hora" */
         .tv-ontime-badge {
-            font-size: 1.6vh;
+            font-size: 1.35vh;
             color: rgba(255,255,255,0.45);
             white-space: nowrap;
             flex-shrink: 0;
             letter-spacing: 0.3px;
         }
 
-        /* Modal popup de aviso (aparece sobre el slide Top 10) */
-        #tv-disclaimer-modal {
-            position: fixed;
-            inset: 0;
-            z-index: 9500;
+        /* Columna Derecha: Panel Fijo de Aviso en Rojo (RH) */
+        .tv-notice-panel {
+            flex: 0.95;
+            background: linear-gradient(165deg, rgba(52, 9, 9, 0.95) 0%, rgba(28, 5, 5, 0.98) 50%, rgba(16, 3, 3, 1) 100%);
+            border: 2px solid rgba(255, 59, 48, 0.7);
+            border-left: 7px solid #ff3b30;
+            border-radius: 18px;
+            padding: 22px 24px;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(4, 7, 15, 0.78);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.4s ease;
-        }
-        #tv-disclaimer-modal.visible {
-            opacity: 1;
-            pointer-events: all;
-        }
-        .tv-disclaimer-box {
-            background: #0f131f;
-            border: 2px solid #ff3b30;
-            border-radius: 20px;
-            padding: 34px 44px 28px;
-            max-width: 680px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 0 45px rgba(255, 59, 48, 0.4), 0 25px 60px rgba(0,0,0,0.85);
-            animation: tv-modal-pulse 2.5s ease-in-out infinite;
-            transform: scale(0.92) translateY(20px);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 0 35px rgba(255, 59, 48, 0.3), inset 0 0 25px rgba(255, 59, 48, 0.08);
             position: relative;
+            overflow: hidden;
+            animation: tv-notice-pulse 3s ease-in-out infinite alternate;
         }
-        #tv-disclaimer-modal.visible .tv-disclaimer-box {
-            transform: scale(1) translateY(0);
+
+        @keyframes tv-notice-pulse {
+            0%   { box-shadow: 0 0 25px rgba(255, 59, 48, 0.25), inset 0 0 20px rgba(255, 59, 48, 0.06); }
+            100% { box-shadow: 0 0 45px rgba(255, 59, 48, 0.5),  inset 0 0 30px rgba(255, 59, 48, 0.12); }
         }
-        @keyframes tv-modal-pulse {
-            0%, 100% { box-shadow: 0 0 35px rgba(255, 59, 48, 0.35), 0 25px 60px rgba(0,0,0,0.85); }
-            50%       { box-shadow: 0 0 65px rgba(255, 59, 48, 0.65), 0 25px 60px rgba(0,0,0,0.85); }
-        }
-        .tv-disclaimer-close-btn {
+
+        .tv-notice-panel::before {
+            content: '';
             position: absolute;
-            top: 14px;
-            right: 16px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.15);
-            color: #ffffff;
-            font-size: 16px;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            cursor: pointer;
+            top: -60px;
+            right: -60px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255, 59, 48, 0.25) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .tv-notice-header {
+            flex-shrink: 0;
+        }
+        .tv-notice-badge {
+            display: inline-block;
+            font-size: 1.2vh;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #ff9999;
+            text-transform: uppercase;
+            background: rgba(255, 59, 48, 0.2);
+            border: 1px solid rgba(255, 59, 48, 0.4);
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 8px;
+        }
+        .tv-notice-title-wrap {
             display: flex;
             align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
+            gap: 12px;
         }
-        .tv-disclaimer-close-btn:hover {
-            background: #ff3b30;
-            transform: scale(1.1);
-        }
-        .tv-disclaimer-icon-big {
-            font-size: 5vh;
-            display: block;
-            margin-bottom: 10px;
+        .tv-notice-icon-alert {
+            font-size: 3.8vh;
             line-height: 1;
+            animation: tv-alert-bounce 2s infinite ease-in-out;
         }
-        .tv-disclaimer-heading {
-            font-size: 2vh;
-            font-weight: 900;
-            color: #ff4d4d;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            margin-bottom: 12px;
+        @keyframes tv-alert-bounce {
+            0%, 100% { transform: scale(1); }
+            50%       { transform: scale(1.15); }
         }
-        .tv-disclaimer-body {
+        .tv-notice-titles {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .tv-notice-title {
+            margin: 0;
             font-size: 2.6vh;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px rgba(255, 59, 48, 0.7);
+            line-height: 1.1;
+        }
+        .tv-notice-subtitle {
+            font-size: 1.2vh;
+            color: rgba(255, 180, 180, 0.7);
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* 1. Anuncio Rojo de Supervisión (Grande y destacado) */
+        .tv-notice-callout {
+            background: linear-gradient(135deg, rgba(255, 59, 48, 0.35) 0%, rgba(180, 15, 15, 0.25) 100%);
+            border: 2.5px solid rgba(255, 80, 80, 0.85);
+            border-radius: 16px;
+            padding: 20px 22px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+            flex-shrink: 0;
+        }
+        .tv-notice-callout-icon {
+            font-size: 4.5vh;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .tv-notice-callout-text {
+            font-size: 2.3vh;
             font-weight: 700;
             color: #ffffff;
-            line-height: 1.45;
+            line-height: 1.4;
+            letter-spacing: 0.3px;
         }
-        .tv-disclaimer-dismiss {
-            display: inline-block;
-            margin-top: 16px;
+        .tv-notice-callout-text strong {
+            color: #ffcccc;
+            text-decoration: underline;
+            text-decoration-color: #ff3b30;
+            text-underline-offset: 4px;
+            font-weight: 900;
+        }
+
+        /* 2. Tarjeta de Restricción Médica (Visual y destacada) */
+        .tv-notice-medical {
+            background: linear-gradient(135deg, rgba(0, 154, 221, 0.2) 0%, rgba(0, 80, 150, 0.15) 100%);
+            border: 2px solid rgba(0, 154, 221, 0.6);
+            border-left: 7px solid #009ADD;
+            border-radius: 16px;
+            padding: 18px 22px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+            flex-shrink: 0;
+        }
+        .tv-notice-medical-icon {
+            font-size: 4.5vh;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .tv-notice-medical-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .tv-notice-medical-title {
+            font-size: 2vh;
+            font-weight: 900;
+            color: #5bc8f5;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+        .tv-notice-medical-text {
+            font-size: 2.1vh;
+            font-weight: 600;
+            color: #ffffff;
+            line-height: 1.35;
+        }
+        .tv-notice-medical-text strong {
+            color: #5bc8f5;
+            font-weight: 900;
+        }
+
+        /* 3. Comparativa Visual de Horarios (Salida Temprana vs Normal) */
+        .tv-notice-times-comparison {
+            display: flex;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+        .tv-time-card {
+            flex: 1;
+            border-radius: 16px;
+            padding: 18px 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 6px;
+            box-shadow: 0 6px 22px rgba(0, 0, 0, 0.4);
+        }
+        .tv-time-card.early {
+            background: linear-gradient(135deg, rgba(0, 200, 83, 0.25) 0%, rgba(0, 100, 40, 0.3) 100%);
+            border: 2px solid rgba(0, 230, 118, 0.7);
+        }
+        .tv-time-card.normal {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.18);
+        }
+        .tv-time-badge {
             font-size: 1.4vh;
-            color: rgba(255,255,255,0.45);
-            letter-spacing: 0.5px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
         }
-        .tv-disclaimer-timer {
-            display: block;
-            height: 4px;
-            background: rgba(255,255,255,0.12);
-            border-radius: 4px;
-            margin-top: 20px;
-            overflow: hidden;
+        .tv-time-card.early .tv-time-badge {
+            color: #00e676;
         }
-        .tv-disclaimer-timer-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ff3b30, #ff8077);
-            border-radius: 4px;
-            width: 100%;
+        .tv-time-card.normal .tv-time-badge {
+            color: rgba(255, 255, 255, 0.65);
+        }
+        .tv-time-clock {
+            font-size: 5vh;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: 1px;
+            margin: 4px 0;
+        }
+        .tv-time-card.early .tv-time-clock {
+            color: #00e676;
+            text-shadow: 0 0 20px rgba(0, 230, 118, 0.6);
+        }
+        .tv-time-card.normal .tv-time-clock {
+            color: #ffffff;
+        }
+        .tv-time-desc {
+            font-size: 1.5vh;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 700;
+        }
+
+        .tv-notice-footer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 1.3vh;
+            color: rgba(255, 255, 255, 0.45);
+            letter-spacing: 2px;
+            font-weight: 700;
+            text-transform: uppercase;
+            flex-shrink: 0;
         }
 
         /* Indicadores de diapositiva (bolitas abajo) */
@@ -3015,7 +3150,7 @@
                 </div>
             </div>
 
-            <!-- DIAPOSITIVA 2: Top 10 Mejores Áreas -->
+            <!-- DIAPOSITIVA 2: Top 10 Mejores Áreas + Aviso Fijo RH -->
             <div id="tv-slide-top10" class="tv-slide">
                 <div class="tv-top10-header">
                     <div class="tv-top10-title-block">
@@ -3028,8 +3163,58 @@
                         <div class="tv-shift-name" id="tv-shift-name">—</div>
                     </div>
                 </div>
-                <div class="tv-area-list" id="tv-area-list">
-                    <!-- Inyectado dinámicamente por JS -->
+
+                <div class="tv-top10-content">
+                    <!-- Columna Izquierda: Gráfica / Ranking de Áreas -->
+                    <div class="tv-area-list" id="tv-area-list">
+                        <!-- Inyectado dinámicamente por JS -->
+                    </div>
+
+                    <!-- Columna Derecha: Panel Fijo de Aviso en Rojo (RH) -->
+                    <div class="tv-notice-panel">
+                        <div class="tv-notice-header">
+                            <span class="tv-notice-badge">POLÍTICA DE RECURSOS HUMANOS</span>
+                            <div class="tv-notice-title-wrap">
+                                <span class="tv-notice-icon-alert">🚨</span>
+                                <h3 class="tv-notice-title">AVISO IMPORTANTE</h3>
+                            </div>
+                        </div>
+
+                        <!-- 1. Anuncio mandatorio de supervisión (Grande y rojo) -->
+                        <div class="tv-notice-callout">
+                            <div class="tv-notice-callout-icon">⚠️</div>
+                            <div class="tv-notice-callout-text">
+                                Cualquier salida anticipada deberá realizarse <strong>ÚNICAMENTE con el acompañamiento de tu supervisor inmediato</strong>.
+                            </div>
+                        </div>
+
+                        <!-- 2. Restricción Médica (Visual y destacada) -->
+                        <div class="tv-notice-medical">
+                            <div class="tv-notice-medical-icon">🩺</div>
+                            <div class="tv-notice-medical-content">
+                                <span class="tv-notice-medical-title">RESTRICCIÓN MÉDICA</span>
+                                <span class="tv-notice-medical-text">Personas con restricción médica también pueden salir <strong>5 minutos antes</strong> mostrando su restricción médica vigente.</span>
+                            </div>
+                        </div>
+
+                        <!-- 3. Comparativa visual de horas: Salida Temprana vs Normal -->
+                        <div class="tv-notice-times-comparison">
+                            <div class="tv-time-card early">
+                                <span class="tv-time-badge">⚡ SALIDA 5 MIN ANTES</span>
+                                <div class="tv-time-clock" id="tv-notice-early-time">—</div>
+                                <span class="tv-time-desc">Top 4 + Restricción Médica</span>
+                            </div>
+                            <div class="tv-time-card normal">
+                                <span class="tv-time-badge">⏰ SALIDA NORMAL</span>
+                                <div class="tv-time-clock" id="tv-notice-normal-time">—</div>
+                                <span class="tv-time-desc">Horario habitual de turno</span>
+                            </div>
+                        </div>
+
+                        <div class="tv-notice-footer">
+                            <span id="tv-notice-shift-name">TURNO EN CURSO</span> · FLEX GUADALAJARA 5S
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3043,22 +3228,6 @@
         <!-- Barra de progreso de timer -->
         <div id="tv-timer-bar-wrap" style="position:fixed;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.07);z-index:9200;display:none;">
             <div id="tv-timer-bar" style="height:100%;background:linear-gradient(90deg,#009ADD,#00e5ff);width:100%;transition:width linear;"></div>
-        </div>
-
-        <!-- Popup modal de aviso para TV Mode (Top 10 slide) -->
-        <div id="tv-disclaimer-modal" onclick="hideTvDisclaimerModal()">
-            <div class="tv-disclaimer-box" onclick="event.stopPropagation()">
-                <button class="tv-disclaimer-close-btn" onclick="hideTvDisclaimerModal()" title="Cerrar">✕</button>
-                <span class="tv-disclaimer-icon-big">🚨</span>
-                <div class="tv-disclaimer-heading">Aviso Importante · Recursos Humanos</div>
-                <div class="tv-disclaimer-body">
-                    Recuerda: cualquier salida anticipada deberá realizarse únicamente con el acompañamiento de tu supervisor inmediato.
-                </div>
-                <div class="tv-disclaimer-timer">
-                    <div class="tv-disclaimer-timer-fill" id="tv-disclaimer-fill"></div>
-                </div>
-                <span class="tv-disclaimer-dismiss">Toca en cualquier parte para cerrar</span>
-            </div>
         </div>
 
             <!-- VISTA ACTIONS EDITOR -->
@@ -4212,46 +4381,9 @@
             }, TV_SLIDE_DURATION);
         }
 
-        let tvDisclaimerTimeout = null;
-
-        function showTvDisclaimerModal() {
-            hideTvDisclaimerModal();
-            const modal = document.getElementById('tv-disclaimer-modal');
-            const fill = document.getElementById('tv-disclaimer-fill');
-            if (!modal) return;
-            
-            modal.classList.add('visible');
-            const DURATION = 8000; // Visible 8 segundos antes de ocultarse
-            if (fill) {
-                fill.style.transition = 'none';
-                fill.style.width = '100%';
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        fill.style.transition = `width ${DURATION}ms linear`;
-                        fill.style.width = '0%';
-                    });
-                });
-            }
-            tvDisclaimerTimeout = setTimeout(() => {
-                hideTvDisclaimerModal();
-            }, DURATION);
-        }
-
-        function hideTvDisclaimerModal() {
-            if (tvDisclaimerTimeout) {
-                clearTimeout(tvDisclaimerTimeout);
-                tvDisclaimerTimeout = null;
-            }
-            const modal = document.getElementById('tv-disclaimer-modal');
-            if (modal) {
-                modal.classList.remove('visible');
-            }
-        }
-
         function stopTvSlideshow() {
             if (tvSlideInterval) { clearInterval(tvSlideInterval); tvSlideInterval = null; }
             cancelAnimationFrame(tvTimerRAF);
-            hideTvDisclaimerModal();
         }
 
         function showTvSlide(index) {
@@ -4265,13 +4397,6 @@
             });
             // Animar barra de progreso
             animateTvTimerBar();
-
-            // Gestionar popup de aviso en slide 1 (Top 10)
-            if (index === 1) {
-                setTimeout(showTvDisclaimerModal, 700);
-            } else {
-                hideTvDisclaimerModal();
-            }
         }
 
         function animateTvTimerBar() {
@@ -4370,8 +4495,8 @@
             // --- Gráfica 2: Dept Overdue ---
             renderTvChartDeptOverdue(darkChartNoYPct);
 
-            // --- Gráfica 3: Aging Overdue ---
-            renderTvChartAgingOverdue(darkChartNoYPct);
+            // --- Gráfica 3: Aging Overdue (Igual al Dashboard Normal) ---
+            renderTvChartAgingOverdue();
 
             // --- Gráfica 4: Upcoming Due ---
             renderTvChartUpcomingDue(darkChartNoYPct);
@@ -4440,28 +4565,50 @@
             });
         }
 
-        function renderTvChartAgingOverdue(opts) {
-            const today = new Date(); today.setHours(0,0,0,0);
-            const buckets = { '1-7d': 0, '8-15d': 0, '16-30d': 0, '+30d': 0 };
-            arrOverdue.forEach(item => {
-                if (!item.dueDate || item.dueDate === 'Sin Fecha') return;
-                const d = parseDateRobust(item.dueDate); if (isNaN(d.getTime())) return;
-                d.setHours(0,0,0,0);
-                const days = Math.floor((today - d) / 86400000);
-                if (days <= 7) buckets['1-7d']++;
-                else if (days <= 15) buckets['8-15d']++;
-                else if (days <= 30) buckets['16-30d']++;
-                else buckets['+30d']++;
-            });
-            const labels = Object.keys(buckets);
-            const data = Object.values(buckets);
+        function renderTvChartAgingOverdue() {
+            const dataObj = getStackedAgingData(arrOverdue, agingOverdueGroupBy || 'dept');
             const ctx = document.getElementById('tv-chartAgingOverdue');
             if (!ctx) return;
             if (tvChartAgingOverdue) { tvChartAgingOverdue.destroy(); tvChartAgingOverdue = null; }
             tvChartAgingOverdue = new Chart(ctx.getContext('2d'), {
                 type: 'bar',
-                data: { labels, datasets: [{ label: 'Acciones Vencidas', data, backgroundColor: ['rgba(245,176,65,0.75)','rgba(236,112,99,0.75)','rgba(192,57,43,0.8)','rgba(125,30,20,0.85)'], borderWidth: 1, borderRadius: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, ...opts, plugins: { ...opts.plugins, legend: { display: false } } }
+                data: dataObj,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { display: false },
+                            ticks: { color: 'rgba(255,255,255,0.7)', font: { family: 'Century Gothic', size: 10 } }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.07)' },
+                            ticks: { precision: 0, color: 'rgba(255,255,255,0.7)', font: { family: 'Century Gothic', size: 10 } }
+                        }
+                    },
+                    plugins: {
+                        datalabels: {
+                            color: '#FFFFFF',
+                            anchor: 'center',
+                            align: 'center',
+                            font: { family: 'Century Gothic', weight: 'bold', size: 10 },
+                            formatter: (value) => value > 0 ? value : ''
+                        },
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 10,
+                                color: 'rgba(255,255,255,0.7)',
+                                font: { size: 10, family: 'Century Gothic' }
+                            }
+                        },
+                        tooltip: {}
+                    }
+                }
             });
         }
 
@@ -4533,6 +4680,14 @@
             });
 
             list.innerHTML = rows.join('');
+
+            // Actualizar información dinámica en el panel lateral de aviso en rojo (RH)
+            const noticeEarly = document.getElementById('tv-notice-early-time');
+            const noticeNormal = document.getElementById('tv-notice-normal-time');
+            const noticeShift = document.getElementById('tv-notice-shift-name');
+            if (noticeEarly) noticeEarly.textContent = shift.early;
+            if (noticeNormal) noticeNormal.textContent = shift.time;
+            if (noticeShift) noticeShift.textContent = shift.name + ' en curso';
         }
 
         // Salir de modo TV presionando ESC
@@ -5682,9 +5837,9 @@
 
             const demoData = [
                 // Auditoría 1
-                { auditId: 'AUD-2026-001', actionId: 'ACT-101', location: 'Flex -> Building 1 -> Assembly -> L10', cleanLocation: 'L10', responseScore: 3, department: 'Production', owner: 'John Doe', status: 'Open', dueDate: dMinus(-15), openDate: dMinus(5) + ' 10:15:30', comments: 'Requires urgent clean-up, floor has oil spills.' }, 
-                { auditId: 'AUD-2026-001', actionId: 'ACT-102', location: 'Flex -> Building 1 -> Assembly -> L10', cleanLocation: 'L10', responseScore: 4, department: 'Maintenance', owner: 'Jane Smith', status: 'Close', dueDate: dMinus(-5), openDate: dMinus(12) + ' 11:30:00', comments: 'Toolbox not in standard location. Checked and resolved.' }, 
-                { auditId: 'AUD-2026-001', actionId: 'ACT-103', location: 'Flex -> Building 1 -> Assembly -> L10', cleanLocation: 'L10', responseScore: -1, department: 'Quality', owner: 'Carlos Ruiz', status: 'Closed', dueDate: dMinus(-3), openDate: dMinus(2) + ' 09:45:12', comments: 'Not applicable for this specific line layout.' }, 
+                { auditId: 'AUD-2026-001', actionId: 'ACT-101', location: 'Flex -> Building 1 -> Assembly -> L11 TOP', cleanLocation: 'L11 TOP', responseScore: 3, department: 'Production', owner: 'John Doe', status: 'Open', dueDate: dMinus(-15), openDate: dMinus(5) + ' 10:15:30', comments: 'Requires urgent clean-up, floor has oil spills.' }, 
+                { auditId: 'AUD-2026-001', actionId: 'ACT-102', location: 'Flex -> Building 1 -> Assembly -> L11 TOP', cleanLocation: 'L11 TOP', responseScore: 4, department: 'Maintenance', owner: 'Jane Smith', status: 'Close', dueDate: dMinus(-5), openDate: dMinus(12) + ' 11:30:00', comments: 'Toolbox not in standard location. Checked and resolved.' }, 
+                { auditId: 'AUD-2026-001', actionId: 'ACT-103', location: 'Flex -> Building 1 -> Assembly -> L11 TOP', cleanLocation: 'L11 TOP', responseScore: -1, department: 'Quality', owner: 'Carlos Ruiz', status: 'Closed', dueDate: dMinus(-3), openDate: dMinus(2) + ' 09:45:12', comments: 'Not applicable for this specific line layout.' }, 
                 
                 // Auditoría 2
                 { auditId: 'AUD-2026-002', actionId: 'ACT-104', location: 'Flex -> Building 1 -> SMT -> L16', cleanLocation: 'L16', responseScore: 1, department: 'Production', owner: 'Carlos Ruiz', status: 'Overdue', dueDate: dMinus(10), openDate: dMinus(40) + ' 14:22:00', comments: 'ESD band test failed, highly critical, needs retest immediately.' }, 
@@ -5706,8 +5861,8 @@
                 { auditId: 'AUD-2026-005', actionId: 'ACT-114', location: 'Flex -> Building 1 -> Assembly -> L12', cleanLocation: 'L12', responseScore: 2, department: 'Quality', owner: 'John Doe', status: 'Open', dueDate: dMinus(-25), openDate: dMinus(6) + ' 13:13:13', comments: 'Shadow board is missing 3 main tools.' }, 
 
                 // Auditoría 6
-                { auditId: 'AUD-2026-006', actionId: 'ACT-115', location: 'Flex -> Building 2 -> SMT -> L18', cleanLocation: 'L18', responseScore: 5, department: 'Maintenance', owner: 'Jane Smith', status: 'Closed', dueDate: dMinus(-1), openDate: dMinus(10) + ' 04:20:00', comments: 'Area is completely clean and organized.' }, 
-                { auditId: 'AUD-2026-006', actionId: 'ACT-116', location: 'Flex -> Building 2 -> SMT -> L18', cleanLocation: 'L18', responseScore: 4, department: 'Production', owner: 'Carlos Ruiz', status: 'Open', dueDate: dMinus(-15), openDate: dMinus(11) + ' 19:15:00', comments: 'Slight dust accumulation near the feeder carts.' }, 
+                { auditId: 'AUD-2026-006', actionId: 'ACT-115', location: 'Flex -> Building 2 -> SMT -> L14 TOP', cleanLocation: 'L14 TOP', responseScore: 5, department: 'Maintenance', owner: 'Jane Smith', status: 'Closed', dueDate: dMinus(-1), openDate: dMinus(10) + ' 04:20:00', comments: 'Area is completely clean and organized.' }, 
+                { auditId: 'AUD-2026-006', actionId: 'ACT-116', location: 'Flex -> Building 2 -> SMT -> L14 TOP', cleanLocation: 'L14 TOP', responseScore: 4, department: 'Production', owner: 'Carlos Ruiz', status: 'Open', dueDate: dMinus(-15), openDate: dMinus(11) + ' 19:15:00', comments: 'Slight dust accumulation near the feeder carts.' }, 
 
                 // Auditoría 7
                 { auditId: 'AUD-2026-007', actionId: 'ACT-117', location: 'Flex -> Building 1 -> SMT -> L16', cleanLocation: 'L16', responseScore: 3, department: 'Maintenance', owner: 'Jane Smith', status: 'Overdue', dueDate: dMinus(12), openDate: dMinus(32) + ' 21:00:00', comments: 'Preventive maintenance tag is missing on machine #3.' }, 
@@ -5734,8 +5889,8 @@
 
             const csvRows = [
                 ['AuditID', 'ActionID', 'Location', 'ResponseScore', 'ActionLogDepartament', 'ActionLogOwner', 'ActionLogStatus', 'ActionLogDueDate', 'ActionLogOpenDate', 'Comments'],
-                ['AUD-2026-001', 'ACT-101', 'Flex -> Building 1 -> Assembly -> L10', '3', 'Production', 'John Doe', 'Open', dMinus(-15), dMinus(5) + ' 08:00:00', 'Requires urgent clean-up, floor has oil spills.'],
-                ['AUD-2026-001', 'ACT-102', 'Flex -> Building 1 -> Assembly -> L10', '4', 'Maintenance', 'Jane Smith', 'Close', dMinus(-5), dMinus(12) + ' 09:30:00', 'Toolbox not in standard location. Checked and resolved.'],
+                ['AUD-2026-001', 'ACT-101', 'Flex -> Building 1 -> Assembly -> L11 TOP', '3', 'Production', 'John Doe', 'Open', dMinus(-15), dMinus(5) + ' 08:00:00', 'Requires urgent clean-up, floor has oil spills.'],
+                ['AUD-2026-001', 'ACT-102', 'Flex -> Building 1 -> Assembly -> L11 TOP', '4', 'Maintenance', 'Jane Smith', 'Close', dMinus(-5), dMinus(12) + ' 09:30:00', 'Toolbox not in standard location. Checked and resolved.'],
                 ['AUD-2026-002', 'ACT-104', 'Flex -> Building 1 -> SMT -> L16', '1', 'Production', 'Carlos Ruiz', 'Overdue', dMinus(10), dMinus(40) + ' 10:00:00', 'ESD band test failed, "highly critical, needs retest \n immediately".'],
                 ['AUD-2026-002', 'ACT-106', 'Flex -> Building 1 -> SMT -> L16', '2', 'Maintenance', 'Luis Perez', 'Re-assigned', dMinus(-20), dMinus(22) + ' 11:00:00', 'Reassigned from Quality to Maintenance due to electrical issues.'],
                 ['AUD-2026-003', 'ACT-107', 'Flex -> Building 2 -> Logistics -> Incoming', '2', 'Logistics', 'Luis Perez', 'Waiting for approval', dMinus(-30), dMinus(15) + ' 12:00:00', 'Waiting for supervisor approval on new racks layout, "layout plan A, B, and C".'],
