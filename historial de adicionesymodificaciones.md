@@ -92,4 +92,7 @@ La base de datos (Supabase) almacena exclusivamente métricas, hallazgos y audit
 *   **Neutralización de `loadDemoData()`:** Se desmanteló el cuerpo de la función en `index.html` impidiendo que realice escrituras o llamadas `upsert` a Supabase bajo ninguna circunstancia.
 *   **Regla de Arquitectura Permanente:** Se integró formalmente la regla 6 de "Prohibición Absoluta de Datos de Prueba / Demo" en las directrices mandatorias del proyecto.
 
+### [Septiembre 2026] - Modo TV: Actualización de Política de Restricción Médica
+*   **Ajuste de Horario de Salida:** Se actualizó el anuncio oficial de Recursos Humanos en la diapositiva 2 (`#tv-slide-top10`) para especificar que el personal con restricción médica vigente puede salir **10 minutos antes** (en lugar de 5 minutos).
+
 
