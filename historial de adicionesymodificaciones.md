@@ -95,4 +95,33 @@ La base de datos (Supabase) almacena exclusivamente métricas, hallazgos y audit
 ### [Septiembre 2026] - Modo TV: Actualización de Política de Restricción Médica
 *   **Ajuste de Horario de Salida:** Se actualizó el anuncio oficial de Recursos Humanos en la diapositiva 2 (`#tv-slide-top10`) para especificar que el personal con restricción médica vigente puede salir **10 minutos antes** (en lugar de 5 minutos).
 
+### [Octubre 2026] - Exclusión de Áreas No Operativas en Gráficas del Dashboard y Auditorías de Tool Room en Viernes
+*   **Exclusión de Áreas Comunes/No Operativas en Dashboard (`isDashboardExcludedArea`):**
+    *   Se creó e implementó el filtro `isDashboardExcludedArea()` en `index.html` para omitir las áreas `VISITAS`, `LOBBY`, `MONITORES` y `OFICINAS` (así como sus variantes `visita`, `monitor`, `office`, `offices`) tanto del cálculo de acciones en proceso/vencidas/próximas (`validActions` en `updateDashboard()`) como de las gráficas de desempeño de áreas (`renderChartAreaScores()`).
+    *   Se extendió la consistencia a reportes ejecutivos semanales (`renderWeeklyCharts()`) y áreas (`renderAreasCharts()`), así como al filtro de modo TV (`isTvExcludedArea()`).
+*   **Restricción de Auditorías de Tool Room a Días Viernes:**
+    *   **Alineación en Base de Datos (Supabase):** Se actualizaron todos los registros operativos de `TOOL ROOM` en `calendar_events` para que su programación coincida estrictamente con los días viernes de cada semana durante todo el ciclo (semanas de octubre y noviembre ajustadas a sus respectivos viernes: 09/10, 16/10, 23/10, 30/10, 06/11, 13/11, 27/11).
+    *   **Validación Estricta en Drag & Drop (`calDrop`):** Si un auditor intenta arrastrar y soltar un evento de `TOOL ROOM` en un día diferente a viernes, la acción se bloquea automáticamente mostrando un toast de advertencia.
+    *   **Validación y UI Dinámica en Modal (`openCalendarModal` y `saveCalendarEvent`):** Se deshabilita y bloquea visualmente la casilla de `TOOL ROOM` si la fecha elegida en el modal no es viernes; asimismo, `saveCalendarEvent()` previene el guardado si se intenta programar en cualquier día que no sea viernes.
+
+### [Octubre 2026] - Integración de Acciones Vencidas Totales en el Reporte Semanal
+*   **Función Centralizada de Extracción de Overdue (`getOverdueActionsForReport`):**
+    *   Se desacopló y unificó la lógica de filtrado de acciones vencidas (evaluación de estatus, fecha límite respecto al SLA y cálculo de `daysOverdue`) para que tanto el Reporte de Acciones Vencidas como el Reporte Semanal compartan exactamente el mismo criterio y consistencia matemática.
+*   **Inclusión de Acciones Vencidas Totales en el Reporte Semanal (`weekly`):**
+    *   En `generateVisualReport()`, además de filtrar las auditorías y acciones de la semana seleccionada, se extrae la totalidad de acciones vencidas del site (`overdueData`).
+    *   Se actualizó el mensaje ejecutivo (`greetingText`) para reportar la calificación promedio semanal junto con el total acumulado de acciones en estatus overdue (`Total de Acciones Vencidas (Overdue)`).
+    *   En `renderWeeklyCharts()`, se integró una tercera tarjeta con la gráfica de barras apiladas por responsable (`chart-weekly-overdue`) que refleja la antigüedad acumulada de las acciones vencidas (`0-7 días`, `8-14 días`, `15-30 días`, `+30 días`) utilizando `getStackedAgingData(overdueData, 'owner')` idéntica a la del reporte de acciones vencidas, o un banner verde si el sitio no cuenta con acciones vencidas.
+
+### [Octubre 2026] - Corrección y Robustez en Generación de Imagen del Reporte Semanal (html2canvas)
+*   **Alineación de Ciclo de Vida y Renderizado en `renderWeeklyCharts`:**
+    *   Se restauró el patrón síncrono estándar con temporizador interno (`setTimeout(() => { ... }, 100)`) utilizado en las demás funciones de reporte del sistema, eliminando bloqueos de promesas asíncronas que desfasaban el renderizado con respecto al llamado de `html2canvas`.
+    *   Se aumentó la ventana de espera para la captura en `generateVisualReport()` a 1000ms para garantizar que las tres gráficas (calificaciones semanales, acciones generadas y acciones vencidas totales) completen su renderizado en el canvas antes de la exportación.
+*   **Limpieza Preventiva de Instancias de Chart.js y Aislamiento de Errores:**
+    *   Se incorporó la destrucción explícita de gráficas previas (`Chart.getChart(ctx)?.destroy()`) en los tres lienzos (`chart-weekly-scores`, `chart-weekly-actions`, `chart-weekly-overdue`) previniendo excepciones por reutilización de canvas.
+    *   Se envolvieron las inicializaciones de cada gráfica y el procesamiento de aging en bloques `try...catch` individuales para que una eventualidad en un lienzo no interrumpa la exportación del reporte visual.
+*   **Mejora en Manejo y Mensajería de Errores:**
+    *   Se actualizó el bloque de captura de `html2canvas` para reportar en consola y alertar al usuario con el mensaje técnico específico en caso de cualquier excepción del navegador o de seguridad.
+
+
+
 

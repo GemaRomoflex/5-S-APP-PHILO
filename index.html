@@ -4169,6 +4169,25 @@
             updateDashboard();
         }
 
+        // Filtro de áreas excluidas del dashboard de acciones (visitas, lobby, monitores, oficinas)
+        function isDashboardExcludedArea(locName) {
+            if (!locName) return false;
+            const norm = String(locName).toLowerCase().trim();
+            const simplified = norm.replace(/\s*-\s*/g, '-').replace(/\s+/g, ' ');
+            const excludedList = [
+                'visitas',
+                'visita',
+                'lobby',
+                'monitores',
+                'monitor',
+                'offices',
+                'office',
+                'oficinas',
+                'oficina'
+            ];
+            return excludedList.some(ex => simplified.includes(ex));
+        }
+
         function updateDashboard() {
             if (allAuditData.length === 0) {
                 document.getElementById('dashboard-empty-state').classList.remove('hidden');
@@ -4217,8 +4236,9 @@
             }
 
             // Filtrar descartes: Solo las calificaciones 0 a 3 reprobatorias generan una acción correctiva real.
-            // Las calificaciones 4 y 5 son conformes y no generan acción. Además, filtramos los "fantasmas" (sin depto ni owner).
-            const validActions = globalFilteredData.filter(item => isValidAction(item));
+            // Las calificaciones 4 y 5 son conformes y no generan acción. Además, filtramos los "fantasmas" (sin depto ni owner)
+            // y las áreas comunes/no operativas excluidas (visitas, lobby, monitores, oficinas).
+            const validActions = globalFilteredData.filter(item => isValidAction(item) && !isDashboardExcludedArea(item.cleanLocation) && !isDashboardExcludedArea(item.location));
 
             // Generar y poblar tres arrays independientes
             arrOverdue = [];
@@ -4503,6 +4523,8 @@
             const simplified = norm.replace(/\s*-\s*/g, '-').replace(/\s+/g, ' ');
 
             const excludedList = [
+                'visitas',
+                'visita',
                 'rma glp',
                 'rma vlp',
                 'lobby',
@@ -4533,6 +4555,7 @@
             if (simplified === 'lobby') return true;
             if (simplified === 'monitores') return true;
             if (simplified === 'offices' || simplified === 'oficinas' || simplified === 'office' || simplified === 'oficina') return true;
+            if (simplified === 'visitas' || simplified === 'visita' || simplified.includes('visita')) return true;
 
             return false;
         }
@@ -5077,10 +5100,11 @@
         function renderChartAreaScores() {
             const audits = getAuditScores(globalFilteredData);
             
-            // Promediar el score de las auditorías por área
+            // Promediar el score de las auditorías por área (omitiendo áreas comunes no operativas)
             const areaGroups = {};
             audits.forEach(audit => {
                 const loc = audit.location;
+                if (isDashboardExcludedArea(loc)) return;
                 if (!areaGroups[loc]) {
                     areaGroups[loc] = { sum: 0, count: 0 };
                 }
@@ -8241,6 +8265,16 @@
                 return;
             }
 
+            // Regla estricta: Tool Room solo puede ser auditada los viernes (getDay() === 5)
+            if (calDragData.areaName && calDragData.areaName.toLowerCase().includes('tool room')) {
+                const targetDayOfWeek = new Date(newDate + 'T12:00:00').getDay();
+                if (targetDayOfWeek !== 5) {
+                    showCalendarToast('⚠️ El área de Tool Room solo puede ser auditada los días viernes.');
+                    calDragData = null;
+                    return;
+                }
+            }
+
             if (!supabaseClient) {
                 alert('Debes iniciar sesión para mover auditorías.');
                 calDragData = null;
@@ -8383,6 +8417,23 @@
                 btnDelete.style.display = 'none';
             }
 
+            // Control dinámico de Tool Room (solo disponible los viernes)
+            const dateInput = document.getElementById('cal-event-date');
+            function updateToolRoomCheckboxes() {
+                const curDate = dateInput.value;
+                const isFri = curDate ? new Date(curDate + 'T12:00:00').getDay() === 5 : false;
+                container.querySelectorAll('.cal-area-checkbox').forEach(cb => {
+                    if (cb.value.toLowerCase().includes('tool room')) {
+                        cb.disabled = !isFri;
+                        if (!isFri && cb.checked) cb.checked = false;
+                        cb.parentElement.title = isFri ? '' : 'El área de Tool Room solo puede programarse los viernes';
+                        cb.parentElement.style.opacity = isFri ? '1' : '0.45';
+                    }
+                });
+            }
+            dateInput.onchange = updateToolRoomCheckboxes;
+            updateToolRoomCheckboxes();
+
             modal.classList.add('active');
         }
 
@@ -8406,6 +8457,16 @@
             if (!date || checkboxes.length === 0) {
                 alert("Por favor completa la fecha y selecciona al menos un área.");
                 return;
+            }
+
+            // Regla estricta: Tool Room solo los viernes
+            const isToolRoomSelected = checkboxes.some(cb => cb.value.toLowerCase().includes('tool room'));
+            if (isToolRoomSelected) {
+                const targetDayOfWeek = new Date(date + 'T12:00:00').getDay();
+                if (targetDayOfWeek !== 5) {
+                    alert("⚠️ El área de Tool Room solo puede ser auditada los días viernes.");
+                    return;
+                }
             }
 
             let error = null;
@@ -8646,6 +8707,42 @@
             return { closureRate, avgScore, totalActions, closed };
         }
 
+        function getOverdueActionsForReport(baseList) {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            
+            return baseList.filter(item => {
+                if (!isValidAction(item)) return false;
+                const s = (item.status || '').toLowerCase().trim();
+                if (s === 'closed' || s === 'close' || s === 'cerrada' || s === 'cerrado') return false;
+                
+                let isOverdue = false;
+                let daysOverdue = 0;
+                
+                if (item.dueDate && item.dueDate !== 'Sin Fecha') {
+                    let dDate = parseDateRobust(item.dueDate);
+                    if (!isNaN(dDate.getTime())) {
+                        dDate.setHours(0,0,0,0);
+                        if (dDate < today) {
+                            isOverdue = true;
+                            const diffTime = today - dDate;
+                            daysOverdue = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                        }
+                    }
+                }
+                
+                if (s === 'overdue' || s === 'vencida') {
+                    isOverdue = true;
+                }
+                
+                if (isOverdue) {
+                    item.daysOverdue = daysOverdue;
+                }
+                
+                return isOverdue;
+            });
+        }
+
         function openReportModal() {
             document.getElementById('report-modal').style.display = 'flex';
             document.getElementById('report-date-input').valueAsDate = new Date();
@@ -8872,8 +8969,10 @@
                 const firstDayOfYear = new Date(year, 0, 1);
                 const days = (weekNum - 1) * 7;
                 const firstDay = new Date(year, 0, 1 + days - firstDayOfYear.getDay());
+                firstDay.setHours(0,0,0,0);
                 const lastDay = new Date(firstDay);
                 lastDay.setDate(firstDay.getDate() + 6);
+                lastDay.setHours(23,59,59,999);
                 
                 bigDate.innerText = `Week ${weekNum}`;
                 subtitle.innerText = `Del ${firstDay.getDate()} al ${lastDay.getDate()} de ${months[lastDay.getMonth()]}`;
@@ -8884,20 +8983,20 @@
                     if (isNaN(d.getTime())) return false;
                     
                     d.setHours(0,0,0,0);
-                    firstDay.setHours(0,0,0,0);
-                    lastDay.setHours(23,59,59,999);
                     return d >= firstDay && d <= lastDay;
                 });
                 
                 const metrics = calculateGlobalMetrics(reportData);
+                const overdueData = getOverdueActionsForReport(baseForReport);
                 
                 greetingText.innerHTML = `
                     Les comparto el resumen ejecutivo correspondiente a la Semana ${weekNum}.<br>
-                    <strong>Calificación Promedio de la Semana: <span style="color: #005A9C; font-size: 18px;">${metrics.avgScore}%</span></strong><br><br>
-                    Agradeceremos que revisen sus áreas asignadas y cierren sus acciones pendientes a la brevedad.
+                    <strong>Calificación Promedio de la Semana: <span style="color: #005A9C; font-size: 18px;">${metrics.avgScore}%</span></strong><br>
+                    <strong>Total de Acciones Vencidas (Overdue): <span style="color: #dc2626; font-size: 18px;">${overdueData.length}</span></strong><br><br>
+                    Agradeceremos que revisen sus áreas asignadas y den seguimiento tanto a las acciones generadas en la semana como a las acciones vencidas a la brevedad.
                 `;
                 
-                await renderWeeklyCharts(reportData, dynamicContent);
+                renderWeeklyCharts(reportData, dynamicContent, overdueData);
                 
             } else if (type === 'monthly') {
                 // Parse YYYY-MM
@@ -9016,39 +9115,7 @@
                 bigDate.innerText = 'Acciones Overdue';
                 subtitle.innerText = 'Fuera de SLA (Acción Inmediata Requerida)';
                 
-                const today = new Date();
-                today.setHours(0,0,0,0);
-                
-                reportData = baseForReport.filter(item => {
-                    if (!isValidAction(item)) return false;
-                    const s = (item.status || '').toLowerCase().trim();
-                    if (s === 'closed' || s === 'close' || s === 'cerrada' || s === 'cerrado') return false;
-                    
-                    let isOverdue = false;
-                    let daysOverdue = 0;
-                    
-                    if (item.dueDate && item.dueDate !== 'Sin Fecha') {
-                        let dDate = parseDateRobust(item.dueDate);
-                        if (!isNaN(dDate.getTime())) {
-                            dDate.setHours(0,0,0,0);
-                            if (dDate < today) {
-                                isOverdue = true;
-                                const diffTime = today - dDate;
-                                daysOverdue = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                            }
-                        }
-                    }
-                    
-                    if (s === 'overdue' || s === 'vencida') {
-                        isOverdue = true;
-                    }
-                    
-                    if (isOverdue) {
-                        item.daysOverdue = daysOverdue;
-                    }
-                    
-                    return isOverdue;
-                });
+                reportData = getOverdueActionsForReport(baseForReport);
                 
                 greetingText.innerHTML = `
                     Equipo,<br>Se muestra a continuación las acciones que ya se encuentran VENCIDAS (fuera de SLA).<br>
@@ -9063,7 +9130,12 @@
                 const target = document.getElementById('visual-report');
                 target.style.display = 'block';
                 
-                html2canvas(target, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
+                html2canvas(target, { 
+                    scale: 2, 
+                    useCORS: true, 
+                    backgroundColor: '#ffffff',
+                    logging: false
+                }).then(canvas => {
                     const link = document.createElement('a');
                     link.download = `Reporte_5S_${type}_${Date.now()}.png`;
                     link.href = canvas.toDataURL('image/png');
@@ -9073,22 +9145,25 @@
                     btn.innerText = 'Generar PNG';
                     btn.disabled = false;
                 }).catch(err => {
-                    console.error("Error:", err);
-                    alert("Error al generar la imagen. Revisa consola.");
+                    console.error("Error al generar imagen de reporte:", err);
+                    alert("Error al generar la imagen: " + (err && err.message ? err.message : err) + "\nRevisa la consola para más detalles.");
                     btn.innerText = 'Generar PNG';
                     btn.disabled = false;
                 });
-            }, 800);
+            }, 1000);
         }
 
-        async function renderWeeklyCharts(data, container) {
-            if(data.length === 0) {
-                container.innerHTML = '<p style="text-align:center; font-size: 20px; color: #666; margin-top: 50px;">No hay auditorías registradas en esta semana.</p>';
+        function renderWeeklyCharts(data, container, overdueData = []) {
+            if (data.length === 0 && (!overdueData || overdueData.length === 0)) {
+                container.innerHTML = '<p style="text-align:center; font-size: 20px; color: #666; margin-top: 50px;">No hay auditorías registradas en esta semana ni acciones vencidas.</p>';
                 return;
             }
             
-            // 1. Calificaciones por Área
-            const areas = [...new Set(data.map(i => i.cleanLocation))].filter(Boolean);
+            // 1. Calificaciones por Área (excluyendo áreas comunes)
+            const excludedAreas = ['monitores', 'oficinas', 'lobby', 'visitas'];
+            const areas = [...new Set(data.map(i => i.cleanLocation))]
+                .filter(Boolean)
+                .filter(area => !excludedAreas.some(ex => String(area).toLowerCase().includes(ex)));
             const areaScores = {};
             areas.forEach(areaName => {
                 const areaData = data.filter(item => item.cleanLocation === areaName);
@@ -9100,13 +9175,13 @@
                 areaScores[areaName] = validScores.length > 0 ? Math.round((avgScoreRaw / 5) * 100) : 0;
             });
             
-            // 2. Acciones abiertas por responsable
+            // 2. Acciones abiertas por responsable (excluyendo áreas comunes)
             const openActionsPerOwner = {};
             data.forEach(item => {
-                if (isValidAction(item)) {
+                if (isValidAction(item) && !isDashboardExcludedArea(item.cleanLocation) && !isDashboardExcludedArea(item.location)) {
                     const st = (item.status || '').toLowerCase();
                     if (!st.includes('clos') && !st.includes('cerrad')) {
-                        const owner = item.owner;
+                        const owner = item.owner || 'Sin Asignar';
                         openActionsPerOwner[owner] = (openActionsPerOwner[owner] || 0) + 1;
                     }
                 }
@@ -9120,32 +9195,69 @@
             const sortedAreas = Object.keys(areaScores).sort((a,b) => areaScores[b] - areaScores[a]);
             const sortedScores = sortedAreas.map(area => areaScores[area]);
             
-            let html = `
-                <div style="display: flex; flex-direction: column; gap: 40px; margin-top: 10px;">
-                    
-                    <!-- Grafica de Calificaciones por Area -->
+            // 3. Procesar datos de acciones vencidas acumuladas (Aging por owner, igual al reporte de acciones vencidas)
+            let overdueDataObj = null;
+            if (overdueData && overdueData.length > 0) {
+                try {
+                    overdueDataObj = getStackedAgingData(overdueData, 'owner');
+                } catch(err) {
+                    console.error("Error al procesar datos de aging en reporte semanal:", err);
+                }
+            }
+            
+            let html = `<div style="display: flex; flex-direction: column; gap: 40px; margin-top: 10px;">`;
+            
+            if (data.length > 0) {
+                // Grafica de Calificaciones por Area
+                html += `
                     <div style="width: 100%; text-align: center; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                         <h3 style="margin: 0 0 20px 0; color: #333; font-size: 24px;">Calificación por Área Auditada</h3>
                         <div style="width: 100%; height: 320px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
                             <canvas id="chart-weekly-scores"></canvas>
                         </div>
                     </div>
-            `;
-            
-            if (sortedOwners.length > 0) {
+                `;
+                
+                if (sortedOwners.length > 0) {
+                    html += `
+                        <!-- Grafica de Acciones Abiertas -->
+                        <div style="width: 100%; text-align: center; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                            <h3 style="margin: 0 0 20px 0; color: #333; font-size: 24px;">Acciones Abiertas por Responsable (Generadas en esta semana)</h3>
+                            <div style="width: 100%; height: 320px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
+                                <canvas id="chart-weekly-actions"></canvas>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div style="width: 100%; text-align: center; background: #ecfdf5; border: 2px dashed #10b981; border-radius: 16px; padding: 30px; box-sizing: border-box;">
+                            <h4 style="margin: 0; color: #047857; font-size: 24px;">¡Excelente trabajo! No quedaron acciones abiertas esta semana.</h4>
+                        </div>
+                    `;
+                }
+            } else {
                 html += `
-                    <!-- Grafica de Acciones Abiertas -->
+                    <div style="width: 100%; text-align: center; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 30px; box-sizing: border-box;">
+                        <h4 style="margin: 0; color: #64748b; font-size: 22px;">No se registraron auditorías en esta semana seleccionada.</h4>
+                    </div>
+                `;
+            }
+            
+            // Sección de Acciones Vencidas (Overdue) - Totalidad
+            if (overdueData && overdueData.length > 0) {
+                html += `
+                    <!-- Grafica de Acciones Vencidas (Overdue) - Totalidad -->
                     <div style="width: 100%; text-align: center; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 24px;">Acciones Abiertas por Responsable (Generadas en esta semana)</h3>
-                        <div style="width: 100%; height: 320px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
-                            <canvas id="chart-weekly-actions"></canvas>
+                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 26px;">Máx. Antigüedad de Acciones Vencidas por Responsable (${overdueData.length} en total)</h3>
+                        <div style="width: 100%; height: 500px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
+                            <canvas id="chart-weekly-overdue"></canvas>
                         </div>
                     </div>
                 `;
             } else {
                 html += `
                     <div style="width: 100%; text-align: center; background: #ecfdf5; border: 2px dashed #10b981; border-radius: 16px; padding: 30px; box-sizing: border-box;">
-                        <h4 style="margin: 0; color: #047857; font-size: 24px;">¡Excelente trabajo! No quedaron acciones abiertas esta semana.</h4>
+                        <h4 style="margin: 0; color: #047857; font-size: 24px;">¡Felicidades! Cero acciones vencidas (Overdue) en el sitio 🎉</h4>
                     </div>
                 `;
             }
@@ -9155,50 +9267,18 @@
             
             setTimeout(() => {
                 // Chart Scores
-                const ctxScores = document.getElementById('chart-weekly-scores');
-                if (ctxScores) {
-                    new Chart(ctxScores, {
-                        type: 'bar',
-                        data: {
-                            labels: sortedAreas,
-                            datasets: [{
-                                data: sortedScores,
-                                backgroundColor: '#005A9C',
-                                borderRadius: 4
-                            }]
-                        },
-                        options: {
-                            animation: false,
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false },
-                                datalabels: {
-                                    anchor: 'end',
-                                    align: 'bottom',
-                                    color: '#ffffff',
-                                    font: { weight: 'bold', size: 14 }
-                                }
-                            },
-                            scales: {
-                                y: { beginAtZero: true, max: 100, ticks: { stepSize: 20, font: { size: 12 } } },
-                                x: { ticks: { font: { size: 11 } } }
-                            }
-                        }
-                    });
-                }
-                
-                // Chart Actions
-                if (sortedOwners.length > 0) {
-                    const ctxActions = document.getElementById('chart-weekly-actions');
-                    if (ctxActions) {
-                        new Chart(ctxActions, {
+                try {
+                    const ctxScores = document.getElementById('chart-weekly-scores');
+                    if (ctxScores) {
+                        const existingChart = Chart.getChart(ctxScores);
+                        if (existingChart) existingChart.destroy();
+                        new Chart(ctxScores, {
                             type: 'bar',
                             data: {
-                                labels: sortedOwners,
+                                labels: sortedAreas,
                                 datasets: [{
-                                    data: sortedActionCounts,
-                                    backgroundColor: '#ef4444',
+                                    data: sortedScores,
+                                    backgroundColor: '#005A9C',
                                     borderRadius: 4
                                 }]
                             },
@@ -9212,16 +9292,119 @@
                                         anchor: 'end',
                                         align: 'bottom',
                                         color: '#ffffff',
-                                        font: { weight: 'bold', size: 16 }
+                                        font: { weight: 'bold', size: 14 }
                                     }
                                 },
                                 scales: {
-                                    y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 12 } } },
+                                    y: { beginAtZero: true, max: 100, ticks: { stepSize: 20, font: { size: 12 } } },
                                     x: { ticks: { font: { size: 11 } } }
                                 }
                             }
                         });
                     }
+                } catch (errScores) {
+                    console.error("Error al renderizar gráfica semanal de scores:", errScores);
+                }
+                
+                // Chart Actions
+                try {
+                    if (sortedOwners.length > 0) {
+                        const ctxActions = document.getElementById('chart-weekly-actions');
+                        if (ctxActions) {
+                            const existingChart = Chart.getChart(ctxActions);
+                            if (existingChart) existingChart.destroy();
+                            new Chart(ctxActions, {
+                                type: 'bar',
+                                data: {
+                                    labels: sortedOwners,
+                                    datasets: [{
+                                        data: sortedActionCounts,
+                                        backgroundColor: '#ef4444',
+                                        borderRadius: 4
+                                    }]
+                                },
+                                options: {
+                                    animation: false,
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: { display: false },
+                                        datalabels: {
+                                            anchor: 'end',
+                                            align: 'bottom',
+                                            color: '#ffffff',
+                                            font: { weight: 'bold', size: 16 }
+                                        }
+                                    },
+                                    scales: {
+                                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 12 } } },
+                                        x: { ticks: { font: { size: 11 } } }
+                                    }
+                                }
+                            });
+                        }
+                    }
+                } catch (errActions) {
+                    console.error("Error al renderizar gráfica semanal de acciones:", errActions);
+                }
+                
+                // Chart Overdue Aging
+                try {
+                    if (overdueData && overdueData.length > 0 && overdueDataObj) {
+                        const ctxOverdue = document.getElementById('chart-weekly-overdue');
+                        if (ctxOverdue) {
+                            const existingChart = Chart.getChart(ctxOverdue);
+                            if (existingChart) existingChart.destroy();
+                            new Chart(ctxOverdue, {
+                                type: 'bar',
+                                data: overdueDataObj,
+                                options: {
+                                    animation: false,
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    scales: {
+                                        x: {
+                                            stacked: true,
+                                            grid: { display: false },
+                                            ticks: { font: { family: 'Century Gothic', size: 14 } }
+                                        },
+                                        y: {
+                                            stacked: true,
+                                            beginAtZero: true,
+                                            grid: { color: '#EAEAEA' },
+                                            ticks: { precision: 0, font: { family: 'Century Gothic', size: 16 } }
+                                        }
+                                    },
+                                    plugins: {
+                                        datalabels: {
+                                            color: '#FFFFFF',
+                                            anchor: 'center',
+                                            align: 'center',
+                                            font: { weight: 'bold', size: 16 },
+                                            formatter: (value) => value > 0 ? value : ''
+                                        },
+                                        legend: {
+                                            display: true,
+                                            position: 'bottom',
+                                            labels: {
+                                                boxWidth: 15,
+                                                font: { size: 14, family: 'Century Gothic' }
+                                            }
+                                        },
+                                        tooltip: {
+                                            callbacks: {
+                                                label: function(context) {
+                                                    return `${context.dataset.label}: ${context.raw} acc`;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }
+                } catch (errOverdue) {
+                    console.error("Error al renderizar gráfica semanal de overdue:", errOverdue);
                 }
             }, 100);
         }
@@ -9373,7 +9556,10 @@
                 return;
             }
             
-            const areas = [...new Set(data.map(i => i.cleanLocation))].filter(Boolean);
+            const excludedAreas = ['monitores', 'oficinas', 'lobby', 'visitas'];
+            const areas = [...new Set(data.map(i => i.cleanLocation))]
+                .filter(Boolean)
+                .filter(area => !excludedAreas.some(ex => area.toLowerCase().includes(ex)));
             let html = '';
             
             for (let i = 0; i < areas.length; i++) {
