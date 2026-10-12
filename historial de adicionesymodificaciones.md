@@ -131,8 +131,16 @@ La base de datos (Supabase) almacena exclusivamente métricas, hallazgos y audit
     *   En días con 9 auditorías (lunes, miércoles, jueves): cada persona tiene exactamente **3 auditorías diarias** (3 Gema, 3 Jose, 3 Alisson).
     *   En martes (8 auditorías) y viernes (10 auditorías): la asignación se ajusta (3, 3, 2 y 4, 3, 3 respectivamente) de forma balanceada para que el total semanal se mantenga estrictamente en 15 para cada auditor.
 *   **Consistencia de Tool Room en Viernes:**
-    *   Se verificó y aseguró que el área `TOOL ROOM` permanezca calendarizada estrictamente los días viernes a lo largo de todas las semanas del ciclo (septiembre - noviembre 2026), manteniendo además el bloqueo en interfaz (`calDrop` y modal) que impide moverla a otros días.
-
-
-
-
+### [Octubre 2026] - Reemplazo de Control Tower por Critical Repair 4 y Ajuste de Carga (Gema: 14 auditorías/semana)
+*   **Baja de Control Tower y Alta de Critical Repair 4:**
+    *   **Base de Datos (Supabase):** Se actualizaron todos los registros (12 semanas) en la tabla `calendar_events` sustituyendo la locación inexistente `CONTROL TOWER` por `CRITICAL REPAIR 4`.
+    *   **Frontend (`index.html`):**
+        *   Se integró `Critical repair 4` al `Sector 1` y se retiró `Control tower` del `Sector 2` en `sectorMapping`.
+        *   Se asignó el avatar de personaje `Iggy` a `critical repair 4` en `areaCharacterMap`.
+        *   Se eliminó `control tower` de `excludedAreas`.
+        *   Se actualizó el mapeo de respaldo `auditorFallbackMap` asociando `CRITICAL REPAIR 4` con auditor Jose.
+*   **Ajuste y Rotación Equitativa de Carga (Gema: 14 auditorías/semana):**
+    *   **Carga Semanal de Gema:** Se reajustó la programación para que Gema tenga exactamente **14 auditorías semanales** a lo largo de las 12 semanas del ciclo (distribuidas de forma óptima en 3 auditorías diarias y 2 en el día de menor carga de la semana).
+    *   **Rotación Balanceada entre Jose y Alisson:** En las semanas regulares de 45 auditorías, Jose y Alisson rotan semanalmente entre 15 y 16 auditorías (ej. semana 1: Alisson 16, Jose 15; semana 2: Jose 16, Alisson 15), manteniendo un acumulado perfectamente equitativo a lo largo del trimestre (185 vs 186 auditorías). En la semana de 44 auditorías, ambos cuentan con exactamente 15 auditorías.
+    *   **Preservación de Tool Room en Viernes:** Se mantuvo sin alteración la asignación estricta de `TOOL ROOM` exclusivamente en días viernes en todas las 12 semanas del ciclo.
+    *   **Integridad de Datos Históricos:** Se conservó intacto el registro histórico completado (`Assembly|Gema` del 08/09/2026).

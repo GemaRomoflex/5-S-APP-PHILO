@@ -4774,7 +4774,7 @@
             'linea 15': 'Lemmy', 'linea 16': 'Kamek', 'equipment room': 'Larry', 'test room 1': 'Captain Toad', 'tool room': 'Yoshi',
             'critical repair 1': 'Wario', 'critical repair 2': 'Mario', 'critical repair 3': 'Bowser', 'l11 top': 'Baby Mario',
             'l11 bottom': 'Baby Rosalina', 'l12 bottom': 'Birdo', 'l12 top': 'Bowser Jr.', 'l13': 'Chargin Chuck',
-            'l14 bottom': 'Toadette', 'l14 top': 'Peachette', 'ict': 'Daisy', 'control tower': 'Iggy', 'bonepile': 'Koopa Troopa',
+            'l14 bottom': 'Toadette', 'l14 top': 'Peachette', 'ict': 'Daisy', 'critical repair 4': 'Iggy', 'bonepile': 'Koopa Troopa',
             'assembly': 'Donkey Kong', 'assembly 2': 'King Bob-omb', 'disassembly': 'Baby Luigi', 'debug': 'Baby Peach',
             'ist': 'Peach', 'cuarto limpio': 'Diddy Kong', 'pack': 'Funky Kong', 'conteos internos': 'Hammer Bro',
             'embarque': 'Waluigi', 'fresh market': 'King Boo', 'hv alto valor': 'Baby Daisy', 'incoming': 'Luigi',
@@ -4810,7 +4810,7 @@
             if (oldPodium) oldPodium.remove();
             
             // Extraer las locaciones (áreas) únicas directamente de los datos
-            const excludedAreas = ['lobby', 'office', 'oficina', 'monitores', 'test room 1', 'test room 2', 'control tower'];
+            const excludedAreas = ['lobby', 'office', 'oficina', 'monitores', 'test room 1', 'test room 2'];
             const areaNames = [...new Set(globalFilteredData.map(item => item.cleanLocation))]
                 .filter(Boolean)
                 .filter(area => !excludedAreas.some(excluded => area.toLowerCase().includes(excluded)));
@@ -6983,8 +6983,8 @@
 
         // Diccionario de Sectores
         const sectorMapping = {
-            'Sector 1': ['Linea 15', 'Linea 16', 'Equipment room', 'Tool room', 'Critical repair 1', 'Critical repair 2', 'Critical repair 3'],
-            'Sector 2': ['Linea 11', 'Linea 13', 'Ict', 'Control tower', 'Bonepile'],
+            'Sector 1': ['Linea 15', 'Linea 16', 'Equipment room', 'Tool room', 'Critical repair 1', 'Critical repair 2', 'Critical repair 3', 'Critical repair 4'],
+            'Sector 2': ['Linea 11', 'Linea 13', 'Ict', 'Bonepile'],
             'Sector 3': ['Assembly', 'Disassembly', 'Debug', 'Ist'],
             'Sector 4': ['Cuarto limpio', 'Pack'],
             'Sector 5': ['Conteos internos', 'Embarque', 'Fresh market', 'Hv alto valor', 'Incoming', 'Receipt', 'Smkt backend', 'Smkt smt', 'Surtido de material', 'Usis'],
@@ -8131,7 +8131,7 @@
                     "EMBARQUE": "Gema", "SURTIDO MATERIAL": "Montse", "L14 BOTTOM": "Alisson", "CONTEOS INTERNOS": "Gema",
                     "L11 TOP": "Jose", "DISSASEMBLY": "Gema", "L15": "Montse", "SMKT BACKEND": "Montse",
                     "HV ALTO VALOR": "Montse", "TEST ROOM 1": "Jose", "RMA GLP": "Alisson", "L12 BOTTOM": "Jose",
-                    "MONITORES": "Alisson", "CRITICAL REPAIR 1": "Montse", "ASSEMBLY 2": "Gema", "CONTROL TOWER": "Jose",
+                    "MONITORES": "Alisson", "CRITICAL REPAIR 1": "Montse", "ASSEMBLY 2": "Gema", "CRITICAL REPAIR 4": "Jose",
                     "LOBBY": "Alisson", "L13": "Alisson", "RMA VLP": "Alisson", "L11 BOTTOM": "Jose", "FRESH MARKET": "Gema",
                     "DEBUG": "Gema", "CLEAN ROOM": "Gema", "BONEPILE": "Montse", "ICT": "Jose"
                 };
