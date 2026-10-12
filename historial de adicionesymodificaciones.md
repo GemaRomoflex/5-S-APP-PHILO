@@ -122,6 +122,17 @@ La base de datos (Supabase) almacena exclusivamente métricas, hallazgos y audit
 *   **Mejora en Manejo y Mensajería de Errores:**
     *   Se actualizó el bloque de captura de `html2canvas` para reportar en consola y alertar al usuario con el mensaje técnico específico en caso de cualquier excepción del navegador o de seguridad.
 
+### [Octubre 2026] - Reparto Equitativo de Auditorías 5S en Calendario y Tool Room en Viernes
+*   **Distribución Equitativa de Carga Semanal (15 / 15 / 15):**
+    *   Se rebalancearon las 45 auditorías semanales programadas en la tabla `calendar_events` de Supabase entre los 3 auditores oficiales (`Gema`, `Jose`, `Alisson`).
+    *   Anteriormente, la carga estaba desproporcionada (Alisson: 20 auditorías/semana, Jose: 15, Gema: 10).
+    *   Con el nuevo reparto, cada auditor tiene asignadas exactamente **15 auditorías semanales** (1/3 de la carga operativa para cada uno).
+*   **Balance Diario Equitativo:**
+    *   En días con 9 auditorías (lunes, miércoles, jueves): cada persona tiene exactamente **3 auditorías diarias** (3 Gema, 3 Jose, 3 Alisson).
+    *   En martes (8 auditorías) y viernes (10 auditorías): la asignación se ajusta (3, 3, 2 y 4, 3, 3 respectivamente) de forma balanceada para que el total semanal se mantenga estrictamente en 15 para cada auditor.
+*   **Consistencia de Tool Room en Viernes:**
+    *   Se verificó y aseguró que el área `TOOL ROOM` permanezca calendarizada estrictamente los días viernes a lo largo de todas las semanas del ciclo (septiembre - noviembre 2026), manteniendo además el bloqueo en interfaz (`calDrop` y modal) que impide moverla a otros días.
+
 
 
 
