@@ -144,3 +144,17 @@ La base de datos (Supabase) almacena exclusivamente métricas, hallazgos y audit
     *   **Rotación Balanceada entre Jose y Alisson:** En las semanas regulares de 45 auditorías, Jose y Alisson rotan semanalmente entre 15 y 16 auditorías (ej. semana 1: Alisson 16, Jose 15; semana 2: Jose 16, Alisson 15), manteniendo un acumulado perfectamente equitativo a lo largo del trimestre (185 vs 186 auditorías). En la semana de 44 auditorías, ambos cuentan con exactamente 15 auditorías.
     *   **Preservación de Tool Room en Viernes:** Se mantuvo sin alteración la asignación estricta de `TOOL ROOM` exclusivamente en días viernes en todas las 12 semanas del ciclo.
     *   **Integridad de Datos Históricos:** Se conservó intacto el registro histórico completado (`Assembly|Gema` del 08/09/2026).
+
+### [Octubre 2026] - Eliminación de RMA VLP y Rebalanceo Final de Auditorías
+*   **Baja Definitiva de RMA VLP:**
+    *   **Base de Datos (Supabase):** Se eliminaron los 12 registros de `RMA VLP` de la tabla `calendar_events` (1 por cada semana del ciclo).
+    *   **Frontend (`index.html`):**
+        *   Se retiró `Rma vlp` del `Sector 7` en `sectorMapping`.
+        *   Se removió el mapeo de `rma vlp` en `areaCharacterMap`, `auditorFallbackMap` y de las listas de exclusión de TV (`isTvExcludedArea`).
+*   **Distribución y Balance Semanal Resultante:**
+    *   Con la salida de `RMA VLP`, las 11 semanas regulares quedan con 44 auditorías totales:
+        *   **Gema:** exactamente **14 auditorías semanales**.
+        *   **Jose:** exactamente **15 auditorías semanales**.
+        *   **Alisson:** exactamente **15 auditorías semanales**.
+    *   La semana 4 (28 de septiembre) cuenta con 43 auditorías totales (Gema: 14, Jose: 14, Alisson: 15).
+    *   Se mantiene `TOOL ROOM` exclusivamente los días viernes en las 12 semanas.
