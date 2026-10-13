@@ -2759,6 +2759,9 @@
                         <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
                             <button class="btn btn-secondary" onclick="exportCalendar('month')" style="background: #28a745; color: white; border: none; font-size: 13px;">📤 Mes (PNG)</button>
                             <button class="btn btn-secondary" onclick="exportCalendar('week')" style="background: #28a745; color: white; border: none; font-size: 13px;">📤 Semana (PNG)</button>
+                            <button id="btn-open-auto-sched" class="btn btn-primary" onclick="openAutoSchedulerModal()" style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3); padding: 7px 14px; border-radius: 6px; cursor: pointer;">
+                                <span style="font-size: 15px;">⚡</span> Auto-Repartir Auditorías
+                            </button>
                             <div style="border-left: 1px solid var(--color-border); height: 25px; margin: 0 5px;"></div>
                             <button class="btn btn-secondary" onclick="changeMonth(-1)">◀</button>
                             <h3 id="calendar-month-year" style="margin: 0; min-width: 150px; text-align: center; font-size: 18px;">Mes Año</h3>
@@ -2826,6 +2829,178 @@
                                 <button class="btn btn-primary" onclick="saveCalendarEvent()">Guardar</button>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- MODAL DE REPARTO AUTOMÁTICO DE AUDITORÍAS 5S -->
+                <div class="modal" id="auto-scheduler-modal" style="display: none; align-items: center; justify-content: center;">
+                    <div class="modal-content" style="max-width: 960px; width: 95%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; border-radius: 14px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); background: var(--color-card, #ffffff); border: 1px solid var(--color-border, #e5e7eb);">
+                        
+                        <!-- Header -->
+                        <div class="modal-header" style="background: linear-gradient(135deg, #4f46e5, #6366f1); color: white; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 20px;">⚡</div>
+                                <div>
+                                    <h3 style="margin: 0; font-size: 19px; font-weight: 700; color: white;">Reparto Automático de Auditorías 5S</h3>
+                                    <p style="margin: 2px 0 0; font-size: 12px; color: rgba(255,255,255,0.85);">Programa y distribuye semanas completas con cuotas equilibradas y restricciones personalizadas.</p>
+                                </div>
+                            </div>
+                            <button onclick="closeAutoSchedulerModal()" style="background: transparent; color: white; border: none; font-size: 24px; cursor: pointer; padding: 0 6px; line-height: 1;">✕</button>
+                        </div>
+
+                        <!-- Body (Scrollable) -->
+                        <div style="padding: 24px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 22px;">
+                            
+                            <!-- SECCIÓN 1: SEMANA A PROGRAMAR -->
+                            <div style="background: var(--color-bg, #f9fafb); border: 1px solid var(--color-border, #e5e7eb); border-radius: 10px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                                    <label style="font-weight: 700; font-size: 14px; color: var(--color-text, #111827); display: flex; align-items: center; gap: 8px;">
+                                        📅 <span>1. Seleccionar Semana a Programar:</span>
+                                    </label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button type="button" class="btn btn-secondary" onclick="autoSchedStepWeek(-1)" style="font-size: 12px; padding: 5px 10px;">◀ Anterior</button>
+                                        <button type="button" class="btn btn-secondary" onclick="autoSchedStepWeek(1)" style="font-size: 12px; padding: 5px 10px;">Siguiente ▶</button>
+                                        <button type="button" class="btn btn-secondary" onclick="autoSchedFindNextEmptyWeek()" style="font-size: 12px; padding: 5px 10px; background: #e0e7ff; color: #4338ca; border-color: #c7d2fe; font-weight: 600;">⚡ Próxima Semana Vacía</button>
+                                    </div>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center;">
+                                    <input type="date" id="auto-sched-date" class="filter-select" style="width: 100%; border: 1px solid var(--color-border); padding: 8px 12px; font-size: 14px; border-radius: 6px;" onchange="onAutoSchedDateChange()">
+                                    <div id="auto-sched-week-badge" style="padding: 8px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; background: #e5e7eb; color: #374151; white-space: nowrap;">
+                                        Cargando estado...
+                                    </div>
+                                </div>
+                                <div id="auto-sched-conflict-box" style="display: none; margin-top: 12px; padding: 10px 14px; border-radius: 6px; background: #fef3c7; border: 1px solid #fde68a; font-size: 13px; color: #92400e;">
+                                    <span style="font-weight: 700;">⚠️ Esta semana ya cuenta con auditorías:</span>
+                                    <div style="display: flex; gap: 18px; margin-top: 6px;">
+                                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                            <input type="radio" name="auto-sched-conflict-mode" value="replace" checked> Sobrescribir programadas (respetando las completadas)
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                            <input type="radio" name="auto-sched-conflict-mode" value="fill"> Solo agendar áreas faltantes
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SECCIÓN 2: AUDITORES Y CUOTAS -->
+                            <div style="background: var(--color-bg, #f9fafb); border: 1px solid var(--color-border, #e5e7eb); border-radius: 10px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                                    <div>
+                                        <label style="font-weight: 700; font-size: 14px; color: var(--color-text, #111827); display: flex; align-items: center; gap: 8px;">
+                                            👥 <span>2. Auditores y Cuotas Semanales:</span>
+                                        </label>
+                                        <span style="font-size: 12px; color: var(--color-text-muted, #6b7280);">Define cuántas auditorías realizará cada persona en la semana.</span>
+                                    </div>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button type="button" class="btn btn-secondary" onclick="balanceAutoSchedQuotas()" style="font-size: 12px; padding: 5px 10px; background: #ecfdf5; color: #047857; border-color: #a7f3d0; font-weight: 600;">⚖️ Balancear Cuotas</button>
+                                        <button type="button" class="btn btn-secondary" onclick="addAutoSchedAuditor()" style="font-size: 12px; padding: 5px 10px;">+ Agregar Auditor</button>
+                                    </div>
+                                </div>
+                                <div id="auto-sched-auditors-list" style="display: flex; flex-direction: column; gap: 8px;">
+                                    <!-- Filas generadas dinámicamente con JS -->
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--color-border); font-size: 13px;">
+                                    <span id="auto-sched-quota-summary" style="font-weight: 600; color: #10b981;">Total Cuotas: 44 / 44 Áreas</span>
+                                    <span id="auto-sched-quota-warning" style="color: #ef4444; font-weight: 600; display: none;">⚠️ Las cuotas no coinciden con el total de áreas activas.</span>
+                                </div>
+                            </div>
+
+                            <!-- SECCIÓN 3: RESTRICCIONES PERSONALIZADAS DE DÍA Y AUDITOR -->
+                            <div style="background: var(--color-bg, #f9fafb); border: 1px solid var(--color-border, #e5e7eb); border-radius: 10px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                                    <div>
+                                        <label style="font-weight: 700; font-size: 14px; color: var(--color-text, #111827); display: flex; align-items: center; gap: 8px;">
+                                            🔒 <span>3. Restricciones por Área (Día Fijo y/o Auditor Obligatorio):</span>
+                                        </label>
+                                        <span style="font-size: 12px; color: var(--color-text-muted, #6b7280);">Configura reglas específicas (ej. Tool Room solo en Viernes). Se guardan automáticamente en tu navegador.</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Formulario para nueva regla -->
+                                <div style="display: grid; grid-template-columns: 2fr 1.5fr 1.5fr auto; gap: 8px; align-items: center; background: white; padding: 10px; border-radius: 6px; border: 1px solid var(--color-border); margin-bottom: 12px;">
+                                    <div>
+                                        <label style="font-size: 11px; font-weight: 600; color: var(--color-text-muted); display: block; margin-bottom: 3px;">ÁREA</label>
+                                        <select id="auto-rule-area" class="filter-select" style="width: 100%; font-size: 13px; padding: 6px;"></select>
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 11px; font-weight: 600; color: var(--color-text-muted); display: block; margin-bottom: 3px;">DÍA FIJO</label>
+                                        <select id="auto-rule-day" class="filter-select" style="width: 100%; font-size: 13px; padding: 6px;">
+                                            <option value="">Cualquier Día</option>
+                                            <option value="1">Lunes</option>
+                                            <option value="2">Martes</option>
+                                            <option value="3">Miércoles</option>
+                                            <option value="4">Jueves</option>
+                                            <option value="5" selected>Viernes</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 11px; font-weight: 600; color: var(--color-text-muted); display: block; margin-bottom: 3px;">AUDITOR FIJO</label>
+                                        <select id="auto-rule-auditor" class="filter-select" style="width: 100%; font-size: 13px; padding: 6px;">
+                                            <option value="">Cualquier Auditor</option>
+                                        </select>
+                                    </div>
+                                    <div style="padding-top: 16px;">
+                                        <button type="button" class="btn btn-primary" onclick="addAutoSchedRule()" style="font-size: 12px; padding: 7px 12px; white-space: nowrap;">+ Agregar Regla</button>
+                                    </div>
+                                </div>
+
+                                <!-- Lista de reglas activas -->
+                                <div id="auto-sched-rules-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto;">
+                                    <!-- Inyectado por JS -->
+                                </div>
+                            </div>
+
+                            <!-- SECCIÓN 4: ÁREAS A AUDITAR (COLAPSABLE) -->
+                            <div style="background: var(--color-bg, #f9fafb); border: 1px solid var(--color-border, #e5e7eb); border-radius: 10px; padding: 14px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleAutoSchedAreasPanel()">
+                                    <label style="font-weight: 700; font-size: 14px; color: var(--color-text, #111827); display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        📋 <span>4. Áreas Activas de la Planta:</span> <span id="auto-sched-areas-count-badge" style="font-size: 12px; font-weight: 600; color: #4f46e5; background: #e0e7ff; padding: 2px 8px; border-radius: 10px;">44 seleccionadas</span>
+                                    </label>
+                                    <span id="auto-sched-areas-toggle-icon" style="font-size: 14px; color: var(--color-text-muted);">▼ Desplegar</span>
+                                </div>
+                                <div id="auto-sched-areas-panel" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-border);">
+                                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                        <button type="button" class="btn btn-secondary" onclick="toggleAllAutoSchedAreas(true)" style="font-size: 11px; padding: 4px 8px;">Seleccionar Todas</button>
+                                        <button type="button" class="btn btn-secondary" onclick="toggleAllAutoSchedAreas(false)" style="font-size: 11px; padding: 4px 8px;">Deseleccionar Todas</button>
+                                    </div>
+                                    <div id="auto-sched-areas-checklist" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px; max-height: 200px; overflow-y: auto; background: white; padding: 10px; border-radius: 6px; border: 1px solid var(--color-border);">
+                                        <!-- Inyectado por JS -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SECCIÓN 5: BOTÓN DE GENERACIÓN Y PREVISUALIZACIÓN -->
+                            <div>
+                                <button type="button" class="btn btn-primary" onclick="generateAutoSchedPreview()" style="width: 100%; padding: 12px; font-size: 15px; font-weight: 700; background: linear-gradient(135deg, #4f46e5, #6366f1); border: none; border-radius: 8px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+                                    <span>🔄</span> Generar y Previsualizar Reparto
+                                </button>
+                            </div>
+
+                            <!-- CONTENEDOR DE PREVISUALIZACIÓN -->
+                            <div id="auto-sched-preview-container" style="display: none; background: white; border: 1px solid var(--color-border); border-radius: 10px; padding: 16px;">
+                                <h4 style="margin: 0 0 12px; font-size: 15px; color: var(--color-text); display: flex; align-items: center; justify-content: space-between;">
+                                    <span>👁️ Previsualización del Calendario Semanal</span>
+                                    <span id="auto-sched-preview-subtitle" style="font-size: 12px; font-weight: normal; color: var(--color-text-muted);"></span>
+                                </h4>
+                                <!-- KPIs Resumen -->
+                                <div id="auto-sched-preview-kpis" style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;"></div>
+                                <!-- Grilla de 5 Días -->
+                                <div id="auto-sched-preview-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;"></div>
+                            </div>
+
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="modal-footer" style="padding: 16px 24px; background: var(--color-bg, #f9fafb); border-top: 1px solid var(--color-border, #e5e7eb); display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 12px; color: var(--color-text-muted);">Las auditorías se guardarán directamente en Supabase con estatus 'Programada'.</span>
+                            <div style="display: flex; gap: 10px;">
+                                <button type="button" class="btn btn-secondary" onclick="closeAutoSchedulerModal()">Cancelar</button>
+                                <button type="button" id="btn-save-auto-sched" class="btn btn-primary" onclick="saveAutoScheduledEvents()" disabled style="background: #10b981; border-color: #10b981; font-weight: 700; padding: 8px 18px; cursor: not-allowed; opacity: 0.6;">
+                                    💾 Guardar en Calendario
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -8510,6 +8685,831 @@
                 }
             }
         }
+
+        // =========================================================================
+        // --- MÓDULO DE REPARTO AUTOMÁTICO DE AUDITORÍAS 5S ---
+        // =========================================================================
+
+        const CANONICAL_5S_AREAS = [
+            'Assembly', 'ASSEMBLY 2', 'BONEPILE', 'CLEAN ROOM', 'CONTEOS INTERNOS',
+            'CRITICAL REPAIR 1', 'CRITICAL REPAIR 2', 'CRITICAL REPAIR 3', 'CRITICAL REPAIR 4',
+            'DEBUG', 'DIGDUG', 'DISSASEMBLY', 'EMBARQUE', 'ENTRADA', 'EQUIPMENT ROOM',
+            'FRESH MARKET', 'HV ALTO VALOR', 'ICT', 'INCOMING', 'IST',
+            'L11 BOTTOM', 'L11 TOP', 'L12 BOTTOM', 'L12 TOP', 'L13',
+            'L14 BOTTOM', 'L14 TOP', 'L15', 'L16', 'MOONSHINE',
+            'PACK', 'Pasillo pack-warehouse', 'Pasillo SMT-SMKT', 'PERIFERIAS',
+            'RECEIPT', 'RECICLAJE', 'RMA GLP', 'SMKT BACKEND', 'SMKT SMT',
+            'SURTIDO MATERIAL', 'TEST ROOM 1', 'TEST ROOM 2', 'TOOL ROOM', 'USIS'
+        ];
+
+        let autoSchedAuditors = [
+            { name: 'Gema', quota: 14 },
+            { name: 'Jose', quota: 15 },
+            { name: 'Alisson', quota: 15 }
+        ];
+
+        let autoSchedRules = [
+            { area: 'TOOL ROOM', dayOfWeek: 5, auditor: '' }
+        ];
+
+        let autoSchedActiveAreas = [...CANONICAL_5S_AREAS];
+        let autoSchedGeneratedSchedule = [];
+
+        function loadAutoSchedStorage() {
+            try {
+                const savedAuditors = localStorage.getItem('5s_scheduler_auditors');
+                if (savedAuditors) {
+                    const parsed = JSON.parse(savedAuditors);
+                    if (Array.isArray(parsed) && parsed.length > 0) autoSchedAuditors = parsed;
+                }
+                const savedRules = localStorage.getItem('5s_scheduler_rules');
+                if (savedRules) {
+                    const parsed = JSON.parse(savedRules);
+                    if (Array.isArray(parsed)) autoSchedRules = parsed;
+                }
+            } catch (e) {
+                console.warn('Error al cargar configuración de auto-scheduler desde localStorage:', e);
+            }
+        }
+
+        function saveAutoSchedStorage() {
+            try {
+                localStorage.setItem('5s_scheduler_auditors', JSON.stringify(autoSchedAuditors));
+                localStorage.setItem('5s_scheduler_rules', JSON.stringify(autoSchedRules));
+            } catch (e) {
+                console.warn('Error al guardar configuración de auto-scheduler:', e);
+            }
+        }
+
+        function autoSchedGetMonday(dStr) {
+            const date = new Date(dStr + 'T12:00:00');
+            const day = date.getDay();
+            const diff = (day === 0 ? -6 : 1) - day;
+            date.setDate(date.getDate() + diff);
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const dt = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${dt}`;
+        }
+
+        function autoSchedAddDays(dStr, days) {
+            const date = new Date(dStr + 'T12:00:00');
+            date.setDate(date.getDate() + days);
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const dt = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${dt}`;
+        }
+
+        function openAutoSchedulerModal() {
+            loadAutoSchedStorage();
+            
+            // Determinar lunes inicial: usar mes/año actual del calendario o fecha actual
+            const todayStr = new Date().toISOString().split('T')[0];
+            const monStr = autoSchedGetMonday(todayStr);
+            document.getElementById('auto-sched-date').value = monStr;
+            
+            // Poblar selects de áreas y auditores en el formulario de reglas
+            populateAutoSchedDropdowns();
+            renderAutoSchedAuditors();
+            renderAutoSchedRules();
+            renderAutoSchedAreasList();
+            onAutoSchedDateChange();
+
+            // Abrir modal
+            const modal = document.getElementById('auto-scheduler-modal');
+            modal.style.display = 'flex';
+            modal.classList.add('active');
+        }
+
+        function closeAutoSchedulerModal() {
+            const modal = document.getElementById('auto-scheduler-modal');
+            modal.style.display = 'none';
+            modal.classList.remove('active');
+            autoSchedGeneratedSchedule = [];
+            document.getElementById('auto-sched-preview-container').style.display = 'none';
+            document.getElementById('btn-save-auto-sched').disabled = true;
+            document.getElementById('btn-save-auto-sched').style.cursor = 'not-allowed';
+            document.getElementById('btn-save-auto-sched').style.opacity = '0.6';
+        }
+
+        function populateAutoSchedDropdowns() {
+            const areaSelect = document.getElementById('auto-rule-area');
+            areaSelect.innerHTML = '<option value="">-- Seleccionar Área --</option>';
+            CANONICAL_5S_AREAS.forEach(area => {
+                const opt = document.createElement('option');
+                opt.value = area;
+                opt.textContent = area;
+                areaSelect.appendChild(opt);
+            });
+
+            const audSelect = document.getElementById('auto-rule-auditor');
+            audSelect.innerHTML = '<option value="">Cualquier Auditor</option>';
+            autoSchedAuditors.forEach(aud => {
+                const opt = document.createElement('option');
+                opt.value = aud.name;
+                opt.textContent = aud.name;
+                audSelect.appendChild(opt);
+            });
+        }
+
+        function onAutoSchedDateChange() {
+            const input = document.getElementById('auto-sched-date');
+            if (!input.value) return;
+            
+            // Alinear al lunes
+            const monStr = autoSchedGetMonday(input.value);
+            input.value = monStr;
+            const friStr = autoSchedAddDays(monStr, 4);
+
+            // Analizar eventos existentes en esa semana
+            const weekEvents = (calendarEvents || []).filter(e => e.audit_date >= monStr && e.audit_date <= friStr);
+            const completedCount = weekEvents.filter(e => (e.status || '').toLowerCase().includes('completada')).length;
+            const scheduledCount = weekEvents.length - completedCount;
+
+            const badge = document.getElementById('auto-sched-week-badge');
+            const conflictBox = document.getElementById('auto-sched-conflict-box');
+
+            const monDate = new Date(monStr + 'T12:00:00');
+            const friDate = new Date(friStr + 'T12:00:00');
+            const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            const rangeStr = `${monDate.getDate()} ${monthNames[monDate.getMonth()]} - ${friDate.getDate()} ${monthNames[friDate.getMonth()]} ${friDate.getFullYear()}`;
+
+            if (weekEvents.length === 0) {
+                badge.style.background = '#d1fae5';
+                badge.style.color = '#065f46';
+                badge.innerHTML = `🟢 Semana Limpia (0 auditorías) — ${rangeStr}`;
+                conflictBox.style.display = 'none';
+            } else {
+                badge.style.background = '#fef3c7';
+                badge.style.color = '#92400e';
+                badge.innerHTML = `🟡 ${weekEvents.length} auditorías encontradas (${completedCount} completadas) — ${rangeStr}`;
+                conflictBox.style.display = 'block';
+            }
+
+            // Ocultar previsualización previa
+            document.getElementById('auto-sched-preview-container').style.display = 'none';
+            document.getElementById('btn-save-auto-sched').disabled = true;
+            document.getElementById('btn-save-auto-sched').style.cursor = 'not-allowed';
+            document.getElementById('btn-save-auto-sched').style.opacity = '0.6';
+        }
+
+        function autoSchedStepWeek(offset) {
+            const input = document.getElementById('auto-sched-date');
+            const curMon = autoSchedGetMonday(input.value || new Date().toISOString().split('T')[0]);
+            input.value = autoSchedAddDays(curMon, offset * 7);
+            onAutoSchedDateChange();
+        }
+
+        function autoSchedFindNextEmptyWeek() {
+            const input = document.getElementById('auto-sched-date');
+            let testMon = autoSchedGetMonday(input.value || new Date().toISOString().split('T')[0]);
+            
+            // Buscar hacia adelante hasta 52 semanas
+            for (let i = 0; i < 52; i++) {
+                const friStr = autoSchedAddDays(testMon, 4);
+                const hasEvents = (calendarEvents || []).some(e => e.audit_date >= testMon && e.audit_date <= friStr);
+                if (!hasEvents) {
+                    input.value = testMon;
+                    onAutoSchedDateChange();
+                    showCalendarToast(`📅 Semana vacía encontrada: ${testMon}`);
+                    return;
+                }
+                testMon = autoSchedAddDays(testMon, 7);
+            }
+            alert('No se encontró ninguna semana completamente vacía en el próximo año.');
+        }
+
+        function renderAutoSchedAuditors() {
+            const container = document.getElementById('auto-sched-auditors-list');
+            container.innerHTML = '';
+
+            autoSchedAuditors.forEach((aud, idx) => {
+                const row = document.createElement('div');
+                row.style.cssText = 'display: flex; gap: 10px; align-items: center; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--color-border);';
+
+                const colorDot = document.createElement('div');
+                colorDot.style.cssText = `width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.2);`;
+                if (aud.name === 'Gema') colorDot.style.background = '#C8A2C8';
+                else if (aud.name === 'Alisson') colorDot.style.background = '#FFD1DC';
+                else if (aud.name === 'Jose') colorDot.style.background = '#0070C0';
+                else if (aud.name === 'Montse') colorDot.style.background = '#800080';
+                else colorDot.style.background = '#6366f1';
+
+                const nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.value = aud.name;
+                nameInput.className = 'form-input';
+                nameInput.style.cssText = 'flex: 2; padding: 6px 10px; font-size: 13px; font-weight: 600; border: 1px solid var(--color-border); border-radius: 4px;';
+                nameInput.onchange = (e) => {
+                    aud.name = e.target.value.trim();
+                    saveAutoSchedStorage();
+                    populateAutoSchedDropdowns();
+                };
+
+                const quotaLabel = document.createElement('span');
+                quotaLabel.textContent = 'Cuota:';
+                quotaLabel.style.cssText = 'font-size: 12px; color: var(--color-text-muted); font-weight: 600;';
+
+                const quotaInput = document.createElement('input');
+                quotaInput.type = 'number';
+                quotaInput.min = '1';
+                quotaInput.max = '100';
+                quotaInput.value = aud.quota;
+                quotaInput.className = 'form-input';
+                quotaInput.style.cssText = 'width: 70px; padding: 6px 10px; font-size: 13px; font-weight: 700; text-align: center; border: 1px solid var(--color-border); border-radius: 4px;';
+                quotaInput.onchange = (e) => {
+                    aud.quota = parseInt(e.target.value, 10) || 0;
+                    saveAutoSchedStorage();
+                    updateQuotaSummary();
+                };
+
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.innerHTML = '🗑️';
+                delBtn.title = 'Eliminar auditor';
+                delBtn.style.cssText = 'background: transparent; border: none; cursor: pointer; font-size: 14px; padding: 4px; opacity: 0.7;';
+                delBtn.onclick = () => removeAutoSchedAuditor(idx);
+
+                row.appendChild(colorDot);
+                row.appendChild(nameInput);
+                row.appendChild(quotaLabel);
+                row.appendChild(quotaInput);
+                if (autoSchedAuditors.length > 1) row.appendChild(delBtn);
+
+                container.appendChild(row);
+            });
+
+            updateQuotaSummary();
+            populateAutoSchedDropdowns();
+        }
+
+        function addAutoSchedAuditor() {
+            const name = prompt('Nombre del nuevo auditor:');
+            if (!name || !name.trim()) return;
+            autoSchedAuditors.push({ name: name.trim(), quota: 10 });
+            saveAutoSchedStorage();
+            renderAutoSchedAuditors();
+        }
+
+        function removeAutoSchedAuditor(index) {
+            if (autoSchedAuditors.length <= 1) return;
+            autoSchedAuditors.splice(index, 1);
+            saveAutoSchedStorage();
+            renderAutoSchedAuditors();
+        }
+
+        function balanceAutoSchedQuotas() {
+            const total = autoSchedActiveAreas.length;
+            const n = autoSchedAuditors.length;
+            if (n === 0) return;
+
+            const base = Math.floor(total / n);
+            const rem = total % n;
+
+            // Si Gema está en los auditores y hay residuo, darle la cuota base a Gema y repartir el residuo a los demás
+            autoSchedAuditors.forEach((aud, i) => {
+                if (rem === 0) {
+                    aud.quota = base;
+                } else {
+                    if (aud.name.toLowerCase() === 'gema') {
+                        aud.quota = base;
+                    } else if (i < rem + (autoSchedAuditors.some(a => a.name.toLowerCase() === 'gema') ? 1 : 0)) {
+                        aud.quota = base + 1;
+                    } else {
+                        aud.quota = base;
+                    }
+                }
+            });
+
+            // Asegurar que la suma exacta coincida con total
+            let currentSum = autoSchedAuditors.reduce((acc, a) => acc + a.quota, 0);
+            let diff = total - currentSum;
+            if (diff !== 0) {
+                // Ajustar al último que no sea Gema
+                const target = autoSchedAuditors.find(a => a.name.toLowerCase() !== 'gema') || autoSchedAuditors[0];
+                target.quota += diff;
+            }
+
+            saveAutoSchedStorage();
+            renderAutoSchedAuditors();
+        }
+
+        function updateQuotaSummary() {
+            const totalQuotas = autoSchedAuditors.reduce((acc, a) => acc + (a.quota || 0), 0);
+            const totalAreas = autoSchedActiveAreas.length;
+
+            const summaryEl = document.getElementById('auto-sched-quota-summary');
+            const warnEl = document.getElementById('auto-sched-quota-warning');
+
+            summaryEl.textContent = `Total Cuotas: ${totalQuotas} / ${totalAreas} Áreas Seleccionadas`;
+            if (totalQuotas === totalAreas) {
+                summaryEl.style.color = '#10b981';
+                warnEl.style.display = 'none';
+            } else {
+                summaryEl.style.color = '#f59e0b';
+                warnEl.style.display = 'inline';
+                warnEl.textContent = `⚠️ Cuotas (${totalQuotas}) no suman las ${totalAreas} áreas (${totalQuotas > totalAreas ? '+' : ''}${totalQuotas - totalAreas}).`;
+            }
+        }
+
+        function renderAutoSchedRules() {
+            const list = document.getElementById('auto-sched-rules-list');
+            list.innerHTML = '';
+
+            const dayNames = { '1': 'Lunes', '2': 'Martes', '3': 'Miércoles', '4': 'Jueves', '5': 'Viernes' };
+
+            if (autoSchedRules.length === 0) {
+                list.innerHTML = '<div style="font-size: 12px; color: var(--color-text-muted); font-style: italic; padding: 6px;">No hay restricciones activas. Las áreas se repartirán libremente.</div>';
+                return;
+            }
+
+            autoSchedRules.forEach((rule, idx) => {
+                const card = document.createElement('div');
+                card.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--color-border); font-size: 13px;';
+
+                const left = document.createElement('div');
+                left.style.cssText = 'display: flex; align-items: center; gap: 8px; flex-wrap: wrap;';
+
+                const areaBadge = document.createElement('span');
+                areaBadge.textContent = rule.area;
+                areaBadge.style.cssText = 'font-weight: 700; color: var(--color-text);';
+
+                const arrow = document.createElement('span');
+                arrow.textContent = '➔';
+                arrow.style.color = 'var(--color-text-muted)';
+
+                const dayBadge = document.createElement('span');
+                dayBadge.style.cssText = 'background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;';
+                dayBadge.textContent = rule.dayOfWeek ? `Día: ${dayNames[rule.dayOfWeek] || rule.dayOfWeek}` : 'Cualquier Día';
+
+                const audBadge = document.createElement('span');
+                audBadge.style.cssText = 'background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;';
+                audBadge.textContent = rule.auditor ? `Auditor: ${rule.auditor}` : 'Cualquier Auditor';
+
+                left.appendChild(areaBadge);
+                left.appendChild(arrow);
+                left.appendChild(dayBadge);
+                if (rule.auditor) left.appendChild(audBadge);
+
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.innerHTML = '🗑️';
+                delBtn.title = 'Eliminar regla';
+                delBtn.style.cssText = 'background: transparent; border: none; cursor: pointer; font-size: 13px; opacity: 0.7;';
+                delBtn.onclick = () => removeAutoSchedRule(idx);
+
+                card.appendChild(left);
+                card.appendChild(delBtn);
+                list.appendChild(card);
+            });
+        }
+
+        function addAutoSchedRule() {
+            const area = document.getElementById('auto-rule-area').value;
+            const dayOfWeek = document.getElementById('auto-rule-day').value;
+            const auditor = document.getElementById('auto-rule-auditor').value;
+
+            if (!area) {
+                alert('Por favor selecciona un área para aplicar la restricción.');
+                return;
+            }
+
+            if (!dayOfWeek && !auditor) {
+                alert('Debes indicar al menos un día fijo o un auditor obligatorio.');
+                return;
+            }
+
+            // Eliminar regla previa para la misma área si existe
+            autoSchedRules = autoSchedRules.filter(r => r.area !== area);
+            autoSchedRules.push({
+                area: area,
+                dayOfWeek: dayOfWeek ? parseInt(dayOfWeek, 10) : null,
+                auditor: auditor || ''
+            });
+
+            saveAutoSchedStorage();
+            renderAutoSchedRules();
+            document.getElementById('auto-rule-area').value = '';
+        }
+
+        function removeAutoSchedRule(index) {
+            autoSchedRules.splice(index, 1);
+            saveAutoSchedStorage();
+            renderAutoSchedRules();
+        }
+
+        function toggleAutoSchedAreasPanel() {
+            const panel = document.getElementById('auto-sched-areas-panel');
+            const icon = document.getElementById('auto-sched-areas-toggle-icon');
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+                icon.textContent = '▲ Ocultar';
+            } else {
+                panel.style.display = 'none';
+                icon.textContent = '▼ Desplegar';
+            }
+        }
+
+        function renderAutoSchedAreasList() {
+            const grid = document.getElementById('auto-sched-areas-checklist');
+            grid.innerHTML = '';
+
+            CANONICAL_5S_AREAS.forEach(area => {
+                const label = document.createElement('label');
+                label.style.cssText = 'display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; padding: 2px 4px;';
+
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.value = area;
+                cb.checked = autoSchedActiveAreas.includes(area);
+                cb.onchange = () => {
+                    if (cb.checked) {
+                        if (!autoSchedActiveAreas.includes(area)) autoSchedActiveAreas.push(area);
+                    } else {
+                        autoSchedActiveAreas = autoSchedActiveAreas.filter(a => a !== area);
+                    }
+                    updateAreasBadge();
+                    updateQuotaSummary();
+                };
+
+                label.appendChild(cb);
+                label.appendChild(document.createTextNode(area));
+                grid.appendChild(label);
+            });
+
+            updateAreasBadge();
+        }
+
+        function toggleAllAutoSchedAreas(select) {
+            if (select) {
+                autoSchedActiveAreas = [...CANONICAL_5S_AREAS];
+            } else {
+                autoSchedActiveAreas = [];
+            }
+            renderAutoSchedAreasList();
+            updateQuotaSummary();
+        }
+
+        function updateAreasBadge() {
+            const badge = document.getElementById('auto-sched-areas-count-badge');
+            badge.textContent = `${autoSchedActiveAreas.length} seleccionadas`;
+        }
+
+        // --- ALGORITMO INTELIGENTE DE GENERACIÓN Y PREVISUALIZACIÓN ---
+        function generateAutoSchedPreview() {
+            const monStr = document.getElementById('auto-sched-date').value;
+            if (!monStr) {
+                alert('Por favor selecciona una fecha válida.');
+                return;
+            }
+
+            if (autoSchedActiveAreas.length === 0) {
+                alert('Debes seleccionar al menos un área a programar.');
+                return;
+            }
+
+            const totalQuotas = autoSchedAuditors.reduce((acc, a) => acc + (a.quota || 0), 0);
+            if (totalQuotas !== autoSchedActiveAreas.length) {
+                if (!confirm(`La suma de cuotas (${totalQuotas}) no coincide con las áreas seleccionadas (${autoSchedActiveAreas.length}). ¿Deseas auto-balancear las cuotas antes de continuar?`)) {
+                    // Continuar con cuotas actuales si el usuario lo desea
+                } else {
+                    balanceAutoSchedQuotas();
+                }
+            }
+
+            // Los 5 días de la semana
+            const weekDays = [
+                { dayNum: 1, name: 'Lunes', dateStr: autoSchedAddDays(monStr, 0), areas: [] },
+                { dayNum: 2, name: 'Martes', dateStr: autoSchedAddDays(monStr, 1), areas: [] },
+                { dayNum: 3, name: 'Miércoles', dateStr: autoSchedAddDays(monStr, 2), areas: [] },
+                { dayNum: 4, name: 'Jueves', dateStr: autoSchedAddDays(monStr, 3), areas: [] },
+                { dayNum: 5, name: 'Viernes', dateStr: autoSchedAddDays(monStr, 4), areas: [] }
+            ];
+
+            // Analizar eventos existentes en esa semana
+            const friStr = weekDays[4].dateStr;
+            const weekEvents = (calendarEvents || []).filter(e => e.audit_date >= monStr && e.audit_date <= friStr);
+            const conflictMode = document.querySelector('input[name="auto-sched-conflict-mode"]:checked')?.value || 'replace';
+
+            // Detectar auditorías completadas para preservarlas
+            const completedEvents = weekEvents.filter(e => (e.status || '').toLowerCase().includes('completada'));
+            const scheduledEventsToKeep = (conflictMode === 'fill') ? weekEvents.filter(e => !(e.status || '').toLowerCase().includes('completada')) : [];
+
+            // Áreas ya programadas que no se deben duplicar
+            const preservedEvents = [...completedEvents, ...scheduledEventsToKeep];
+            const alreadyAssignedAreaNames = new Set();
+            
+            // Seguimiento de cuotas por auditor y por día
+            const auditorRemaining = {};
+            autoSchedAuditors.forEach(a => auditorRemaining[a.name] = a.quota);
+
+            preservedEvents.forEach(ev => {
+                const parts = (ev.area_name || '').split('|');
+                const aName = parts[0].trim();
+                const audName = parts.length > 1 ? parts[1].trim() : '';
+                alreadyAssignedAreaNames.add(aName.toUpperCase());
+
+                // Descontar de cuota si el auditor coincide
+                if (audName && auditorRemaining[audName] !== undefined) {
+                    auditorRemaining[audName] = Math.max(0, auditorRemaining[audName] - 1);
+                }
+
+                // Asignar al día correspondiente
+                const targetDay = weekDays.find(d => d.dateStr === ev.audit_date);
+                if (targetDay) {
+                    targetDay.areas.push({
+                        area: aName,
+                        auditor: audName || 'Desconocido',
+                        status: ev.status,
+                        isPreserved: true
+                    });
+                }
+            });
+
+            // Lista de áreas que aún faltan por programar
+            let areasToSchedule = autoSchedActiveAreas.filter(a => !alreadyAssignedAreaNames.has(a.toUpperCase()));
+
+            // Calcular capacidad meta por día para que sea equilibrado
+            // e.g. si faltan 44 áreas y 5 días: 4 días con 9 y 1 día con 8
+            const totalRemaining = areasToSchedule.length;
+            const baseDaily = Math.floor(totalRemaining / 5);
+            const remDaily = totalRemaining % 5;
+
+            const dayCapacities = [baseDaily, baseDaily, baseDaily, baseDaily, baseDaily];
+            // Distribuir el residuo entre los días (preferentemente Lunes, Miércoles, Jueves, Viernes si rem == 4)
+            for (let i = 0; i < remDaily; i++) {
+                // Si rem == 4, dar a 0, 2, 3, 4 dejando el Martes con 8 como es la tradición de la planta
+                if (remDaily === 4) {
+                    const idxs = [0, 2, 3, 4];
+                    dayCapacities[idxs[i]]++;
+                } else {
+                    dayCapacities[i]++;
+                }
+            }
+
+            // 1. APLICAR RESTRICCIONES FIJAS (Día Fijo)
+            const scheduledFromRules = [];
+            autoSchedRules.forEach(rule => {
+                const areaMatch = areasToSchedule.find(a => a.toUpperCase() === rule.area.toUpperCase());
+                if (!areaMatch) return;
+
+                if (rule.dayOfWeek) {
+                    const dayIdx = rule.dayOfWeek - 1; // 1=Lunes -> idx 0
+                    if (dayIdx >= 0 && dayIdx < 5) {
+                        weekDays[dayIdx].areas.push({
+                            area: areaMatch,
+                            fixedAuditor: rule.auditor || null,
+                            isPreserved: false
+                        });
+                        scheduledFromRules.push(areaMatch);
+                    }
+                }
+            });
+
+            // Remover áreas que ya se fijaron por regla
+            areasToSchedule = areasToSchedule.filter(a => !scheduledFromRules.includes(a));
+
+            // 2. DISTRIBUIR LAS DEMÁS ÁREAS EN LOS 5 DÍAS HASTA COMPLETAR CAPACIDAD
+            let areaIndex = 0;
+            weekDays.forEach((day, dIdx) => {
+                const targetCount = dayCapacities[dIdx];
+                while (day.areas.filter(a => !a.isPreserved).length < targetCount && areaIndex < areasToSchedule.length) {
+                    const curArea = areasToSchedule[areaIndex++];
+                    // Revisar si tenía auditor fijo aunque no día fijo
+                    const rule = autoSchedRules.find(r => r.area.toUpperCase() === curArea.toUpperCase());
+                    day.areas.push({
+                        area: curArea,
+                        fixedAuditor: rule?.auditor || null,
+                        isPreserved: false
+                    });
+                }
+            });
+
+            // Por si sobraron áreas
+            while (areaIndex < areasToSchedule.length) {
+                const curArea = areasToSchedule[areaIndex++];
+                // Añadir al día con menor cantidad de áreas
+                const minDay = [...weekDays].sort((a, b) => a.areas.length - b.areas.length)[0];
+                const rule = autoSchedRules.find(r => r.area.toUpperCase() === curArea.toUpperCase());
+                minDay.areas.push({
+                    area: curArea,
+                    fixedAuditor: rule?.auditor || null,
+                    isPreserved: false
+                });
+            }
+
+            // 3. ASIGNAR AUDITORES DÍA POR DÍA EQUITATIVAMENTE
+            weekDays.forEach((day, dIdx) => {
+                // Primero: asignar los auditores fijos
+                day.areas.forEach(item => {
+                    if (item.isPreserved) return;
+                    if (item.fixedAuditor && auditorRemaining[item.fixedAuditor] > 0) {
+                        item.auditor = item.fixedAuditor;
+                        auditorRemaining[item.fixedAuditor]--;
+                    }
+                });
+
+                // Segundo: repartir las demás áreas del día entre los auditores que aún tienen cuota
+                const unassignedToday = day.areas.filter(a => !a.isPreserved && !a.auditor);
+                const daysRemaining = 5 - dIdx;
+
+                unassignedToday.forEach(item => {
+                    // Ordenar auditores candidatos: los que tengan mayor cuota restante respecto a su meta
+                    const candidates = autoSchedAuditors
+                        .map(a => a.name)
+                        .filter(name => auditorRemaining[name] > 0)
+                        .sort((a, b) => auditorRemaining[b] - auditorRemaining[a]);
+
+                    const chosenAud = candidates[0] || autoSchedAuditors[0].name;
+                    item.auditor = chosenAud;
+                    if (auditorRemaining[chosenAud] > 0) {
+                        auditorRemaining[chosenAud]--;
+                    }
+                });
+            });
+
+            // Guardar resultado para inserción
+            autoSchedGeneratedSchedule = [];
+            weekDays.forEach(day => {
+                day.areas.forEach(item => {
+                    if (!item.isPreserved) {
+                        autoSchedGeneratedSchedule.push({
+                            audit_date: day.dateStr,
+                            area_name: `${item.area}|${item.auditor}`,
+                            status: 'Programada'
+                        });
+                    }
+                });
+            });
+
+            // RENDERIZAR PREVISUALIZACIÓN VISUAL
+            renderAutoSchedPreviewBoard(weekDays, conflictMode, preservedEvents.length);
+        }
+
+        function renderAutoSchedPreviewBoard(weekDays, conflictMode, preservedCount) {
+            const container = document.getElementById('auto-sched-preview-container');
+            const subtitle = document.getElementById('auto-sched-preview-subtitle');
+            const kpisContainer = document.getElementById('auto-sched-preview-kpis');
+            const grid = document.getElementById('auto-sched-preview-grid');
+
+            container.style.display = 'block';
+            grid.innerHTML = '';
+            kpisContainer.innerHTML = '';
+
+            subtitle.textContent = `Generadas: ${autoSchedGeneratedSchedule.length} nuevas auditorías ${preservedCount > 0 ? `(${preservedCount} conservadas)` : ''}`;
+
+            // Calcular totales por auditor en la simulación
+            const auditorCounts = {};
+            autoSchedAuditors.forEach(a => auditorCounts[a.name] = 0);
+
+            weekDays.forEach(d => {
+                d.areas.forEach(item => {
+                    if (auditorCounts[item.auditor] !== undefined) auditorCounts[item.auditor]++;
+                    else auditorCounts[item.auditor] = 1;
+                });
+            });
+
+            // Renderizar KPIs por Auditor
+            autoSchedAuditors.forEach(a => {
+                const count = auditorCounts[a.name] || 0;
+                const pill = document.createElement('div');
+                pill.style.cssText = `padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; border: 1px solid rgba(0,0,0,0.1);`;
+
+                if (a.name === 'Gema') { pill.style.background = '#C8A2C8'; pill.style.color = '#000'; }
+                else if (a.name === 'Alisson') { pill.style.background = '#FFD1DC'; pill.style.color = '#000'; }
+                else if (a.name === 'Jose') { pill.style.background = '#0070C0'; pill.style.color = '#fff'; }
+                else { pill.style.background = '#e0e7ff'; pill.style.color = '#4338ca'; }
+
+                pill.innerHTML = `<span>${a.name}:</span> <span>${count} / ${a.quota}</span> ${count === a.quota ? '✅' : '⚡'}`;
+                kpisContainer.appendChild(pill);
+            });
+
+            // Total General KPI
+            const totalScheduled = weekDays.reduce((acc, d) => acc + d.areas.length, 0);
+            const totalPill = document.createElement('div');
+            totalPill.style.cssText = 'padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; background: #f3f4f6; color: #1f2937; border: 1px solid #d1d5db;';
+            totalPill.innerHTML = `Total Semana: <b>${totalScheduled} auditorías</b>`;
+            kpisContainer.appendChild(totalPill);
+
+            // Renderizar las 5 columnas de días
+            weekDays.forEach(day => {
+                const col = document.createElement('div');
+                col.style.cssText = 'background: #f9fafb; border: 1px solid var(--color-border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px;';
+
+                const dayHeader = document.createElement('div');
+                dayHeader.style.cssText = 'text-align: center; padding-bottom: 6px; border-bottom: 2px solid var(--color-border); margin-bottom: 4px;';
+                dayHeader.innerHTML = `<div style="font-weight: 700; font-size: 13px; color: var(--color-text);">${day.name}</div><div style="font-size: 11px; color: var(--color-text-muted);">${day.dateStr.split('-').slice(1).join('/')} (${day.areas.length})</div>`;
+                col.appendChild(dayHeader);
+
+                // Chips de áreas
+                day.areas.forEach(item => {
+                    const chip = document.createElement('div');
+                    chip.style.cssText = 'padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; line-height: 1.2; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(0,0,0,0.15);';
+
+                    if (item.auditor === 'Gema') {
+                        chip.style.background = '#C8A2C8'; chip.style.color = '#000';
+                    } else if (item.auditor === 'Alisson') {
+                        chip.style.background = '#FFD1DC'; chip.style.color = '#000';
+                    } else if (item.auditor === 'Jose') {
+                        chip.style.background = '#0070C0'; chip.style.color = '#fff';
+                    } else {
+                        chip.style.background = '#e5e7eb'; chip.style.color = '#1f2937';
+                    }
+
+                    const cleanTitle = cleanLocation(item.area);
+                    chip.innerHTML = `<span>${cleanTitle}</span> <span style="font-size: 9px; opacity: 0.85;">${item.auditor.substring(0, 3)}</span>`;
+                    if (item.isPreserved) {
+                        chip.style.opacity = '0.75';
+                        chip.title = 'Auditoría conservada del calendario actual';
+                    }
+                    col.appendChild(chip);
+                });
+
+                grid.appendChild(col);
+            });
+
+            // Habilitar botón de guardar
+            const btnSave = document.getElementById('btn-save-auto-sched');
+            btnSave.disabled = false;
+            btnSave.style.cursor = 'pointer';
+            btnSave.style.opacity = '1';
+        }
+
+        // --- GUARDADO DIRECTO EN SUPABASE ---
+        async function saveAutoScheduledEvents() {
+            if (!supabaseClient) {
+                alert('Debes iniciar sesión con Supabase para guardar auditorías.');
+                return;
+            }
+
+            if (!autoSchedGeneratedSchedule || autoSchedGeneratedSchedule.length === 0) {
+                alert('No hay auditorías generadas para guardar. Presiona primero "Generar y Previsualizar Reparto".');
+                return;
+            }
+
+            const monStr = document.getElementById('auto-sched-date').value;
+            const friStr = autoSchedAddDays(monStr, 4);
+            const conflictMode = document.querySelector('input[name="auto-sched-conflict-mode"]:checked')?.value || 'replace';
+
+            const confirmMsg = `¿Confirmas guardar ${autoSchedGeneratedSchedule.length} auditorías en la semana del ${monStr} al ${friStr}?` +
+                (conflictMode === 'replace' ? '\n(Se reemplazarán las auditorías pendientes/programadas existentes, conservando intactas las completadas).' : '');
+
+            if (!confirm(confirmMsg)) return;
+
+            const btnSave = document.getElementById('btn-save-auto-sched');
+            btnSave.disabled = true;
+            btnSave.innerHTML = '⏳ Guardando en Base de Datos...';
+
+            try {
+                // 1. Si el modo es 'replace', eliminar las no-completadas de esa semana
+                if (conflictMode === 'replace') {
+                    const { error: delError } = await supabaseClient
+                        .from('calendar_events')
+                        .delete()
+                        .gte('audit_date', monStr)
+                        .lte('audit_date', friStr)
+                        .neq('status', 'Completada');
+
+                    if (delError) {
+                        console.error('Error al limpiar eventos previos:', delError);
+                        alert('Error al limpiar eventos previos: ' + delError.message);
+                        btnSave.disabled = false;
+                        btnSave.innerHTML = '💾 Guardar en Calendario';
+                        return;
+                    }
+                }
+
+                // 2. Insertar los nuevos eventos
+                const { data, error: insError } = await supabaseClient
+                    .from('calendar_events')
+                    .insert(autoSchedGeneratedSchedule);
+
+                if (insError) {
+                    console.error('Error al insertar nuevos eventos:', insError);
+                    alert('Error al insertar eventos en Supabase: ' + insError.message);
+                    btnSave.disabled = false;
+                    btnSave.innerHTML = '💾 Guardar en Calendario';
+                    return;
+                }
+
+                // 3. Recargar y actualizar la interfaz del calendario
+                await initCalendar();
+                closeAutoSchedulerModal();
+                showCalendarToast(`✅ ¡${autoSchedGeneratedSchedule.length} auditorías programadas exitosamente!`);
+
+            } catch (err) {
+                console.error('Excepción al guardar calendario automático:', err);
+                alert('Ocurrió un error inesperado al guardar: ' + err.message);
+                btnSave.disabled = false;
+                btnSave.innerHTML = '💾 Guardar en Calendario';
+            }
+        }
+
+        // =========================================================================
+        // --- FIN MÓDULO DE REPARTO AUTOMÁTICO DE AUDITORÍAS 5S ---
+        // =========================================================================
+
         // --- LÓGICA DE CONTROL DE ÁREAS ---
         function initAreasList() {
             const container = document.getElementById('areas-grid-container');

@@ -158,3 +158,22 @@ La base de datos (Supabase) almacena exclusivamente métricas, hallazgos y audit
         *   **Alisson:** exactamente **15 auditorías semanales**.
     *   La semana 4 (28 de septiembre) cuenta con 43 auditorías totales (Gema: 14, Jose: 14, Alisson: 15).
     *   Se mantiene `TOOL ROOM` exclusivamente los días viernes en las 12 semanas.
+
+### [Octubre 2026] - Módulo Interactivo de Reparto Automático de Auditorías 5S
+*   **Botón en la Barra de Herramientas del Calendario:**
+    *   Se incorporó el botón `⚡ Auto-Repartir Auditorías` en la cabecera del calendario (`#view-calendar`) para permitir la generación y programación autónoma de semanas completas sin intervención manual.
+*   **Modal Interactivo de Configuración (`#auto-scheduler-modal`):**
+    *   **Selector Inteligente de Semanas:** Permite seleccionar cualquier fecha (alineándola al lunes correspondiente), navegar con botones `◀ Anterior` / `Siguiente ▶` y detectar automáticamente la `⚡ Próxima Semana Vacía`.
+    *   **Detección y Manejo de Conflictos:** Analiza en tiempo real si la semana elegida tiene auditorías agendadas o completadas, ofreciendo modos de `Sobrescribir programadas (respetando las completadas)` o `Solo agendar áreas faltantes`.
+    *   **Gestión Dinámica de Auditores y Cuotas:** Permite configurar quiénes auditan (Gema, Jose, Alisson, u otros), definir cuotas semanales individuales, o pulsar `⚖️ Balancear Cuotas` para calcular matemáticamente una distribución equitativa (14, 15, 15).
+    *   **Restricciones Personalizadas Editables:** Permite añadir, editar y eliminar reglas de asignación por área:
+        *   **Día Fijo:** Fijar un área a un día específico (ej. `TOOL ROOM` ➔ `Viernes`).
+        *   **Auditor Fijo:** Asignar un auditor obligatorio para un área específica.
+        *   **Persistencia Local:** Las reglas se almacenan en `localStorage` (`5s_scheduler_rules`) para conservarse entre sesiones.
+    *   **Checklist de Áreas Activas (44 Áreas):** Permite incluir o excluir áreas específicas de la planta con un panel colapsable.
+*   **Algoritmo de Distribución y Previsualización Visual:**
+    *   Aplica primero las restricciones fijas y áreas ya completadas en la semana.
+    *   Reparte las áreas restantes balanceando la carga diaria (ej. 9, 8, 9, 9, 9) y las cuotas semanales de cada auditor.
+    *   Ofrece una previsualización interactiva con tarjetas KPI por auditor (cuota asignada vs objetivo) y una grilla semanal con los chips coloreados correspondientes a cada auditor.
+*   **Guardado Directo en Base de Datos (Supabase):**
+    *   Guarda la programación resultante en la tabla `calendar_events` de Supabase, preservando las auditorías completadas y refrescando el calendario en tiempo real con feedback visual (toasts).
