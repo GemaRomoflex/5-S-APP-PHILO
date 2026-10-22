@@ -177,3 +177,65 @@ La base de datos (Supabase) almacena exclusivamente métricas, hallazgos y audit
     *   Ofrece una previsualización interactiva con tarjetas KPI por auditor (cuota asignada vs objetivo) y una grilla semanal con los chips coloreados correspondientes a cada auditor.
 *   **Guardado Directo en Base de Datos (Supabase):**
     *   Guarda la programación resultante en la tabla `calendar_events` de Supabase, preservando las auditorías completadas y refrescando el calendario en tiempo real con feedback visual (toasts).
+
+### [Octubre 2026] - Reestructuración de Auditorías 5'S por Sectores, Binas y Rotación Mensual
+*   **Transición de Áreas a Sectores (Sectores 1 al 8):**
+    *   Se transformó la unidad oficial de programación de auditorías 5'S: en lugar de auditarse individualmente 44 áreas dispersas a lo largo de la semana, ahora se audita formalmente por **Sectores**.
+    *   Se formalizó en `sectorMapping` la definición de los 8 sectores, incorporando el `Sector 8` (Entrada, Periferias, Reciclaje, Pasillos).
+*   **Distribución Semanal en Binas Rotativas (Días Lunes):**
+    *   Todas las auditorías de los sectores operativos se programan y concentran en los días **Lunes**, divididas en 3 binas fijas que **rotan semana tras semana entre las 3 personas** para garantizar que ningún auditor audite repetidamente las mismas zonas:
+        *   **Bina A:** `Sector 1` y `Sector 3` *(+ Tool Room en Viernes)*.
+        *   **Bina B:** `Sector 2` y `Sector 4`.
+        *   **Bina C:** `Sector 5` y `Sector 7`.
+    *   **Ciclo de Rotación Semanal:**
+        *   *Semana 1:* Alisson ➔ Bina A (1 y 3 + Tool Room) | Jose ➔ Bina B (2 y 4) | Gema ➔ Bina C (5 y 7).
+        *   *Semana 2:* Gema ➔ Bina A (1 y 3 + Tool Room) | Alisson ➔ Bina B (2 y 4) | Jose ➔ Bina C (5 y 7).
+        *   *Semana 3:* Jose ➔ Bina A (1 y 3 + Tool Room) | Gema ➔ Bina B (2 y 4) | Alisson ➔ Bina C (5 y 7).
+        *   *Semana 4 en adelante:* Se repite el ciclo rotativo ordenadamente en todas las semanas.
+*   **Auditoría de Tool Room los Viernes:**
+    *   `TOOL ROOM` (perteneciente al Sector 1) se audita exclusivamente los **Viernes** por la persona a quien le correspondió la Bina A (Sector 1 y 3) en dicha semana, rotando de la misma forma equitativa.
+*   **Auditorías Mensuales Rotativas (Sectores 6 y 8):**
+    *   Los sectores de áreas comunes/administrativas y externas (`Sector 6` y `Sector 8`) se auditan exactamente **1 vez al mes** (en el primer lunes de cada mes).
+    *   Se diseñó una rotación equitativa mes a mes entre los 3 auditores oficiales:
+        *   **Septiembre (07/09):** `Sector 6` ➔ Gema | `Sector 8` ➔ Jose.
+        *   **Octubre (05/10):** `Sector 6` ➔ Jose | `Sector 8` ➔ Alisson.
+        *   **Noviembre (02/11):** `Sector 6` ➔ Alisson | `Sector 8` ➔ Gema.
+*   **Flexibilidad Operativa y Drag & Drop:**
+    *   Se preservó y flexibilizó el sistema interactivo de arrastrar y soltar (`calDrop`), permitiendo que cualquier auditor pueda mover y reacomodar libremente su auditoría a cualquier otro día de la semana si sus tiempos operativos lo requieren, con toasts de feedback inmediato.
+*   **Actualización de Interfaz y Modal de Calendario:**
+    *   En `openCalendarModal`, se reestructuró la selección de áreas/sectores presentando como bloque prioritario los **Sectores 5'S Oficiales** (`Sector 1` al `Sector 8` y `Tool Room`) con detección y auto-selección inteligente del auditor correspondiente.
+    *   Se actualizó `cleanLocation` y `auditorFallbackMap` para reconocer y formatear de forma consistente `Sector 1` a `Sector 8` y `Tool Room`.
+*   **Alineación Completa en Base de Datos (Supabase):**
+    *   Se depuraron los 526 registros obsoletos por área individual en la tabla `calendar_events`.
+    *   Se insertaron los nuevos 90 eventos distribuidos con rotación semanal y mensual por Sectores, Binas y Tool Room para las 12 semanas del ciclo (Septiembre a Noviembre 2026).
+    *   Se conservó 100% intacto el registro histórico completado (`Assembly|Gema` del 08/09/2026).
+
+### [Octubre 2026] - Actualización del Generador y Modal "Auto-Repartir Auditorías" a Sectores y Binas Rotativas
+*   **Reemplazo del Módulo de Autogeneración:**
+    *   Se eliminó la distribución por 44 áreas individuales dispersas en los 5 días de la semana.
+    *   Se implementó la autogeneración basada en los **Sectores Oficiales (1 al 8) y Tool Room**:
+        *   **Binas Semanales en Lunes:** Bina A (Sector 1 y 3), Bina B (Sector 2 y 4), Bina C (Sector 5 y 7).
+        *   **Tool Room en Viernes:** Asignado a quien le corresponda la Bina A esa semana.
+        *   **Rotación Semanal Automática:** Cálculo dinámico del turno semanal en base al Lunes de la semana seleccionada relativo al inicio de ciclo (`2026-09-07`), rotando equitativamente entre Alisson, Jose y Gema.
+        *   **Sectores Mensuales (Sector 6 y 8):** Detección inteligente del primer lunes del mes con activación automática y cálculo de la rotación mensual (ej. Mes % 3).
+*   **Rediseño Visual del Modal `#auto-scheduler-modal`:**
+    *   Selector de semana con alineación automática a días Lunes y botones de navegación rápida.
+    *   Tarjetas visuales por auditor indicando exactamente la bina y sectores que le tocan en la semana seleccionada.
+    *   Tarjetas explicativas de las Binas A, B y C con switch para activar/desactivar sectores mensuales.
+    *   Checklist colapsable de sectores activos.
+    *   Previsualización semanal por columnas de días (Lunes a Viernes) con badges de color por auditor (Gema: Lila, Alisson: Rosa pastel, Jose: Azul).
+    *   Guardado seguro en Supabase con opción de reemplazar programadas o rellenar faltantes, preservando siempre auditorías con estado `Completada`.
+
+
+### [Octubre 2026] - Visibilidad Completa de Nombres en Gráficas Overdue, Gráfica de % de Cierre por Semana y Métrica % Cerradas Post-Overdue
+*   **Visibilidad Total de Responsables (Owners) en Dashboard y Reportes PNG:**
+    *   Se desactivó el recorte automático de etiquetas de Chart.js (`ticks: { autoSkip: false, maxRotation: 65, minRotation: 45/50 }`) en todas las gráficas de acciones vencidas y por vencer tanto del **Dashboard principal** (`chartDeptOverdue`, `chartAgingOverdue`, `chartUpcomingDue`) como de los **Reportes Visuales PNG** (`renderAgeActionChart`, `renderActionChart`, `renderWeeklyCharts`, `renderAreasCharts`).
+    *   Se configuró por defecto la vista agrupada por **Responsable (`owner`)** en las gráficas de Acciones Vencidas del Dashboard (`overdueGroupBy = 'owner'` y `agingOverdueGroupBy = 'owner'`), ordenando de mayor a menor cantidad de acciones vencidas.
+    *   Se implementó ajuste dinámico de ancho completo (`grid-column: 1 / -1` mediante `updateOverdueGridLayout()`) cuando las gráficas de Acciones Vencidas están agrupadas por Responsable, y se amplió el lienzo de exportación de reportes PNG (`#hidden-report-container` y `#visual-report`) de `800px` a `1200px` para que los 38+ nombres de responsables se lean con total claridad sin necesidad de pasar el cursor.
+*   **Nueva Gráfica: `% de Acciones Cerradas por Semana (Week XX YY%)`:**
+    *   Se implementó `computeWeeklyClosureStats()`, `renderChartWeeklyClosure()` en la fila principal del Dashboard y `renderReportWeeklyClosureChart()` en los reportes visuales PNG (Semanal, Mensual, Acciones Vencidas e individual).
+    *   Cada barra muestra explícitamente en el eje X y sobre la barra el número de semana y su porcentaje de cierre (ej. `Week 38 60% (3/5)`), permitiendo visualizar la evolución semanal de cierre de extremo a extremo.
+*   **Nueva Métrica y Trazabilidad: `% de Acciones Cerradas Post-Overdue`:**
+    *   Respetando la Regla 1 de arquitectura (sin alterar columnas de la tabla `actions` en Supabase), se implementó esteganografía automática (`\nLATE_CLOSED:1` en `comments`) al cerrar una acción vencida desde el Editor (`saveActionEdit`) o desde la ingesta CSV (`runUpsert`), ocultando el marcador en la interfaz mediante `getCleanComment()`.
+    *   Se creó `isActionClosedLate(item)` que detecta tanto el marcador `\nLATE_CLOSED:1` como el historial existente en base de datos (`status === 'Closed'` vs `'Close'` al día, `closedDate > dueDate` o `isLate`).
+    *   Se añadió la nueva tarjeta KPI **`% Cerradas Post-Overdue`** en el Dashboard con desglose interactivo al hacer clic (`openDetailView('closed_late')`), una serie superpuesta en la gráfica semanal y un bloque de resumen ejecutivo en los reportes PNG.
