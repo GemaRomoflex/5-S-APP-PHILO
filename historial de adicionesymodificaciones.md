@@ -239,3 +239,11 @@ La base de datos (Supabase) almacena exclusivamente métricas, hallazgos y audit
     *   Respetando la Regla 1 de arquitectura (sin alterar columnas de la tabla `actions` en Supabase), se implementó esteganografía automática (`\nLATE_CLOSED:1` en `comments`) al cerrar una acción vencida desde el Editor (`saveActionEdit`) o desde la ingesta CSV (`runUpsert`), ocultando el marcador en la interfaz mediante `getCleanComment()`.
     *   Se creó `isActionClosedLate(item)` que detecta tanto el marcador `\nLATE_CLOSED:1` como el historial existente en base de datos (`status === 'Closed'` vs `'Close'` al día, `closedDate > dueDate` o `isLate`).
     *   Se añadió la nueva tarjeta KPI **`% Cerradas Post-Overdue`** en el Dashboard con desglose interactivo al hacer clic (`openDetailView('closed_late')`), una serie superpuesta en la gráfica semanal y un bloque de resumen ejecutivo en los reportes PNG.
+
+### [Octubre 2026] - Nueva Plantilla de Comunicados (`Plantilladecomunicados.png`), Tipografía Century Gothic y Aumento de Tamaño de Letra
+*   **Integración de `Plantilladecomunicados.png`:**
+    *   Se configuró la nueva imagen [Plantilladecomunicados.png](file:///C:/Users/gdlgemro/OneDrive%20-%20Flex/Documents/dashboard%202.0/Plantilladecomunicados.png) como fondo oficial en `#visual-report` (para Reporte Diario, Semanal, Mensual, Por Vencer y Acciones Vencidas) así como en los comunicados ejecutivos de Gemba (`generateGembaExecutivePNG` y `generateGembaReport`).
+    *   Se ajustó el espaciado superior (`height: 375px`) para respetar íntegramente el encabezado dorado de la nueva plantilla (`SCORE 5'S +1 | PHILO | Guad North B29`).
+*   **Tipografía `Century Gothic` y Aumento de Tamaño de Fuente:**
+    *   Se reemplazó la fuente anterior (`Segoe UI` / `sans-serif`) por `'Century Gothic', CenturyGothic, AppleGothic, sans-serif` en todo el contenedor `#visual-report`, textos de saludo, títulos, tablas y gráficas de los comunicados.
+    *   Se incrementó el tamaño del texto del comunicado de `16px` a `25px`–`27px` (y métricas destacadas a `27px`–`28px`), títulos principales a `64px`/`34px`, encabezados de gráficas a `28px`, y tablas/etiquetas de ejes para máxima legibilidad en correos.

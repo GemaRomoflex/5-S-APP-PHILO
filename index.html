@@ -2542,25 +2542,25 @@
 
         <!-- CONTENEDOR OCULTO PARA HTML2CANVAS -->
         <div id="hidden-report-container" style="position: absolute; left: -9999px; top: 0; width: 1200px; background: white; z-index: -1;">
-            <div id="visual-report" style="padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; background-color: #ffffff; background-image: url('plantilla de comunicados.png'); background-size: 100% auto; background-repeat: no-repeat; background-position: top center; width: 1200px; min-height: 1200px;">
-                <!-- Espaciado superior para no escribir encima del banner impreso en tu imagen -->
-                <div style="width: 100%; height: 340px;"></div>
+            <div id="visual-report" style="padding: 0; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; color: #1e293b; background-color: #ffffff; background-image: url('Plantilladecomunicados.png'); background-size: 100% auto; background-repeat: no-repeat; background-position: top center; width: 1200px; min-height: 1200px;">
+                <!-- Espaciado superior para no escribir encima del banner impreso en Plantilladecomunicados.png -->
+                <div style="width: 100%; height: 375px;"></div>
                 
                 <!-- Greeting -->
-                <div style="padding: 0 50px 20px 50px; font-size: 16px; line-height: 1.5;">
-                    <p style="margin-top: 0;">Buen día equipo,</p>
-                    <p id="report-greeting-text">Les comparto la información correspondiente a las auditorías realizadas el día de hoy.<br>Agradeceré su pronta colaboración en la atención de las acciones generadas. Como recordatorio, se cuenta con un plazo de 7 días para su cierre antes de que pasen a estatus overdue.</p>
-                    <p style="margin-bottom: 0;">Saludos cordiales,<br><strong>Gema Romo</strong></p>
+                <div style="padding: 0 55px 25px 55px; font-size: 25px; line-height: 1.65; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; color: #1e293b;">
+                    <p style="margin-top: 0; font-weight: 700; font-size: 27px;">Buen día equipo,</p>
+                    <p id="report-greeting-text" style="font-size: 25px; line-height: 1.65;">Les comparto la información correspondiente a las auditorías realizadas el día de hoy.<br>Agradeceré su pronta colaboración en la atención de las acciones generadas. Como recordatorio, se cuenta con un plazo de 7 días para su cierre antes de que pasen a estatus overdue.</p>
+                    <p style="margin-bottom: 0; font-size: 25px;">Saludos cordiales,<br><strong style="font-size: 27px;">Gema Romo</strong></p>
                 </div>
                 
                 <!-- Big Title/Date -->
-                <div style="text-align: center; margin: 30px 0;">
-                    <h1 id="report-big-date" style="font-size: 56px; color: #005A9C; margin: 0; font-weight: 900;">10 de Junio</h1>
-                    <h2 id="report-subtitle" style="font-size: 28px; color: #333; margin: 5px 0;">Calificación de Auditorías 5s</h2>
+                <div style="text-align: center; margin: 35px 0; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">
+                    <h1 id="report-big-date" style="font-size: 64px; color: #005A9C; margin: 0; font-weight: 900; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">10 de Junio</h1>
+                    <h2 id="report-subtitle" style="font-size: 34px; color: #333; margin: 8px 0; font-weight: 700; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">Calificación de Auditorías 5s</h2>
                 </div>
                 
                 <!-- Dynamic Content Area -->
-                <div id="report-dynamic-content" style="padding: 0 50px 50px 50px;">
+                <div id="report-dynamic-content" style="padding: 0 55px 60px 55px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">
                     <!-- Areas or Actions will be injected here -->
                 </div>
             </div>
@@ -10070,7 +10070,7 @@
                 
                 greetingText.innerHTML = `
                     Les comparto el resumen ejecutivo de las auditorías realizadas el día de hoy.<br>
-                    <strong>Calificación Promedio del Site: <span style="color: #005A9C; font-size: 18px;">${metrics.avgScore}%</span></strong><br><br>
+                    <strong>Calificación Promedio del Site: <span style="color: #005A9C; font-size: 28px;">${metrics.avgScore}%</span></strong><br><br>
                     Agradeceré su pronta colaboración en la atención de las acciones generadas. Recuerden que tienen 7 días para el cierre oportuno.
                 `;
                 
@@ -10124,9 +10124,9 @@
                 
                 greetingText.innerHTML = `
                     Les comparto el resumen ejecutivo correspondiente a la Semana ${weekNum}.<br>
-                    <strong>Calificación Promedio de la Semana: <span style="color: #005A9C; font-size: 18px;">${metrics.avgScore}%</span></strong><br>
-                    <strong>Total de Acciones Vencidas (Overdue): <span style="color: #dc2626; font-size: 18px;">${overdueData.length}</span></strong><br>
-                    <strong>% de Acciones Cerradas después de Overdue: <span style="color: #d97706; font-size: 18px;">${lateClosureGlobalPct}% (${totalClosedLateAll}/${totalClosedAll})</span></strong><br><br>
+                    <strong>Calificación Promedio de la Semana: <span style="color: #005A9C; font-size: 27px;">${metrics.avgScore}%</span></strong><br>
+                    <strong>Total de Acciones Vencidas (Overdue): <span style="color: #dc2626; font-size: 27px;">${overdueData.length}</span></strong><br>
+                    <strong>% de Acciones Cerradas después de Overdue: <span style="color: #d97706; font-size: 27px;">${lateClosureGlobalPct}% (${totalClosedLateAll}/${totalClosedAll})</span></strong><br><br>
                     Agradeceremos que revisen sus áreas asignadas y den seguimiento tanto a las acciones generadas en la semana como a las acciones vencidas a la brevedad.
                 `;
                 
@@ -10196,9 +10196,9 @@
                 
                 greetingText.innerHTML = `
                     Les comparto el reporte mensual de auditorías 5S correspondiente a <strong>${months[month]} ${year}</strong>.<br><br>
-                    <strong>Calificación General del Site: <span style="color: #005A9C; font-size: 18px;">${metrics.avgScore}%</span></strong><br>
-                    <strong>Porcentaje de Cierre de Acciones: <span style="color: #005A9C; font-size: 18px;">${closureRate}%</span></strong><br>
-                    <strong>% de Acciones Cerradas después de Overdue: <span style="color: #d97706; font-size: 18px;">${lateClosureRate}% (${closedLateCount}/${closedCount})</span></strong><br><br>
+                    <strong>Calificación General del Site: <span style="color: #005A9C; font-size: 27px;">${metrics.avgScore}%</span></strong><br>
+                    <strong>Porcentaje de Cierre de Acciones: <span style="color: #005A9C; font-size: 27px;">${closureRate}%</span></strong><br>
+                    <strong>% de Acciones Cerradas después de Overdue: <span style="color: #d97706; font-size: 27px;">${lateClosureRate}% (${closedLateCount}/${closedCount})</span></strong><br><br>
                     Agradeceremos que revisen sus áreas asignadas y cierren las acciones vencidas a la brevedad posible, dando prioridad a cerrar las acciones con mayor antigüedad.
                 `;
                 
@@ -10243,7 +10243,7 @@
                 
                 greetingText.innerHTML = `
                     Equipo,<br>Las siguientes acciones están a punto de pasar a estatus Vencido (Overdue) en los próximos 3 días.<br>
-                    <strong>Total de acciones en riesgo: <span style="color: #f59e0b; font-size: 18px;">${reportData.length}</span></strong><br><br>
+                    <strong>Total de acciones en riesgo: <span style="color: #f59e0b; font-size: 27px;">${reportData.length}</span></strong><br><br>
                     Requerimos su inmediata atención para resolverlas y mantener nuestra métrica de cierre saludable.
                 `;
                 
@@ -10269,8 +10269,8 @@
                 
                 greetingText.innerHTML = `
                     Equipo,<br>Se muestra a continuación las acciones que ya se encuentran VENCIDAS (fuera de SLA), con todos los responsables visibles.<br>
-                    <strong>Total de acciones vencidas: <span style="color: #dc2626; font-size: 18px;">${reportData.length}</span></strong> &nbsp;|&nbsp;
-                    <strong>% de Acciones Cerradas Post-Overdue: <span style="color: #d97706; font-size: 18px;">${lateClosureGlobalPct}% (${totalClosedLateAll}/${totalClosedAll})</span></strong><br><br>
+                    <strong>Total de acciones vencidas: <span style="color: #dc2626; font-size: 27px;">${reportData.length}</span></strong> &nbsp;|&nbsp;
+                    <strong>% de Acciones Cerradas Post-Overdue: <span style="color: #d97706; font-size: 27px;">${lateClosureGlobalPct}% (${totalClosedLateAll}/${totalClosedAll})</span></strong><br><br>
                     Por favor, pónganse en contacto con los responsables mencionados para el cierre y plan de contingencia inmediato, dando prioridad a cerrar las acciones con mayor antigüedad.
                 `;
                 
@@ -10354,7 +10354,7 @@
                                 autoSkip: false,
                                 maxRotation: 45,
                                 minRotation: 0,
-                                font: { family: 'Century Gothic', size: 12, weight: 'bold' },
+                                font: { family: 'Century Gothic', size: 14, weight: 'bold' },
                                 color: '#1e293b'
                             }
                         },
@@ -10365,7 +10365,7 @@
                             ticks: {
                                 stepSize: 20,
                                 callback: (v) => v <= 100 ? v + '%' : '',
-                                font: { family: 'Century Gothic', size: 13 }
+                                font: { family: 'Century Gothic', size: 15, weight: 'bold' }
                             }
                         }
                     },
@@ -10374,8 +10374,8 @@
                             display: true,
                             position: 'top',
                             labels: {
-                                boxWidth: 14,
-                                font: { family: 'Century Gothic', size: 13, weight: 'bold' }
+                                boxWidth: 16,
+                                font: { family: 'Century Gothic', size: 15, weight: 'bold' }
                             }
                         },
                         datalabels: {
@@ -10383,7 +10383,7 @@
                             align: 'top',
                             offset: 2,
                             color: (context) => context.datasetIndex === 1 ? '#6d28d9' : '#0f172a',
-                            font: { weight: 'bold', size: 12, family: 'Century Gothic' },
+                            font: { weight: 'bold', size: 14, family: 'Century Gothic' },
                             formatter: (value, context) => {
                                 if (context.datasetIndex === 1) {
                                     return value > 0 ? `Venc: ${value}%` : '';
@@ -10399,7 +10399,7 @@
 
         function renderWeeklyCharts(data, container, overdueData = [], weeklyTrend = []) {
             if (data.length === 0 && (!overdueData || overdueData.length === 0) && (!weeklyTrend || weeklyTrend.length === 0)) {
-                container.innerHTML = '<p style="text-align:center; font-size: 20px; color: #666; margin-top: 50px;">No hay auditorías registradas en esta semana ni acciones vencidas.</p>';
+                container.innerHTML = '<p style="text-align:center; font-size: 24px; font-family: \'Century Gothic\', sans-serif; color: #666; margin-top: 50px;">No hay auditorías registradas en esta semana ni acciones vencidas.</p>';
                 return;
             }
             
@@ -10449,14 +10449,14 @@
                 }
             }
             
-            let html = `<div style="display: flex; flex-direction: column; gap: 40px; margin-top: 10px;">`;
+            let html = `<div style="display: flex; flex-direction: column; gap: 40px; margin-top: 10px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">`;
             
             if (data.length > 0) {
                 // Grafica de Calificaciones por Area
                 html += `
                     <div style="width: 100%; text-align: center; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 24px;">Calificación por Área Auditada</h3>
-                        <div style="width: 100%; height: 320px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
+                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 28px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">Calificación por Área Auditada</h3>
+                        <div style="width: 100%; height: 340px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
                             <canvas id="chart-weekly-scores"></canvas>
                         </div>
                     </div>
@@ -10466,7 +10466,7 @@
                     html += `
                         <!-- Grafica de Acciones Abiertas -->
                         <div style="width: 100%; text-align: center; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                            <h3 style="margin: 0 0 20px 0; color: #333; font-size: 24px;">Acciones Abiertas por Responsable (Generadas en esta semana)</h3>
+                            <h3 style="margin: 0 0 20px 0; color: #333; font-size: 28px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">Acciones Abiertas por Responsable (Generadas en esta semana)</h3>
                             <div style="width: 100%; height: 380px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
                                 <canvas id="chart-weekly-actions"></canvas>
                             </div>
@@ -10475,14 +10475,14 @@
                 } else {
                     html += `
                         <div style="width: 100%; text-align: center; background: #ecfdf5; border: 2px dashed #10b981; border-radius: 16px; padding: 30px; box-sizing: border-box;">
-                            <h4 style="margin: 0; color: #047857; font-size: 24px;">¡Excelente trabajo! No quedaron acciones abiertas esta semana.</h4>
+                            <h4 style="margin: 0; color: #047857; font-size: 26px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">¡Excelente trabajo! No quedaron acciones abiertas esta semana.</h4>
                         </div>
                     `;
                 }
             } else {
                 html += `
                     <div style="width: 100%; text-align: center; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 30px; box-sizing: border-box;">
-                        <h4 style="margin: 0; color: #64748b; font-size: 22px;">No se registraron auditorías en esta semana seleccionada.</h4>
+                        <h4 style="margin: 0; color: #64748b; font-size: 24px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">No se registraron auditorías en esta semana seleccionada.</h4>
                     </div>
                 `;
             }
@@ -10491,7 +10491,7 @@
             if (weeklyTrend && weeklyTrend.length > 0) {
                 html += `
                     <div style="width: 100%; text-align: center; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 24px;">📊 % de Acciones Cerradas por Semana y % Cerradas Post-Overdue</h3>
+                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 28px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">📊 % de Acciones Cerradas por Semana y % Cerradas Post-Overdue</h3>
                         <div style="width: 100%; height: 380px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
                             <canvas id="chart-weekly-closure-trend"></canvas>
                         </div>
@@ -10504,8 +10504,8 @@
                 html += `
                     <!-- Grafica de Acciones Vencidas (Overdue) - Totalidad -->
                     <div style="width: 100%; text-align: center; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 26px;">Máx. Antigüedad de Acciones Vencidas por Responsable (${overdueData.length} en total)</h3>
-                        <div style="width: 100%; height: 540px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
+                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 28px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">Máx. Antigüedad de Acciones Vencidas por Responsable (${overdueData.length} en total)</h3>
+                        <div style="width: 100%; height: 550px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
                             <canvas id="chart-weekly-overdue"></canvas>
                         </div>
                     </div>
@@ -10513,7 +10513,7 @@
             } else {
                 html += `
                     <div style="width: 100%; text-align: center; background: #ecfdf5; border: 2px dashed #10b981; border-radius: 16px; padding: 30px; box-sizing: border-box;">
-                        <h4 style="margin: 0; color: #047857; font-size: 24px;">¡Felicidades! Cero acciones vencidas (Overdue) en el sitio 🎉</h4>
+                        <h4 style="margin: 0; color: #047857; font-size: 26px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">¡Felicidades! Cero acciones vencidas (Overdue) en el sitio 🎉</h4>
                     </div>
                 `;
             }
@@ -10548,12 +10548,12 @@
                                         anchor: 'end',
                                         align: 'bottom',
                                         color: '#ffffff',
-                                        font: { weight: 'bold', size: 14 }
+                                        font: { weight: 'bold', size: 16, family: 'Century Gothic' }
                                     }
                                 },
                                 scales: {
-                                    y: { beginAtZero: true, max: 100, ticks: { stepSize: 20, font: { size: 12 } } },
-                                    x: { ticks: { autoSkip: false, maxRotation: 50, minRotation: 0, font: { size: 11 } } }
+                                    y: { beginAtZero: true, max: 100, ticks: { stepSize: 20, font: { size: 14, family: 'Century Gothic' } } },
+                                    x: { ticks: { autoSkip: false, maxRotation: 50, minRotation: 0, font: { size: 13, weight: 'bold', family: 'Century Gothic' } } }
                                 }
                             }
                         });
@@ -10589,17 +10589,17 @@
                                             anchor: 'end',
                                             align: 'bottom',
                                             color: '#ffffff',
-                                            font: { weight: 'bold', size: 16 }
+                                            font: { weight: 'bold', size: 18, family: 'Century Gothic' }
                                         }
                                     },
                                     scales: {
-                                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 12 } } },
+                                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 14, family: 'Century Gothic' } } },
                                         x: {
                                             ticks: {
                                                 autoSkip: false,
                                                 maxRotation: 65,
                                                 minRotation: 45,
-                                                font: { size: 12, weight: 'bold', family: 'Century Gothic' },
+                                                font: { size: 13, weight: 'bold', family: 'Century Gothic' },
                                                 color: '#1e293b'
                                             }
                                         }
@@ -10643,7 +10643,7 @@
                                                 autoSkip: false,
                                                 maxRotation: 65,
                                                 minRotation: 45,
-                                                font: { family: 'Century Gothic', size: 12, weight: 'bold' },
+                                                font: { family: 'Century Gothic', size: 13, weight: 'bold' },
                                                 color: '#1e293b'
                                             }
                                         },
@@ -10659,15 +10659,15 @@
                                             color: '#FFFFFF',
                                             anchor: 'center',
                                             align: 'center',
-                                            font: { weight: 'bold', size: 14 },
+                                            font: { weight: 'bold', size: 15, family: 'Century Gothic' },
                                             formatter: (value) => value > 0 ? value : ''
                                         },
                                         legend: {
                                             display: true,
                                             position: 'bottom',
                                             labels: {
-                                                boxWidth: 15,
-                                                font: { size: 14, family: 'Century Gothic' }
+                                                boxWidth: 16,
+                                                font: { size: 15, family: 'Century Gothic', weight: 'bold' }
                                             }
                                         },
                                         tooltip: {
@@ -10690,7 +10690,7 @@
 
         async function renderMonthlyCharts(data, prevData, container, lastDayOfMonth, weeklyTrend = []) {
             if(data.length === 0) {
-                container.innerHTML = '<p style="text-align:center; font-size: 20px; color: #666; margin-top: 50px;">No hay auditorías registradas en este mes.</p>';
+                container.innerHTML = '<p style="text-align:center; font-size: 24px; font-family: \'Century Gothic\', sans-serif; color: #666; margin-top: 50px;">No hay auditorías registradas en este mes.</p>';
                 return;
             }
             
@@ -10723,12 +10723,12 @@
             
             
             let html = `
-                <div style="display: flex; flex-direction: column; gap: 40px; margin-top: 10px;">
+                <div style="display: flex; flex-direction: column; gap: 40px; margin-top: 10px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">
                     
                     <!-- Grafica Promedio Mensual -->
                     <div style="width: 100%; text-align: center; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 24px;">Calificación Promedio Mensual por Área</h3>
-                        <div style="width: 100%; height: ${Math.max(400, sortedAreas.length * 35)}px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
+                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 28px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">Calificación Promedio Mensual por Área</h3>
+                        <div style="width: 100%; height: ${Math.max(420, sortedAreas.length * 38)}px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
                             <canvas id="chart-monthly-scores"></canvas>
                         </div>
                     </div>
@@ -10738,7 +10738,7 @@
                 html += `
                     <!-- Gráfica % Cierre por Semana -->
                     <div style="width: 100%; text-align: center; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 24px;">📊 % de Acciones Cerradas por Semana y % Cerradas Post-Overdue</h3>
+                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 28px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">📊 % de Acciones Cerradas por Semana y % Cerradas Post-Overdue</h3>
                         <div style="width: 100%; height: 380px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
                             <canvas id="chart-monthly-closure-trend"></canvas>
                         </div>
@@ -10749,14 +10749,14 @@
             if (overdueActions.length > 0) {
                 html += `
                     <!-- Tabla Overdue -->
-                    <div style="width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                        <h3 style="margin: 0 0 20px 0; color: #ef4444; font-size: 24px; text-align: center;">Acciones Vencidas al Cierre de Mes (${overdueActions.length})</h3>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 14px; text-align: left;">
+                    <div style="width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.05); font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">
+                        <h3 style="margin: 0 0 20px 0; color: #ef4444; font-size: 28px; text-align: center; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">Acciones Vencidas al Cierre de Mes (${overdueActions.length})</h3>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 19px; text-align: left; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">
                             <thead>
                                 <tr style="background-color: #f8fafc; border-bottom: 2px solid #e2e8f0;">
-                                    <th style="padding: 12px; color: #475569;">Área</th>
-                                    <th style="padding: 12px; color: #475569;">Acción</th>
-                                    <th style="padding: 12px; color: #475569;">Propietario</th>
+                                    <th style="padding: 14px; color: #475569;">Área</th>
+                                    <th style="padding: 14px; color: #475569;">Acción</th>
+                                    <th style="padding: 14px; color: #475569;">Propietario</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -10766,16 +10766,16 @@
                     const bg = index % 2 === 0 ? '#ffffff' : '#f8fafc';
                     html += `
                         <tr style="background-color: ${bg}; border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 12px; font-weight: 500;">${item.cleanLocation}</td>
-                            <td style="padding: 12px; color: #64748b;">${getCleanComment(item.comments) || '-'}</td>
-                            <td style="padding: 12px;">${item.owner || 'Sin Asignar'}</td>
+                            <td style="padding: 14px; font-weight: 700;">${item.cleanLocation}</td>
+                            <td style="padding: 14px; color: #334155;">${getCleanComment(item.comments) || '-'}</td>
+                            <td style="padding: 14px; font-weight: 600;">${item.owner || 'Sin Asignar'}</td>
                         </tr>
                     `;
                 });
                 if (overdueActions.length > 15) {
                      html += `
                         <tr style="background-color: #ffffff; border-bottom: 1px solid #e2e8f0;">
-                            <td colspan="3" style="padding: 12px; font-style: italic; text-align: center; color: #64748b;">Y ${overdueActions.length - 15} acciones vencidas más...</td>
+                            <td colspan="3" style="padding: 14px; font-style: italic; text-align: center; color: #64748b; font-size: 19px;">Y ${overdueActions.length - 15} acciones vencidas más...</td>
                         </tr>
                     `;
                 }
@@ -10787,7 +10787,7 @@
             } else {
                 html += `
                     <div style="width: 100%; text-align: center; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                        <h3 style="margin: 0; color: #10b981; font-size: 24px;">¡Felicidades! Cero Acciones Vencidas al Cierre de Mes 🎉</h3>
+                        <h3 style="margin: 0; color: #10b981; font-size: 26px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">¡Felicidades! Cero Acciones Vencidas al Cierre de Mes 🎉</h3>
                     </div>
                 `;
             }
@@ -10825,12 +10825,13 @@
                                 color: '#333',
                                 anchor: 'end',
                                 align: 'right',
-                                font: { weight: 'bold', size: 14 },
+                                font: { weight: 'bold', size: 16, family: 'Century Gothic' },
                                 formatter: (val) => val + '%'
                             }
                         },
                         scales: {
-                            x: { beginAtZero: true, max: 100 }
+                            x: { beginAtZero: true, max: 100, ticks: { font: { family: 'Century Gothic', size: 14 } } },
+                            y: { ticks: { font: { family: 'Century Gothic', size: 14, weight: 'bold' } } }
                         }
                     }
                 });
@@ -10843,7 +10844,7 @@
 
         async function renderAreasCharts(data, container) {
             if(data.length === 0) {
-                container.innerHTML = '<p style="text-align:center; font-size: 20px; color: #666; margin-top: 50px;">No hay auditorías registradas en este periodo.</p>';
+                container.innerHTML = '<p style="text-align:center; font-size: 24px; font-family: \'Century Gothic\', sans-serif; color: #666; margin-top: 50px;">No hay auditorías registradas en este periodo.</p>';
                 return;
             }
             
@@ -10875,14 +10876,14 @@
                 const canvasId = 'chart-report-' + i;
                 
                 html += `
-                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 30px 0; border-top: 2px solid #e2e8f0;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 30px 0; border-top: 2px solid #e2e8f0; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">
                         <div style="flex: 1;">
-                            <h3 style="margin: 0; font-size: 20px; color: #64748b; text-transform: uppercase;">Área auditada</h3>
-                            <p style="margin: 5px 0 0 0; font-size: 42px; font-weight: 800; color: #0f172a;">${areaName}</p>
+                            <h3 style="margin: 0; font-size: 24px; color: #64748b; text-transform: uppercase; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">Área auditada</h3>
+                            <p style="margin: 5px 0 0 0; font-size: 46px; font-weight: 800; color: #0f172a; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">${areaName}</p>
                         </div>
                         <div style="flex: 1; text-align: center;">
-                            <h3 style="margin: 0; font-size: 20px; color: #64748b; text-transform: uppercase;">Calificación general</h3>
-                            <div style="background-color: #005A9C; color: white; display: inline-block; padding: 15px 40px; border-radius: 40px; font-size: 48px; font-weight: 900; margin-top: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            <h3 style="margin: 0; font-size: 24px; color: #64748b; text-transform: uppercase; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">Calificación general</h3>
+                            <div style="background-color: #005A9C; color: white; display: inline-block; padding: 15px 40px; border-radius: 40px; font-size: 52px; font-weight: 900; margin-top: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">
                                 ${avgScore}%
                             </div>
                         </div>
@@ -10891,17 +10892,17 @@
                 
                 if (Object.keys(actionsPerOwner).length > 0) {
                     html += `
-                        <div style="width: 100%; text-align: center; margin-bottom: 50px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                            <h4 style="margin: 0 0 20px 0; color: #333; font-size: 24px;">Acciones Generadas</h4>
-                            <div style="width: 100%; height: 340px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
+                        <div style="width: 100%; text-align: center; margin-bottom: 50px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.05); font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">
+                            <h4 style="margin: 0 0 20px 0; color: #333; font-size: 28px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">Acciones Generadas</h4>
+                            <div style="width: 100%; height: 350px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
                                 <canvas id="${canvasId}"></canvas>
                             </div>
                         </div>
                     `;
                 } else {
                     html += `
-                        <div style="width: 100%; text-align: center; margin-bottom: 50px; background: #ecfdf5; border: 2px dashed #10b981; border-radius: 16px; padding: 30px; box-sizing: border-box;">
-                            <h4 style="margin: 0; color: #047857; font-size: 24px;">¡Felicidades! Cero acciones generadas en esta área.</h4>
+                        <div style="width: 100%; text-align: center; margin-bottom: 50px; background: #ecfdf5; border: 2px dashed #10b981; border-radius: 16px; padding: 30px; box-sizing: border-box; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">
+                            <h4 style="margin: 0; color: #047857; font-size: 26px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">¡Felicidades! Cero acciones generadas en esta área.</h4>
                         </div>
                     `;
                 }
@@ -10946,17 +10947,17 @@
                                             anchor: 'end',
                                             align: 'bottom',
                                             color: '#0f172a',
-                                            font: { weight: 'bold', size: 24 }
+                                            font: { weight: 'bold', size: 24, family: 'Century Gothic' }
                                         }
                                     },
                                     scales: {
-                                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 16 } } },
+                                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 16, family: 'Century Gothic' } } },
                                         x: {
                                             ticks: {
                                                 autoSkip: false,
                                                 maxRotation: 60,
                                                 minRotation: 0,
-                                                font: { size: 13, weight: 'bold' },
+                                                font: { size: 15, weight: 'bold', family: 'Century Gothic' },
                                                 color: '#1e293b'
                                             }
                                         }
@@ -10971,7 +10972,7 @@
 
         function renderActionChart(data, container, color, title) {
             if(data.length === 0) {
-                container.innerHTML = '<p style="text-align:center; font-size: 24px; color: #10b981; font-weight: bold; margin-top: 50px;">¡Felicidades! No hay acciones críticas.</p>';
+                container.innerHTML = '<p style="text-align:center; font-size: 26px; font-family: \'Century Gothic\', sans-serif; color: #10b981; font-weight: bold; margin-top: 50px;">¡Felicidades! No hay acciones críticas.</p>';
                 return;
             }
             
@@ -10989,9 +10990,9 @@
             const sortedData = sortedOwners.map(owner => actionsPerOwner[owner]);
             
             const html = `
-                <div style="width: 100%; text-align: center; margin-top: 20px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
-                    <h3 style="margin: 0 0 20px 0; color: #333; font-size: 26px;">${title}</h3>
-                    <div style="width: 100%; height: 540px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
+                <div style="width: 100%; text-align: center; margin-top: 20px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">
+                    <h3 style="margin: 0 0 20px 0; color: #333; font-size: 28px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">${title}</h3>
+                    <div style="width: 100%; height: 550px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
                         <canvas id="chart-critical-actions"></canvas>
                     </div>
                 </div>
@@ -11024,17 +11025,17 @@
                                     anchor: 'end',
                                     align: 'bottom',
                                     color: '#ffffff',
-                                    font: { weight: 'bold', size: 18 }
+                                    font: { weight: 'bold', size: 18, family: 'Century Gothic' }
                                 }
                             },
                             scales: {
-                                y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 16 } } },
+                                y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 16, family: 'Century Gothic' } } },
                                 x: {
                                     ticks: {
                                         autoSkip: false,
                                         maxRotation: 65,
                                         minRotation: 45,
-                                        font: { size: 12, weight: 'bold', family: 'Century Gothic' },
+                                        font: { size: 13, weight: 'bold', family: 'Century Gothic' },
                                         color: '#1e293b'
                                     }
                                 }
@@ -11047,18 +11048,18 @@
 
         function renderAgeActionChart(data, container, color, title, weeklyTrend = []) {
             if(data.length === 0) {
-                container.innerHTML = '<p style="text-align:center; font-size: 24px; color: #10b981; font-weight: bold; margin-top: 50px;">¡Felicidades! No hay acciones críticas.</p>';
+                container.innerHTML = '<p style="text-align:center; font-size: 26px; font-family: \'Century Gothic\', sans-serif; color: #10b981; font-weight: bold; margin-top: 50px;">¡Felicidades! No hay acciones críticas.</p>';
                 return;
             }
             
             // Usamos la misma función del dashboard para obtener los datos apilados por antigüedad
             const dataObj = getStackedAgingData(data, 'owner');
             
-            let html = `<div style="display: flex; flex-direction: column; gap: 35px; margin-top: 20px;">`;
+            let html = `<div style="display: flex; flex-direction: column; gap: 35px; margin-top: 20px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">`;
             html += `
                 <div style="width: 100%; text-align: center; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
-                    <h3 style="margin: 0 0 20px 0; color: #333; font-size: 26px;">${title} (${data.length} acciones vencidas — ${dataObj.labels.length} responsables)</h3>
-                    <div style="width: 100%; height: 550px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
+                    <h3 style="margin: 0 0 20px 0; color: #333; font-size: 28px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">${title} (${data.length} acciones vencidas — ${dataObj.labels.length} responsables)</h3>
+                    <div style="width: 100%; height: 560px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
                         <canvas id="chart-age-actions"></canvas>
                     </div>
                 </div>
@@ -11067,7 +11068,7 @@
             if (weeklyTrend && weeklyTrend.length > 0) {
                 html += `
                     <div style="width: 100%; text-align: center; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
-                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 24px;">📊 % de Acciones Cerradas por Semana y % Cerradas Post-Overdue</h3>
+                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 28px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">📊 % de Acciones Cerradas por Semana y % Cerradas Post-Overdue</h3>
                         <div style="width: 100%; height: 380px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
                             <canvas id="chart-overdue-closure-trend"></canvas>
                         </div>
@@ -11096,7 +11097,7 @@
                                         autoSkip: false,
                                         maxRotation: 65,
                                         minRotation: 45,
-                                        font: { family: 'Century Gothic', size: 12, weight: 'bold' },
+                                        font: { family: 'Century Gothic', size: 13, weight: 'bold' },
                                         color: '#1e293b'
                                     }
                                 },
@@ -11112,15 +11113,15 @@
                                     color: '#FFFFFF', 
                                     anchor: 'center', 
                                     align: 'center',
-                                    font: { weight: 'bold', size: 14 },
+                                    font: { weight: 'bold', size: 15, family: 'Century Gothic' },
                                     formatter: (value) => value > 0 ? value : ''
                                 },
                                 legend: {
                                     display: true,
                                     position: 'bottom',
                                     labels: {
-                                        boxWidth: 15,
-                                        font: { size: 14, family: 'Century Gothic' }
+                                        boxWidth: 16,
+                                        font: { size: 15, family: 'Century Gothic', weight: 'bold' }
                                     }
                                 },
                                 tooltip: {
@@ -11801,7 +11802,7 @@
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 const template = new Image();
-                template.src = 'plantilla de comunicados.png';
+                template.src = 'Plantilladecomunicados.png';
                 
                 template.onload = () => {
                     const headerHeight = template.height > 0 ? template.height : 1080;
@@ -11820,7 +11821,7 @@
                     const sectionsCount = Object.keys(dataBySecAndOwner).length;
                     
                     const chartsHeight = (sectionsCount * 80) + (totalOwnersInCharts * 60) + 100;
-                    const startOfWhiteAreaY = 350; 
+                    const startOfWhiteAreaY = 360; 
                     
                     canvas.width = width;
                     canvas.height = Math.max(headerHeight, startOfWhiteAreaY + chartsHeight + 400);
@@ -11830,13 +11831,13 @@
                     ctx.drawImage(template, 0, 0, width, headerHeight);
                     
                     ctx.fillStyle = '#000000';
-                    ctx.font = 'bold 45px sans-serif';
+                    ctx.font = 'bold 48px "Century Gothic", sans-serif';
                     ctx.textAlign = 'center';
-                    ctx.fillText(`Comunicado de Acciones Gemba Walk`, width / 2, startOfWhiteAreaY + 40);
+                    ctx.fillText(`Comunicado de Acciones Gemba Walk`, width / 2, startOfWhiteAreaY + 45);
                     
-                    ctx.font = '30px sans-serif';
+                    ctx.font = '32px "Century Gothic", sans-serif';
                     ctx.fillStyle = '#333333';
-                    ctx.fillText(`Fecha: ${dateStr} | Auditor: ${adminName}`, width / 2, startOfWhiteAreaY + 90);
+                    ctx.fillText(`Fecha: ${dateStr} | Auditor: ${adminName}`, width / 2, startOfWhiteAreaY + 95);
                     
                     const msgLines = [
                         "Buenos días.",
@@ -11851,8 +11852,8 @@
                     ctx.fillStyle = '#0f172a';
                     
                     const scale = width / 1920;
-                    const baseFont = Math.max(16, 32 * scale);
-                    ctx.font = `${baseFont}px sans-serif`;
+                    const baseFont = Math.max(22, Math.round(36 * scale));
+                    ctx.font = `${baseFont}px "Century Gothic", sans-serif`;
                     
                     let textY = startOfWhiteAreaY + 160;
                     
@@ -11886,7 +11887,7 @@
                     
                     Object.keys(dataBySecAndOwner).forEach(sec => {
                         ctx.fillStyle = '#1e293b';
-                        ctx.font = `bold ${baseFont + 4}px sans-serif`;
+                        ctx.font = `bold ${baseFont + 4}px "Century Gothic", sans-serif`;
                         ctx.fillText(`Sección: ${sec}`, 50, textY);
                         textY += 50;
                         
@@ -11899,7 +11900,7 @@
                             const barWidth = maxVal > 0 ? (val / maxVal) * maxBarWidth : 0;
                             
                             ctx.fillStyle = '#475569';
-                            ctx.font = `${baseFont - 4}px sans-serif`;
+                            ctx.font = `${baseFont - 2}px "Century Gothic", sans-serif`;
                             // Truncar owner name si es muy largo
                             let dOwn = own;
                             if (ctx.measureText(dOwn).width > 220) {
@@ -11911,7 +11912,7 @@
                             ctx.fillRect(300, textY, barWidth, 35);
                             
                             ctx.fillStyle = '#ffffff';
-                            ctx.font = `bold ${baseFont - 6}px sans-serif`;
+                            ctx.font = `bold ${baseFont - 4}px "Century Gothic", sans-serif`;
                             if (barWidth > 30) {
                                 ctx.fillText(val, 300 + barWidth - 25, textY + 26);
                             } else {
@@ -12026,7 +12027,7 @@
         async function generateGembaReport(dateRaw, actions, customMsg = "Se comparten acciones generadas durante el Gemba, favor de darles prioridad según su nivel.") {
             // Build temporary hidden div for HTML2Canvas
             const reportDiv = document.createElement('div');
-            reportDiv.style.cssText = "position: absolute; left: -9999px; top: 0; width: 1400px; background: white; padding: 0; font-family: 'Segoe UI', sans-serif;";
+            reportDiv.style.cssText = "position: absolute; left: -9999px; top: 0; width: 1400px; background: white; padding: 0; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;";
             document.body.appendChild(reportDiv);
             
             const [y, m, d] = dateRaw.split('-');
@@ -12034,17 +12035,16 @@
             const formattedDate = `${parseInt(d)} de ${months[parseInt(m)-1]}`;
             
             let html = `
-                <div style="width: 100%; padding: 0;">
-                    <img src="./documents/plantilla de comunicados.png" style="width: 100%; height: auto; display: block;" onerror="this.style.display='none'">
+                <div style="width: 100%; padding: 0; background-image: url('Plantilladecomunicados.png'); background-size: 100% auto; background-repeat: no-repeat; background-position: top center;">
+                    <div style="width: 100%; height: 420px;"></div>
+                <div style="padding: 20px 50px 20px 50px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">
+                    <h2 style="color: #005A9C; margin-top: 0; font-size: 34px; border-bottom: 2px solid #005A9C; padding-bottom: 10px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">Reporte Ejecutivo Gemba Walk - ${formattedDate}</h2>
+                    <div style="font-size: 24px; color: #1e293b; line-height: 1.65; white-space: pre-wrap; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">${customMsg}</div>
                 </div>
-                <div style="padding: 40px 40px 20px 40px;">
-                    <h2 style="color: #005A9C; margin-top: 0; font-size: 28px; border-bottom: 2px solid #005A9C; padding-bottom: 10px;">Reporte Ejecutivo Gemba Walk - ${formattedDate}</h2>
-                    <div style="font-size: 18px; color: #333; line-height: 1.6; white-space: pre-wrap; font-family: Arial, sans-serif;">${customMsg}</div>
-                </div>
-                <div style="padding: 0 40px 40px 40px;">
-                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                <div style="padding: 0 50px 50px 50px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">
                     <thead>
-                        <tr style="background-color: #f1f5f9; border-bottom: 3px solid #cbd5e1;">
+                        <tr style="background-color: #f1f5f9; border-bottom: 3px solid #cbd5e1; font-size: 20px;">
                             <th style="padding: 15px; text-align: left; width: 35%;">Evidencia Fotográfica</th>
                             <th style="padding: 15px; text-align: left; width: 65%;">Detalle del Hallazgo</th>
                         </tr>
@@ -12084,19 +12084,19 @@
                         <td style="padding: 20px; vertical-align: top;">
                             <div style="display: flex; flex-wrap: wrap;">${photoGrid}</div>
                         </td>
-                        <td style="padding: 20px; vertical-align: top;">
+                        <td style="padding: 20px; vertical-align: top; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">
                             <div style="margin-bottom: 10px;">
-                                <span style="background-color: ${badgeColor}; color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; margin-right: 10px;">PRIORIDAD ${pri.toUpperCase()} (SLA: ${slaText})</span>
-                                <span style="background-color: #e2e8f0; color: #475569; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 14px;">${cat}</span>
+                                <span style="background-color: ${badgeColor}; color: white; padding: 5px 14px; border-radius: 20px; font-weight: bold; font-size: 16px; margin-right: 10px;">PRIORIDAD ${pri.toUpperCase()} (SLA: ${slaText})</span>
+                                <span style="background-color: #e2e8f0; color: #475569; padding: 5px 14px; border-radius: 20px; font-weight: bold; font-size: 16px;">${cat}</span>
                             </div>
-                            <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 20px;">Área: ${act.cleanLocation}</h3>
-                            <p style="margin: 0; font-size: 18px; color: #334155;">${justAction}</p>
+                            <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 24px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">Área: ${act.cleanLocation}</h3>
+                            <p style="margin: 0; font-size: 21px; color: #334155; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">${justAction}</p>
                         </td>
                     </tr>
                 `;
             });
 
-            html += `</tbody></table></div>`;
+            html += `</tbody></table></div></div>`;
             reportDiv.innerHTML = html;
 
             // Wait for images to load before canvas
