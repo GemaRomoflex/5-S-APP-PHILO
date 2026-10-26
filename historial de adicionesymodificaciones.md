@@ -247,3 +247,17 @@ La base de datos (Supabase) almacena exclusivamente métricas, hallazgos y audit
 *   **Tipografía `Century Gothic` y Aumento de Tamaño de Fuente:**
     *   Se reemplazó la fuente anterior (`Segoe UI` / `sans-serif`) por `'Century Gothic', CenturyGothic, AppleGothic, sans-serif` en todo el contenedor `#visual-report`, textos de saludo, títulos, tablas y gráficas de los comunicados.
     *   Se incrementó el tamaño del texto del comunicado de `16px` a `25px`–`27px` (y métricas destacadas a `27px`–`28px`), títulos principales a `64px`/`34px`, encabezados de gráficas a `28px`, y tablas/etiquetas de ejes para máxima legibilidad en correos.
+
+### [Octubre 2026] - Reconstrucción Histórica Semanal con `ActionLogOpenDate` y `ActionLogClose` (Abiertas / Cerradas / Overdue por Semana)
+*   **Extracción y Persistencia de Fechas Reales de Apertura y Cierre desde CSV:**
+    *   En `mapHeaders()` y `processFile()`, se priorizó `ActionLogOpenDate` como fecha real de apertura de la acción (con respaldo a `ResponseDateTime` para filas sin acción) y se incorporó la lectura de `ActionLogClose` como fecha real de cierre.
+    *   Respetando la Regla 1 y 2 (sin alterar columnas de la tabla `actions` en Supabase), la fecha de cierre se almacena por esteganografía mediante la etiqueta `\nCLOSE_DATE:YYYY-MM-DD` (y `\nLATE_CLOSED:1` cuando `ActionLogClose > ActionLogDueDate`), limpiándose de forma transparente en `getCleanComment()`.
+    *   Se sincronizaron en Supabase los 710 registros históricos de acciones con sus fechas exactas de `ActionLogOpenDate` y `ActionLogClose` provenientes del historial CSV.
+*   **Cálculo de Corte Histórico por Semana (`computeWeeklyClosureStats`):**
+    *   En lugar de mostrar 100% en semanas anteriores porque sus acciones se cerraron semanas después, `computeWeeklyClosureStats()` evalúa para cada semana (`weekStart` a `weekEnd`) las acciones que estaban activas en esa semana:
+        *   **Abiertas (En Tiempo):** Acciones abiertas que al cierre de esa semana seguían dentro de su fecha compromiso (`dueDate >= weekEnd`).
+        *   **Cerradas en la Semana:** Acciones cuya fecha real de cierre (`closeDate`) ocurrió dentro de esa semana (`weekStart <= closeDate <= weekEnd`).
+        *   **Overdue (Vencidas):** Acciones que al cierre de esa semana seguían sin cerrarse y ya habían rebasado su fecha compromiso (`dueDate < weekEnd`).
+        *   **% de Cierre Semanal:** Porcentaje real de acciones cerradas en esa semana respecto al total de acciones activas en esa semana (`cerradas / (abiertas + cerradas + overdue)`).
+*   **Gráfica Comparativa de Barras Agrupadas + Línea de % de Cierre (`renderChartWeeklyClosure` y `renderReportWeeklyClosureChart`):**
+    *   Tanto en el Dashboard principal como en los Reportes Visuales PNG (Semanal, Mensual y Overdue), cada semana muestra las 3 barras de cantidades (**Abiertas** en azul, **Cerradas** en verde y **Overdue** en rojo) con sus conteos visibles, junto con la línea de **`% de Cierre Semanal`** en eje secundario y resumen en el eje X (`Week XX (YY%) | A:x C:z V:y`).

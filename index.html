@@ -3190,10 +3190,10 @@
                     </div>
                 </div>
 
-                <!-- Gráfica NUEVA: % de Acciones Cerradas por Semana (Ej. Week 38 60%) + % Cerradas Post-Overdue -->
+                <!-- Gráfica NUEVA: Desglose Semanal (Abiertas vs Cerradas vs Overdue) + % de Cierre -->
                 <div class="chart-card" style="cursor: pointer; transition: transform 0.2s; position: relative;" onclick="openDetailView('closed_all')" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
                     <div class="chart-header">
-                        <span class="chart-title">📊 % de Acciones Cerradas por Semana</span>
+                        <span class="chart-title">📊 Acciones por Semana (Abiertas / Cerradas / Overdue y % Cierre)</span>
                         <div class="chart-controls" onclick="event.stopPropagation()">
                             <span id="badge-weekly-late-summary" style="font-size: 11px; background: #fef3c7; color: #b45309; padding: 4px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #fcd34d;">Post-Overdue: 0%</span>
                         </div>
@@ -3785,13 +3785,14 @@
         let arrOverdue = [];
         let arrWIP = [];
 
-        // Helpers para limpiar comentarios y detectar acciones cerradas post-overdue
+        // Helpers para limpiar comentarios y detectar acciones cerradas post-overdue y fecha real de cierre
         function getCleanComment(rawComment) {
             if (!rawComment) return '';
             return String(rawComment)
-                .replace(/\nEVIDENCE:.*/g, '')
-                .replace(/\nTURNO:.*/g, '')
-                .replace(/\nLATE_CLOSED:\d+/g, '')
+                .replace(/\r?\nEVIDENCE:.*/g, '')
+                .replace(/\r?\nTURNO:.*/g, '')
+                .replace(/\r?\nLATE_CLOSED:\d+/g, '')
+                .replace(/\r?\nCLOSE_DATE:[^\n\r]*/g, '')
                 .trim();
         }
 
@@ -3801,23 +3802,36 @@
             return s === 'closed' || s === 'close' || s === 'cerrada' || s === 'cerrado' || s === 'closed on time' || s.includes('clos') || s.includes('cerrad');
         }
 
+        function getActionClosedDate(item) {
+            if (!item) return null;
+            if (item.closedDate && item.closedDate !== 'Sin Fecha' && item.closedDate !== 'null' && item.closedDate !== 'undefined') {
+                return String(item.closedDate).split(' ')[0];
+            }
+            const rawComments = String(item.comments || '');
+            const match = rawComments.match(/CLOSE_DATE:([0-9]{4}-[0-9]{2}-[0-9]{2}|[0-9]{2}\/[0-9]{2}\/[0-9]{4})/);
+            if (match && match[1]) {
+                return match[1];
+            }
+            return null;
+        }
+
         function isActionClosedLate(item) {
             if (!isActionClosed(item)) return false;
-            if (item.isLate === true || item.isLate === 'true' || item.isLate === 1) return true;
-            const rawComments = String(item.comments || '');
-            if (rawComments.includes('LATE_CLOSED:1')) return true;
-            const s = String(item.status || '').toLowerCase().trim();
-            // En las cargas CSV y ediciones manuales post-overdue, 'Closed' (vs 'Close' nativo a tiempo) o closedDate > dueDate identifica cierre tardío
-            if (s === 'closed' || s === 'closed late' || s === 'cerrada vencida') return true;
-            if (item.closedDate && item.dueDate && item.dueDate !== 'Sin Fecha') {
-                const cD = parseDateRobust(item.closedDate);
+            const cStr = getActionClosedDate(item);
+            if (cStr && item.dueDate && item.dueDate !== 'Sin Fecha') {
+                const cD = parseDateRobust(cStr);
                 const dD = parseDateRobust(item.dueDate);
                 if (!isNaN(cD.getTime()) && !isNaN(dD.getTime())) {
                     cD.setHours(0,0,0,0);
                     dD.setHours(0,0,0,0);
-                    if (cD > dD) return true;
+                    return cD > dD;
                 }
             }
+            if (item.isLate === true || item.isLate === 'true' || item.isLate === 1) return true;
+            const rawComments = String(item.comments || '');
+            if (rawComments.includes('LATE_CLOSED:1')) return true;
+            const s = String(item.status || '').toLowerCase().trim();
+            if (s === 'closed' || s === 'closed late' || s === 'cerrada vencida') return true;
             return false;
         }
 
@@ -3836,54 +3850,136 @@
             };
         }
 
+        function getWeekBoundsFromYearWeek(year, weekNum) {
+            const firstDayOfYear = new Date(year, 0, 1);
+            firstDayOfYear.setHours(0, 0, 0, 0);
+            const startOffsetDays = (weekNum - 1) * 7 - firstDayOfYear.getDay();
+            const weekStart = new Date(year, 0, 1 + startOffsetDays);
+            weekStart.setHours(0, 0, 0, 0);
+            const weekEnd = new Date(weekStart.getTime() + 6 * 86400000);
+            weekEnd.setHours(0, 0, 0, 0);
+            return { weekStart, weekEnd };
+        }
+
+        // Reconstruye el historial semanal real usando la fecha de apertura (openDate), fecha compromiso (dueDate) y fecha de cierre (closeDate)
+        // Para cada semana muestra cuántas acciones había Abiertas (en tiempo), cuántas se Cerraron en esa semana y cuántas estaban Overdue
         function computeWeeklyClosureStats(actionsList) {
-            const weeksMap = {};
+            const parsedActions = [];
+            const weekKeysMap = {};
+
             actionsList.forEach(item => {
                 if (!isValidAction(item)) return;
                 if (isDashboardExcludedArea(item.cleanLocation) || isDashboardExcludedArea(item.location)) return;
                 if (!item.openDate || item.openDate === 'Sin Fecha') return;
-                const d = parseDateRobust(item.openDate);
-                if (isNaN(d.getTime())) return;
-                const wInfo = getWeekInfoFromDate(d);
-                if (!weeksMap[wInfo.key]) {
-                    weeksMap[wInfo.key] = {
-                        key: wInfo.key,
-                        label: wInfo.label,
-                        year: wInfo.year,
-                        week: wInfo.week,
-                        total: 0,
-                        closed: 0,
-                        closedLate: 0,
-                        closedOnTime: 0,
-                        openOrOverdue: 0
-                    };
-                }
-                const bucket = weeksMap[wInfo.key];
-                bucket.total++;
-                if (isActionClosed(item)) {
-                    bucket.closed++;
-                    if (isActionClosedLate(item)) {
-                        bucket.closedLate++;
-                    } else {
-                        bucket.closedOnTime++;
+                const od = parseDateRobust(item.openDate);
+                if (isNaN(od.getTime())) return;
+                od.setHours(0, 0, 0, 0);
+
+                let dd = null;
+                if (item.dueDate && item.dueDate !== 'Sin Fecha') {
+                    const parsedDue = parseDateRobust(item.dueDate);
+                    if (!isNaN(parsedDue.getTime())) {
+                        parsedDue.setHours(0, 0, 0, 0);
+                        dd = parsedDue;
                     }
-                } else {
-                    bucket.openOrOverdue++;
                 }
+                if (!dd) {
+                    dd = new Date(od.getTime() + 7 * 86400000);
+                }
+
+                const closed = isActionClosed(item);
+                let cd = null;
+                if (closed) {
+                    const cStr = getActionClosedDate(item);
+                    if (cStr) {
+                        const parsedClose = parseDateRobust(cStr);
+                        if (!isNaN(parsedClose.getTime())) {
+                            parsedClose.setHours(0, 0, 0, 0);
+                            cd = parsedClose;
+                        }
+                    }
+                    // Fallback para registros antiguos (ej. mayo/junio) sin etiqueta CLOSE_DATE: usar dueDate u openDate para no arrastrarlos abiertos
+                    if (!cd) {
+                        cd = dd >= od ? new Date(dd.getTime()) : new Date(od.getTime());
+                    }
+                }
+
+                const wOpen = getWeekInfoFromDate(od);
+                weekKeysMap[wOpen.key] = wOpen;
+                if (cd) {
+                    const wClose = getWeekInfoFromDate(cd);
+                    weekKeysMap[wClose.key] = wClose;
+                }
+
+                parsedActions.push({
+                    item,
+                    openDate: od,
+                    dueDate: dd,
+                    closeDate: cd,
+                    isClosed: closed
+                });
             });
 
-            const sortedKeys = Object.keys(weeksMap).sort();
+            const sortedKeys = Object.keys(weekKeysMap).sort();
             return sortedKeys.map(k => {
-                const w = weeksMap[k];
-                const closedPct = w.total > 0 ? Math.round((w.closed / w.total) * 100) : 0;
-                const lateOfTotalPct = w.total > 0 ? Math.round((w.closedLate / w.total) * 100) : 0;
-                const lateOfClosedPct = w.closed > 0 ? Math.round((w.closedLate / w.closed) * 100) : 0;
+                const wMeta = weekKeysMap[k];
+                const { weekStart, weekEnd } = getWeekBoundsFromYearWeek(wMeta.year, wMeta.week);
+
+                let openOnTimeCount = 0;
+                let closedInWeekCount = 0;
+                let closedOnTimeCount = 0;
+                let closedLateCount = 0;
+                let overdueCount = 0;
+                let newlyOpenedCount = 0;
+
+                parsedActions.forEach(a => {
+                    if (a.openDate >= weekStart && a.openDate <= weekEnd) {
+                        newlyOpenedCount++;
+                    }
+                    // Una acción está activa/en juego en esta semana si se abrió antes o durante la semana y no se había cerrado antes de iniciar la semana
+                    if (a.openDate <= weekEnd && (!a.closeDate || a.closeDate >= weekStart)) {
+                        if (a.closeDate && a.closeDate >= weekStart && a.closeDate <= weekEnd) {
+                            closedInWeekCount++;
+                            if (a.closeDate > a.dueDate) {
+                                closedLateCount++;
+                            } else {
+                                closedOnTimeCount++;
+                            }
+                        } else {
+                            // Sigue abierta al cierre de esa semana: evaluar si ya estaba vencida (Overdue) o en tiempo (Abierta)
+                            if (a.dueDate < weekEnd) {
+                                overdueCount++;
+                            } else {
+                                openOnTimeCount++;
+                            }
+                        }
+                    }
+                });
+
+                const totalActive = openOnTimeCount + closedInWeekCount + overdueCount;
+                const closedPct = totalActive > 0 ? Math.round((closedInWeekCount / totalActive) * 100) : 0;
+                const lateOfTotalPct = totalActive > 0 ? Math.round((closedLateCount / totalActive) * 100) : 0;
+                const lateOfClosedPct = closedInWeekCount > 0 ? Math.round((closedLateCount / closedInWeekCount) * 100) : 0;
+
                 return {
-                    ...w,
+                    key: wMeta.key,
+                    label: wMeta.label,
+                    year: wMeta.year,
+                    week: wMeta.week,
+                    total: totalActive,
+                    newlyOpened: newlyOpenedCount,
+                    open: openOnTimeCount,
+                    closed: closedInWeekCount,
+                    closedOnTime: closedOnTimeCount,
+                    closedLate: closedLateCount,
+                    overdue: overdueCount,
+                    openOrOverdue: openOnTimeCount + overdueCount,
                     closedPct,
+                    pctClosed: closedPct,
                     lateOfTotalPct,
                     lateOfClosedPct,
-                    labelWithPct: `${w.label} (${closedPct}%)`
+                    pctClosedLateOfClosed: lateOfClosedPct,
+                    labelWithPct: `${wMeta.label} (${closedPct}%)`
                 };
             });
         }
@@ -4117,6 +4213,10 @@
                     let oDate = item.openDate !== undefined ? item.openDate : item.opendate;
                     let dDate = item.dueDate !== undefined ? item.dueDate : item.duedate;
                     let cDate = item.closedDate !== undefined ? item.closedDate : item.closeddate;
+                    if (!cDate && item.comments) {
+                        const matchClose = String(item.comments).match(/CLOSE_DATE:([0-9]{4}-[0-9]{2}-[0-9]{2}|[0-9]{2}\/[0-9]{2}\/[0-9]{4})/);
+                        if (matchClose && matchClose[1]) cDate = matchClose[1];
+                    }
                     
                     // Eliminar la 'T' del tiempo universal para compatibilidad con todos los reportes
                     if (oDate) oDate = String(oDate).replace('T', ' ');
@@ -4234,11 +4334,32 @@
                     }
 
                     const dueDate = getValue(headerMap.date, 'Sin Fecha');
-                    const rawOpenDate = getValue(headerMap.openDate, formatDate(new Date()));
+                    const rawActionOpen = headerMap.actionOpenDate !== -1 ? getValue(headerMap.actionOpenDate, '') : '';
+                    const rawRespDate = headerMap.respDate !== -1 ? getValue(headerMap.respDate, '') : '';
+                    const rawOpenDate = rawActionOpen || rawRespDate || getValue(headerMap.openDate, formatDate(new Date()));
                     // Cortar la hora para evitar "Invalid Date" en Chart.js y cálculos de días
                     const openDate = rawOpenDate.includes(' ') ? rawOpenDate.split(' ')[0] : rawOpenDate;
 
-                    const comments = getValue(headerMap.comments, 'Sin comentarios / Acción no descrita');
+                    const rawCloseDate = headerMap.closeDate !== -1 ? getValue(headerMap.closeDate, '') : '';
+                    const closeDateClean = rawCloseDate.includes(' ') ? rawCloseDate.split(' ')[0] : rawCloseDate;
+
+                    let comments = getValue(headerMap.comments, 'Sin comentarios / Acción no descrita');
+                    if (isActionClosed({ status }) && closeDateClean) {
+                        if (!comments.includes('CLOSE_DATE:')) {
+                            comments += `\nCLOSE_DATE:${closeDateClean}`;
+                        }
+                        if (dueDate && dueDate !== 'Sin Fecha') {
+                            const cD = parseDateRobust(closeDateClean);
+                            const dD = parseDateRobust(dueDate);
+                            if (!isNaN(cD.getTime()) && !isNaN(dD.getTime())) {
+                                cD.setHours(0, 0, 0, 0);
+                                dD.setHours(0, 0, 0, 0);
+                                if (cD > dD && !comments.includes('LATE_CLOSED:1')) {
+                                    comments += '\nLATE_CLOSED:1';
+                                }
+                            }
+                        }
+                    }
 
                     return {
                         auditId,
@@ -4351,11 +4472,15 @@
             map.owner = findIndex(['actionlogowner', 'owner', 'responsable', 'propietario']);
             map.status = findIndex(['actionlogstatus', 'status', 'estado', 'estatus']);
             map.date = findIndex(['actionlogduedate', 'duedate', 'fechavence', 'due', 'fecha']);
-            let respIndex = findIndex(['responsedatetime', 'responsedate']);
-            if (respIndex !== -1) {
-                map.openDate = respIndex;
+            map.actionOpenDate = findIndex(['actionlogopendate', 'opendate', 'fechaapertura', 'apertura', 'open']);
+            map.respDate = findIndex(['responsedatetime', 'responsedate']);
+            map.closeDate = findIndex(['actionlogclose', 'actionlogcloseddate', 'closeddate', 'fechacierre']);
+            if (map.actionOpenDate !== -1) {
+                map.openDate = map.actionOpenDate;
+            } else if (map.respDate !== -1) {
+                map.openDate = map.respDate;
             } else {
-                map.openDate = findIndex(['actionlogopendate', 'opendate', 'fechaapertura', 'apertura', 'open']);
+                map.openDate = -1;
             }
             map.comments = findIndex(['comments', 'comentarios', 'accion', 'actionlogcomments']);
 
@@ -4440,7 +4565,15 @@
                             if (dDue < today) wasOverdue = true;
                         }
                     }
-                    // Si ya tenía marca LATE_CLOSED:1 o se cierra ahora estando overdue, preservar la marca en comments
+                    // Preservar fecha real de cierre (CLOSE_DATE) y marca LATE_CLOSED:1 en comments
+                    const existingCloseDate = getActionClosedDate(existing);
+                    const incomingCloseDate = getActionClosedDate(item);
+                    if (!incomingCloseDate && nowClosed) {
+                        const dateToTag = existingCloseDate || formatDate(new Date());
+                        if (!String(item.comments || '').includes('CLOSE_DATE:')) {
+                            item.comments = String(item.comments || '') + `\nCLOSE_DATE:${dateToTag}`;
+                        }
+                    }
                     const hadLateTag = String(existing.comments || '').includes('LATE_CLOSED:1');
                     if ((hadLateTag || (!prevClosed && nowClosed && wasOverdue)) && !String(item.comments || '').includes('LATE_CLOSED:1')) {
                         item.comments = String(item.comments || '') + '\nLATE_CLOSED:1';
@@ -5529,17 +5662,19 @@
             });
         }
 
-        // Gráfica NUEVA: % de Acciones Cerradas por Semana (Ej. Week 38 60%) y % Cerradas Post-Overdue
+        // Gráfica NUEVA: Desglose Semanal de Acciones (Abiertas / Cerradas / Overdue) y % de Cierre
         function renderChartWeeklyClosure() {
             const canvasEl = document.getElementById('chartWeeklyClosure');
             if (!canvasEl) return;
             const weeklyStats = computeWeeklyClosureStats(globalFilteredData);
-            // Tomar las últimas 14 semanas con datos para mantener legibilidad perfecta, o todas si son <= 16
+            // Mostrar las últimas 16 semanas con historial completo (desde Julio W28 en adelante)
             const displayStats = weeklyStats.length > 16 ? weeklyStats.slice(-16) : weeklyStats;
 
-            const labels = displayStats.map(w => `${w.label}\n${w.closedPct}%`);
+            const openCounts = displayStats.map(w => w.open);
+            const closedCounts = displayStats.map(w => w.closed);
+            const overdueCounts = displayStats.map(w => w.overdue);
             const closureRates = displayStats.map(w => w.closedPct);
-            const lateClosureRates = displayStats.map(w => w.lateOfClosedPct);
+            const maxCount = Math.max(10, ...openCounts, ...closedCounts, ...overdueCounts);
 
             const ctx = canvasEl.getContext('2d');
             if (chartInstanceWeeklyClosure) chartInstanceWeeklyClosure.destroy();
@@ -5547,49 +5682,91 @@
             chartInstanceWeeklyClosure = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: displayStats.map(w => `${w.label} (${w.closedPct}%)`),
+                    labels: displayStats.map(w => [`${w.label} (${w.closedPct}%)`, `A:${w.open} C:${w.closed} V:${w.overdue}`]),
                     datasets: [
                         {
                             type: 'line',
-                            label: '% Cerradas Post-Overdue',
-                            data: lateClosureRates,
+                            label: '% de Cierre Semanal',
+                            data: closureRates,
+                            yAxisID: 'y1',
                             borderColor: '#d97706',
-                            backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                            backgroundColor: 'rgba(245, 158, 11, 0.18)',
                             borderWidth: 2.5,
                             pointBackgroundColor: '#d97706',
                             pointRadius: 4,
                             tension: 0.25,
-                            order: 1,
+                            order: 0,
                             datalabels: {
-                                display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
-                                color: '#b45309',
-                                backgroundColor: 'rgba(254, 243, 199, 0.9)',
+                                display: true,
+                                color: '#92400e',
+                                backgroundColor: 'rgba(254, 243, 199, 0.92)',
                                 borderRadius: 4,
-                                padding: { top: 2, bottom: 2, left: 4, right: 4 },
+                                padding: { top: 1, bottom: 1, left: 4, right: 4 },
                                 anchor: 'end',
                                 align: 'top',
+                                offset: 2,
                                 font: { weight: 'bold', size: 10, family: 'Century Gothic' },
-                                formatter: (val) => `${val}% venc.`
+                                formatter: (val) => `${val}%`
                             }
                         },
                         {
                             type: 'bar',
-                            label: '% Acciones Cerradas por Semana',
-                            data: closureRates,
-                            backgroundColor: 'rgba(16, 185, 129, 0.78)',
-                            borderColor: '#059669',
-                            borderWidth: 1.5,
-                            borderRadius: 4,
+                            label: 'Abiertas (En Tiempo)',
+                            data: openCounts,
+                            yAxisID: 'y',
+                            backgroundColor: 'rgba(59, 130, 246, 0.85)',
+                            borderColor: '#2563eb',
+                            borderWidth: 1,
+                            borderRadius: 3,
                             order: 2,
                             datalabels: {
-                                color: '#FFFFFF',
-                                anchor: 'center',
-                                align: 'center',
-                                font: { weight: 'bold', size: 11, family: 'Century Gothic' },
-                                formatter: (val, ctx) => {
-                                    const w = displayStats[ctx.dataIndex];
-                                    return w ? `${w.label}\n${val}%` : `${val}%`;
-                                }
+                                display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
+                                color: '#1e40af',
+                                anchor: 'end',
+                                align: 'top',
+                                offset: 0,
+                                font: { weight: 'bold', size: 10, family: 'Century Gothic' },
+                                formatter: (val) => val
+                            }
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Cerradas en la Semana',
+                            data: closedCounts,
+                            yAxisID: 'y',
+                            backgroundColor: 'rgba(16, 185, 129, 0.88)',
+                            borderColor: '#059669',
+                            borderWidth: 1,
+                            borderRadius: 3,
+                            order: 2,
+                            datalabels: {
+                                display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
+                                color: '#065f46',
+                                anchor: 'end',
+                                align: 'top',
+                                offset: 0,
+                                font: { weight: 'bold', size: 10, family: 'Century Gothic' },
+                                formatter: (val) => val
+                            }
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Overdue (Vencidas)',
+                            data: overdueCounts,
+                            yAxisID: 'y',
+                            backgroundColor: 'rgba(239, 68, 68, 0.85)',
+                            borderColor: '#dc2626',
+                            borderWidth: 1,
+                            borderRadius: 3,
+                            order: 2,
+                            datalabels: {
+                                display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
+                                color: '#991b1b',
+                                anchor: 'end',
+                                align: 'top',
+                                offset: 0,
+                                font: { weight: 'bold', size: 10, family: 'Century Gothic' },
+                                formatter: (val) => val
                             }
                         }
                     ]
@@ -5597,13 +5774,41 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
                     scales: {
                         y: {
+                            type: 'linear',
+                            position: 'left',
                             beginAtZero: true,
-                            max: 110,
+                            suggestedMax: Math.ceil(maxCount * 1.22),
                             grid: { color: '#EAEAEA' },
+                            title: {
+                                display: true,
+                                text: 'Cantidad de Acciones',
+                                font: { family: 'Century Gothic', size: 11, weight: 'bold' }
+                            },
                             ticks: {
-                                font: { family: 'Century Gothic' },
+                                font: { family: 'Century Gothic', size: 11 }
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
+                            beginAtZero: true,
+                            max: 115,
+                            grid: { drawOnChartArea: false },
+                            title: {
+                                display: true,
+                                text: '% Cierre',
+                                font: { family: 'Century Gothic', size: 11, weight: 'bold' },
+                                color: '#b45309'
+                            },
+                            ticks: {
+                                font: { family: 'Century Gothic', size: 10, weight: 'bold' },
+                                color: '#b45309',
                                 callback: function(value) { return value <= 100 ? value + '%' : ''; }
                             }
                         },
@@ -5611,9 +5816,9 @@
                             grid: { display: false },
                             ticks: {
                                 autoSkip: false,
-                                maxRotation: 45,
-                                minRotation: 30,
-                                font: { family: 'Century Gothic', size: 11, weight: 'bold' }
+                                maxRotation: 40,
+                                minRotation: 0,
+                                font: { family: 'Century Gothic', size: 10, weight: 'bold' }
                             }
                         }
                     },
@@ -5621,7 +5826,7 @@
                         legend: {
                             display: true,
                             position: 'top',
-                            labels: { font: { family: 'Century Gothic', size: 11 } }
+                            labels: { boxWidth: 12, font: { family: 'Century Gothic', size: 11, weight: 'bold' } }
                         },
                         tooltip: {
                             callbacks: {
@@ -5629,9 +5834,18 @@
                                     const w = displayStats[context.dataIndex];
                                     if (!w) return '';
                                     if (context.dataset.type === 'line') {
-                                        return `Cerradas Post-Overdue: ${w.closedLate} de ${w.closed} cerradas (${w.lateOfClosedPct}%)`;
+                                        return `% de Cierre Semanal: ${w.closedPct}% (${w.closed} cerradas de ${w.total} activas)`;
                                     }
-                                    return `${w.label}: ${w.closedPct}% cerradas (${w.closed}/${w.total} acciones)`;
+                                    if (context.dataset.label.includes('Cerradas')) {
+                                        return `Cerradas en la Semana: ${w.closed} (En tiempo: ${w.closedOnTime} | Post-Overdue: ${w.closedLate})`;
+                                    }
+                                    return `${context.dataset.label}: ${context.raw} acciones`;
+                                },
+                                footer: function(tooltipItems) {
+                                    if (!tooltipItems || !tooltipItems.length) return '';
+                                    const w = displayStats[tooltipItems[0].dataIndex];
+                                    if (!w) return '';
+                                    return `Total activas esa semana: ${w.total} (Nuevas abiertas: ${w.newlyOpened})`;
                                 }
                             }
                         }
@@ -6998,6 +7212,11 @@
             }
 
             let updatedComments = String(allAuditData[idx].comments || '');
+            if (isClosingNow && !updatedComments.includes('CLOSE_DATE:')) {
+                const nowIso = new Date();
+                const isoStr = `${nowIso.getFullYear()}-${String(nowIso.getMonth() + 1).padStart(2, '0')}-${String(nowIso.getDate()).padStart(2, '0')}`;
+                updatedComments = updatedComments + `\nCLOSE_DATE:${isoStr}`;
+            }
             if (isClosingNow && wasOverdueBeforeClosing && !updatedComments.includes('LATE_CLOSED:1')) {
                 updatedComments = updatedComments + '\nLATE_CLOSED:1';
             }
@@ -10313,9 +10532,12 @@
 
             // Mostrar las últimas 16 semanas para legibilidad óptima en el reporte PNG
             const sliced = weeklyTrend.slice(-16);
-            const labels = sliced.map(w => [`Week ${w.week} ${w.pctClosed}%`, `(${w.closed}/${w.total})`]);
-            const pctClosedData = sliced.map(w => w.pctClosed);
-            const pctLateData = sliced.map(w => w.pctClosedLateOfClosed);
+            const labels = sliced.map(w => [`Week ${w.week} (${w.closedPct}%)`, `A:${w.open} C:${w.closed} V:${w.overdue}`]);
+            const openData = sliced.map(w => w.open);
+            const closedData = sliced.map(w => w.closed);
+            const overdueData = sliced.map(w => w.overdue);
+            const pctClosedData = sliced.map(w => w.closedPct);
+            const maxCount = Math.max(10, ...openData, ...closedData, ...overdueData);
 
             new Chart(ctx, {
                 type: 'bar',
@@ -10323,23 +10545,83 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: '% Acciones Cerradas (Total Semana)',
-                            data: pctClosedData,
-                            backgroundColor: sliced.map(w => w.pctClosed >= 80 ? '#10b981' : (w.pctClosed >= 50 ? '#f59e0b' : '#ef4444')),
-                            borderRadius: 6,
-                            order: 2
-                        },
-                        {
                             type: 'line',
-                            label: '% Cerradas Post-Overdue (del total cerrado)',
-                            data: pctLateData,
-                            borderColor: '#7c3aed',
-                            backgroundColor: 'rgba(124, 58, 237, 0.15)',
+                            label: '% de Cierre Semanal',
+                            data: pctClosedData,
+                            yAxisID: 'y1',
+                            borderColor: '#d97706',
+                            backgroundColor: 'rgba(245, 158, 11, 0.18)',
                             borderWidth: 3,
-                            pointBackgroundColor: '#7c3aed',
+                            pointBackgroundColor: '#d97706',
                             pointRadius: 5,
                             tension: 0.25,
-                            order: 1
+                            order: 0,
+                            datalabels: {
+                                display: true,
+                                anchor: 'end',
+                                align: 'top',
+                                offset: 3,
+                                color: '#92400e',
+                                backgroundColor: 'rgba(254, 243, 199, 0.92)',
+                                borderRadius: 4,
+                                padding: { top: 2, bottom: 2, left: 5, right: 5 },
+                                font: { weight: 'bold', size: 12, family: 'Century Gothic' },
+                                formatter: (val) => `${val}%`
+                            }
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Abiertas (En Tiempo)',
+                            data: openData,
+                            yAxisID: 'y',
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 4,
+                            order: 2,
+                            datalabels: {
+                                display: (context) => context.dataset.data[context.dataIndex] > 0,
+                                anchor: 'end',
+                                align: 'top',
+                                offset: 1,
+                                color: '#1d4ed8',
+                                font: { weight: 'bold', size: 12, family: 'Century Gothic' },
+                                formatter: (val) => val
+                            }
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Cerradas en la Semana',
+                            data: closedData,
+                            yAxisID: 'y',
+                            backgroundColor: '#10b981',
+                            borderRadius: 4,
+                            order: 2,
+                            datalabels: {
+                                display: (context) => context.dataset.data[context.dataIndex] > 0,
+                                anchor: 'end',
+                                align: 'top',
+                                offset: 1,
+                                color: '#047857',
+                                font: { weight: 'bold', size: 12, family: 'Century Gothic' },
+                                formatter: (val) => val
+                            }
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Overdue (Vencidas)',
+                            data: overdueData,
+                            yAxisID: 'y',
+                            backgroundColor: '#ef4444',
+                            borderRadius: 4,
+                            order: 2,
+                            datalabels: {
+                                display: (context) => context.dataset.data[context.dataIndex] > 0,
+                                anchor: 'end',
+                                align: 'top',
+                                offset: 1,
+                                color: '#b91c1c',
+                                font: { weight: 'bold', size: 12, family: 'Century Gothic' },
+                                formatter: (val) => val
+                            }
                         }
                     ]
                 },
@@ -10352,20 +10634,44 @@
                             grid: { display: false },
                             ticks: {
                                 autoSkip: false,
-                                maxRotation: 45,
+                                maxRotation: 35,
                                 minRotation: 0,
-                                font: { family: 'Century Gothic', size: 14, weight: 'bold' },
+                                font: { family: 'Century Gothic', size: 12, weight: 'bold' },
                                 color: '#1e293b'
                             }
                         },
                         y: {
+                            type: 'linear',
+                            position: 'left',
+                            beginAtZero: true,
+                            suggestedMax: Math.ceil(maxCount * 1.25),
+                            grid: { color: '#EAEAEA' },
+                            title: {
+                                display: true,
+                                text: 'Acciones',
+                                font: { family: 'Century Gothic', size: 13, weight: 'bold' }
+                            },
+                            ticks: {
+                                font: { family: 'Century Gothic', size: 13, weight: 'bold' }
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
                             beginAtZero: true,
                             max: 115,
-                            grid: { color: '#EAEAEA' },
+                            grid: { drawOnChartArea: false },
+                            title: {
+                                display: true,
+                                text: '% Cierre',
+                                font: { family: 'Century Gothic', size: 13, weight: 'bold' },
+                                color: '#b45309'
+                            },
                             ticks: {
                                 stepSize: 20,
                                 callback: (v) => v <= 100 ? v + '%' : '',
-                                font: { family: 'Century Gothic', size: 15, weight: 'bold' }
+                                font: { family: 'Century Gothic', size: 13, weight: 'bold' },
+                                color: '#b45309'
                             }
                         }
                     },
@@ -10374,22 +10680,8 @@
                             display: true,
                             position: 'top',
                             labels: {
-                                boxWidth: 16,
-                                font: { family: 'Century Gothic', size: 15, weight: 'bold' }
-                            }
-                        },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            offset: 2,
-                            color: (context) => context.datasetIndex === 1 ? '#6d28d9' : '#0f172a',
-                            font: { weight: 'bold', size: 14, family: 'Century Gothic' },
-                            formatter: (value, context) => {
-                                if (context.datasetIndex === 1) {
-                                    return value > 0 ? `Venc: ${value}%` : '';
-                                }
-                                const w = sliced[context.dataIndex];
-                                return w ? `W${w.week} ${value}%` : `${value}%`;
+                                boxWidth: 14,
+                                font: { family: 'Century Gothic', size: 14, weight: 'bold' }
                             }
                         }
                     }
@@ -10491,8 +10783,8 @@
             if (weeklyTrend && weeklyTrend.length > 0) {
                 html += `
                     <div style="width: 100%; text-align: center; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 28px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">📊 % de Acciones Cerradas por Semana y % Cerradas Post-Overdue</h3>
-                        <div style="width: 100%; height: 380px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
+                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 28px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">📊 Desglose Semanal de Acciones (Abiertas / Cerradas / Overdue y % Cierre)</h3>
+                        <div style="width: 100%; height: 420px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
                             <canvas id="chart-weekly-closure-trend"></canvas>
                         </div>
                     </div>
@@ -10738,8 +11030,8 @@
                 html += `
                     <!-- Gráfica % Cierre por Semana -->
                     <div style="width: 100%; text-align: center; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 28px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">📊 % de Acciones Cerradas por Semana y % Cerradas Post-Overdue</h3>
-                        <div style="width: 100%; height: 380px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
+                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 28px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">📊 Desglose Semanal de Acciones (Abiertas / Cerradas / Overdue y % Cierre)</h3>
+                        <div style="width: 100%; height: 420px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
                             <canvas id="chart-monthly-closure-trend"></canvas>
                         </div>
                     </div>
@@ -11068,8 +11360,8 @@
             if (weeklyTrend && weeklyTrend.length > 0) {
                 html += `
                     <div style="width: 100%; text-align: center; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-sizing: border-box; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
-                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 28px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">📊 % de Acciones Cerradas por Semana y % Cerradas Post-Overdue</h3>
-                        <div style="width: 100%; height: 380px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
+                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 28px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;">📊 Desglose Semanal de Acciones (Abiertas / Cerradas / Overdue y % Cierre)</h3>
+                        <div style="width: 100%; height: 420px; background: white; border-radius: 8px; padding: 15px; box-sizing: border-box;">
                             <canvas id="chart-overdue-closure-trend"></canvas>
                         </div>
                     </div>
