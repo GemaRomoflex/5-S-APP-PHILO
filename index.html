@@ -5662,7 +5662,7 @@
             });
         }
 
-        // Gráfica NUEVA: Desglose Semanal de Acciones (Abiertas / Cerradas / Overdue) y % de Cierre
+        // Gráfica NUEVA: Barra Apilada por Semana (Cerradas / Abiertas / Overdue) estilo Aging + % de Cierre
         function renderChartWeeklyClosure() {
             const canvasEl = document.getElementById('chartWeeklyClosure');
             if (!canvasEl) return;
@@ -5670,11 +5670,9 @@
             // Mostrar las últimas 16 semanas con historial completo (desde Julio W28 en adelante)
             const displayStats = weeklyStats.length > 16 ? weeklyStats.slice(-16) : weeklyStats;
 
-            const openCounts = displayStats.map(w => w.open);
             const closedCounts = displayStats.map(w => w.closed);
+            const openCounts = displayStats.map(w => w.open);
             const overdueCounts = displayStats.map(w => w.overdue);
-            const closureRates = displayStats.map(w => w.closedPct);
-            const maxCount = Math.max(10, ...openCounts, ...closedCounts, ...overdueCounts);
 
             const ctx = canvasEl.getContext('2d');
             if (chartInstanceWeeklyClosure) chartInstanceWeeklyClosure.destroy();
@@ -5682,170 +5680,88 @@
             chartInstanceWeeklyClosure = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: displayStats.map(w => [`${w.label} (${w.closedPct}%)`, `A:${w.open} C:${w.closed} V:${w.overdue}`]),
+                    labels: displayStats.map(w => `${w.label} (${w.closedPct}%)`),
                     datasets: [
                         {
-                            type: 'line',
-                            label: '% de Cierre Semanal',
-                            data: closureRates,
-                            yAxisID: 'y1',
-                            borderColor: '#d97706',
-                            backgroundColor: 'rgba(245, 158, 11, 0.18)',
-                            borderWidth: 2.5,
-                            pointBackgroundColor: '#d97706',
-                            pointRadius: 4,
-                            tension: 0.25,
-                            order: 0,
-                            datalabels: {
-                                display: true,
-                                color: '#92400e',
-                                backgroundColor: 'rgba(254, 243, 199, 0.92)',
-                                borderRadius: 4,
-                                padding: { top: 1, bottom: 1, left: 4, right: 4 },
-                                anchor: 'end',
-                                align: 'top',
-                                offset: 2,
-                                font: { weight: 'bold', size: 10, family: 'Century Gothic' },
-                                formatter: (val) => `${val}%`
-                            }
-                        },
-                        {
-                            type: 'bar',
-                            label: 'Abiertas (En Tiempo)',
-                            data: openCounts,
-                            yAxisID: 'y',
-                            backgroundColor: 'rgba(59, 130, 246, 0.85)',
-                            borderColor: '#2563eb',
-                            borderWidth: 1,
-                            borderRadius: 3,
-                            order: 2,
-                            datalabels: {
-                                display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
-                                color: '#1e40af',
-                                anchor: 'end',
-                                align: 'top',
-                                offset: 0,
-                                font: { weight: 'bold', size: 10, family: 'Century Gothic' },
-                                formatter: (val) => val
-                            }
-                        },
-                        {
-                            type: 'bar',
-                            label: 'Cerradas en la Semana',
+                            label: 'Cerradas',
                             data: closedCounts,
-                            yAxisID: 'y',
-                            backgroundColor: 'rgba(16, 185, 129, 0.88)',
-                            borderColor: '#059669',
+                            backgroundColor: 'rgba(82, 190, 128, 0.82)',
+                            borderColor: '#52BE80',
                             borderWidth: 1,
-                            borderRadius: 3,
-                            order: 2,
-                            datalabels: {
-                                display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
-                                color: '#065f46',
-                                anchor: 'end',
-                                align: 'top',
-                                offset: 0,
-                                font: { weight: 'bold', size: 10, family: 'Century Gothic' },
-                                formatter: (val) => val
-                            }
+                            borderRadius: 2
                         },
                         {
-                            type: 'bar',
-                            label: 'Overdue (Vencidas)',
-                            data: overdueCounts,
-                            yAxisID: 'y',
-                            backgroundColor: 'rgba(239, 68, 68, 0.85)',
-                            borderColor: '#dc2626',
+                            label: 'Abiertas',
+                            data: openCounts,
+                            backgroundColor: 'rgba(59, 130, 246, 0.80)',
+                            borderColor: '#3b82f6',
                             borderWidth: 1,
-                            borderRadius: 3,
-                            order: 2,
-                            datalabels: {
-                                display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
-                                color: '#991b1b',
-                                anchor: 'end',
-                                align: 'top',
-                                offset: 0,
-                                font: { weight: 'bold', size: 10, family: 'Century Gothic' },
-                                formatter: (val) => val
-                            }
+                            borderRadius: 2
+                        },
+                        {
+                            label: 'Overdue',
+                            data: overdueCounts,
+                            backgroundColor: 'rgba(236, 112, 99, 0.82)',
+                            borderColor: '#EC7063',
+                            borderWidth: 1,
+                            borderRadius: 2
                         }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false
-                    },
                     scales: {
-                        y: {
-                            type: 'linear',
-                            position: 'left',
-                            beginAtZero: true,
-                            suggestedMax: Math.ceil(maxCount * 1.22),
-                            grid: { color: '#EAEAEA' },
-                            title: {
-                                display: true,
-                                text: 'Cantidad de Acciones',
-                                font: { family: 'Century Gothic', size: 11, weight: 'bold' }
-                            },
-                            ticks: {
-                                font: { family: 'Century Gothic', size: 11 }
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            position: 'right',
-                            beginAtZero: true,
-                            max: 115,
-                            grid: { drawOnChartArea: false },
-                            title: {
-                                display: true,
-                                text: '% Cierre',
-                                font: { family: 'Century Gothic', size: 11, weight: 'bold' },
-                                color: '#b45309'
-                            },
-                            ticks: {
-                                font: { family: 'Century Gothic', size: 10, weight: 'bold' },
-                                color: '#b45309',
-                                callback: function(value) { return value <= 100 ? value + '%' : ''; }
-                            }
-                        },
                         x: {
+                            stacked: true,
                             grid: { display: false },
                             ticks: {
                                 autoSkip: false,
-                                maxRotation: 40,
-                                minRotation: 0,
-                                font: { family: 'Century Gothic', size: 10, weight: 'bold' }
+                                maxRotation: 45,
+                                minRotation: 30,
+                                font: { family: 'Century Gothic', size: 11, weight: 'bold' }
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            grid: { color: '#EAEAEA' },
+                            ticks: {
+                                precision: 0,
+                                font: { family: 'Century Gothic' }
                             }
                         }
                     },
                     plugins: {
+                        datalabels: {
+                            color: '#FFFFFF',
+                            anchor: 'center',
+                            align: 'center',
+                            font: { weight: 'bold', size: 11, family: 'Century Gothic' },
+                            formatter: (value) => value > 0 ? value : ''
+                        },
                         legend: {
                             display: true,
-                            position: 'top',
-                            labels: { boxWidth: 12, font: { family: 'Century Gothic', size: 11, weight: 'bold' } }
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 10,
+                                font: { size: 11, family: 'Century Gothic' }
+                            }
                         },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
                                     const w = displayStats[context.dataIndex];
-                                    if (!w) return '';
-                                    if (context.dataset.type === 'line') {
-                                        return `% de Cierre Semanal: ${w.closedPct}% (${w.closed} cerradas de ${w.total} activas)`;
+                                    if (w && context.dataset.label === 'Cerradas') {
+                                        return `Cerradas: ${context.raw} acc (En tiempo: ${w.closedOnTime} | Post-Overdue: ${w.closedLate})`;
                                     }
-                                    if (context.dataset.label.includes('Cerradas')) {
-                                        return `Cerradas en la Semana: ${w.closed} (En tiempo: ${w.closedOnTime} | Post-Overdue: ${w.closedLate})`;
-                                    }
-                                    return `${context.dataset.label}: ${context.raw} acciones`;
+                                    return `${context.dataset.label}: ${context.raw} acc`;
                                 },
                                 footer: function(tooltipItems) {
                                     if (!tooltipItems || !tooltipItems.length) return '';
                                     const w = displayStats[tooltipItems[0].dataIndex];
                                     if (!w) return '';
-                                    return `Total activas esa semana: ${w.total} (Nuevas abiertas: ${w.newlyOpened})`;
+                                    return `Total semana: ${w.total} acc | % Cierre: ${w.closedPct}% (${w.closed}/${w.total})`;
                                 }
                             }
                         }
@@ -10532,12 +10448,10 @@
 
             // Mostrar las últimas 16 semanas para legibilidad óptima en el reporte PNG
             const sliced = weeklyTrend.slice(-16);
-            const labels = sliced.map(w => [`Week ${w.week} (${w.closedPct}%)`, `A:${w.open} C:${w.closed} V:${w.overdue}`]);
-            const openData = sliced.map(w => w.open);
+            const labels = sliced.map(w => `Week ${w.week} (${w.closedPct}%)`);
             const closedData = sliced.map(w => w.closed);
+            const openData = sliced.map(w => w.open);
             const overdueData = sliced.map(w => w.overdue);
-            const pctClosedData = sliced.map(w => w.closedPct);
-            const maxCount = Math.max(10, ...openData, ...closedData, ...overdueData);
 
             new Chart(ctx, {
                 type: 'bar',
@@ -10545,83 +10459,28 @@
                     labels: labels,
                     datasets: [
                         {
-                            type: 'line',
-                            label: '% de Cierre Semanal',
-                            data: pctClosedData,
-                            yAxisID: 'y1',
-                            borderColor: '#d97706',
-                            backgroundColor: 'rgba(245, 158, 11, 0.18)',
-                            borderWidth: 3,
-                            pointBackgroundColor: '#d97706',
-                            pointRadius: 5,
-                            tension: 0.25,
-                            order: 0,
-                            datalabels: {
-                                display: true,
-                                anchor: 'end',
-                                align: 'top',
-                                offset: 3,
-                                color: '#92400e',
-                                backgroundColor: 'rgba(254, 243, 199, 0.92)',
-                                borderRadius: 4,
-                                padding: { top: 2, bottom: 2, left: 5, right: 5 },
-                                font: { weight: 'bold', size: 12, family: 'Century Gothic' },
-                                formatter: (val) => `${val}%`
-                            }
-                        },
-                        {
-                            type: 'bar',
-                            label: 'Abiertas (En Tiempo)',
-                            data: openData,
-                            yAxisID: 'y',
-                            backgroundColor: '#3b82f6',
-                            borderRadius: 4,
-                            order: 2,
-                            datalabels: {
-                                display: (context) => context.dataset.data[context.dataIndex] > 0,
-                                anchor: 'end',
-                                align: 'top',
-                                offset: 1,
-                                color: '#1d4ed8',
-                                font: { weight: 'bold', size: 12, family: 'Century Gothic' },
-                                formatter: (val) => val
-                            }
-                        },
-                        {
-                            type: 'bar',
-                            label: 'Cerradas en la Semana',
+                            label: 'Cerradas',
                             data: closedData,
-                            yAxisID: 'y',
-                            backgroundColor: '#10b981',
-                            borderRadius: 4,
-                            order: 2,
-                            datalabels: {
-                                display: (context) => context.dataset.data[context.dataIndex] > 0,
-                                anchor: 'end',
-                                align: 'top',
-                                offset: 1,
-                                color: '#047857',
-                                font: { weight: 'bold', size: 12, family: 'Century Gothic' },
-                                formatter: (val) => val
-                            }
+                            backgroundColor: 'rgba(82, 190, 128, 0.85)',
+                            borderColor: '#52BE80',
+                            borderWidth: 1,
+                            borderRadius: 2
                         },
                         {
-                            type: 'bar',
-                            label: 'Overdue (Vencidas)',
+                            label: 'Abiertas',
+                            data: openData,
+                            backgroundColor: 'rgba(59, 130, 246, 0.82)',
+                            borderColor: '#3b82f6',
+                            borderWidth: 1,
+                            borderRadius: 2
+                        },
+                        {
+                            label: 'Overdue',
                             data: overdueData,
-                            yAxisID: 'y',
-                            backgroundColor: '#ef4444',
-                            borderRadius: 4,
-                            order: 2,
-                            datalabels: {
-                                display: (context) => context.dataset.data[context.dataIndex] > 0,
-                                anchor: 'end',
-                                align: 'top',
-                                offset: 1,
-                                color: '#b91c1c',
-                                font: { weight: 'bold', size: 12, family: 'Century Gothic' },
-                                formatter: (val) => val
-                            }
+                            backgroundColor: 'rgba(236, 112, 99, 0.85)',
+                            borderColor: '#EC7063',
+                            borderWidth: 1,
+                            borderRadius: 2
                         }
                     ]
                 },
@@ -10631,57 +10490,40 @@
                     maintainAspectRatio: false,
                     scales: {
                         x: {
+                            stacked: true,
                             grid: { display: false },
                             ticks: {
                                 autoSkip: false,
-                                maxRotation: 35,
-                                minRotation: 0,
-                                font: { family: 'Century Gothic', size: 12, weight: 'bold' },
+                                maxRotation: 45,
+                                minRotation: 30,
+                                font: { family: 'Century Gothic', size: 13, weight: 'bold' },
                                 color: '#1e293b'
                             }
                         },
                         y: {
-                            type: 'linear',
-                            position: 'left',
+                            stacked: true,
                             beginAtZero: true,
-                            suggestedMax: Math.ceil(maxCount * 1.25),
                             grid: { color: '#EAEAEA' },
-                            title: {
-                                display: true,
-                                text: 'Acciones',
-                                font: { family: 'Century Gothic', size: 13, weight: 'bold' }
-                            },
                             ticks: {
-                                font: { family: 'Century Gothic', size: 13, weight: 'bold' }
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            position: 'right',
-                            beginAtZero: true,
-                            max: 115,
-                            grid: { drawOnChartArea: false },
-                            title: {
-                                display: true,
-                                text: '% Cierre',
-                                font: { family: 'Century Gothic', size: 13, weight: 'bold' },
-                                color: '#b45309'
-                            },
-                            ticks: {
-                                stepSize: 20,
-                                callback: (v) => v <= 100 ? v + '%' : '',
-                                font: { family: 'Century Gothic', size: 13, weight: 'bold' },
-                                color: '#b45309'
+                                precision: 0,
+                                font: { family: 'Century Gothic', size: 14, weight: 'bold' }
                             }
                         }
                     },
                     plugins: {
+                        datalabels: {
+                            color: '#FFFFFF',
+                            anchor: 'center',
+                            align: 'center',
+                            font: { weight: 'bold', size: 14, family: 'Century Gothic' },
+                            formatter: (value) => value > 0 ? value : ''
+                        },
                         legend: {
                             display: true,
-                            position: 'top',
+                            position: 'bottom',
                             labels: {
                                 boxWidth: 14,
-                                font: { family: 'Century Gothic', size: 14, weight: 'bold' }
+                                font: { family: 'Century Gothic', size: 15, weight: 'bold' }
                             }
                         }
                     }
