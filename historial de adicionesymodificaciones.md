@@ -261,3 +261,18 @@ La base de datos (Supabase) almacena exclusivamente métricas, hallazgos y audit
         *   **% de Cierre Semanal:** Porcentaje real de acciones cerradas en esa semana respecto al total de acciones activas en esa semana (`cerradas / (abiertas + cerradas + overdue)`).
 *   **Gráfica de Barra Apilada por Semana Estilo Aging (`renderChartWeeklyClosure` y `renderReportWeeklyClosureChart`):**
     *   Tanto en el Dashboard principal como en los Reportes Visuales PNG (Semanal, Mensual y Overdue), cada semana se representa en **una sola barra apilada (`stacked: true`)** con el mismo estilo visual que la gráfica de Aging de Acciones, dividida en 3 segmentos: **Cerradas** (verde), **Abiertas** (azul) y **Overdue** (rojo), mostrando la cantidad centrada en blanco dentro de cada segmento y el `% de Cierre` en la etiqueta de la semana (`Week XX (YY%)`).
+
+### [Octubre 2026] - Corrección y Activación del Generador de Gráficas PNG con Filtro por Departamento
+*   **Corrección del Fallo de Bloqueo / Carga Infinita:**
+    *   **Causa Raíz:** `generateVisualReport()` intentaba acceder a `document.getElementById('filter-department')`, elemento inexistente en el DOM (el selector real de la tabla es `filter-dept`), provocando una excepción no controlada (`TypeError: Cannot read properties of null (reading 'value')`). Como el botón se ponía en `Generando...` y `disabled = true` al inicio sin bloque `try...catch...finally`, la aplicación se quedaba congelada en modo de carga infinito.
+*   **Implementación de `generateChartReport(type, reportDept)`:**
+    *   Se desacopló la exportación de las gráficas del DOM interactivo en vivo, eliminando saltos de pestaña molestos (`switchTab`), problemas de responsividad en pantallas pequeñas y la falla con `chartHistoryAreaScores` (que estaba oculta en la vista SPA).
+    *   **Filtrado Real por Departamento:** Las 6 modalidades de gráficas del dashboard (`chart_scores`, `chart_weekly_closure`, `chart_dept_overdue`, `chart_aging`, `chart_upcoming`, `chart_history`) ahora filtran efectivamente los datos por el departamento seleccionado en `report-dept-select` (o muestran todos si no se selecciona filtro).
+    *   Al filtrar por departamento en las gráficas de vencidas y aging (`chart_dept_overdue` y `chart_aging`), se agrupa automáticamente por **Responsable (`owner`)** para desglosar a los dueños de acción de ese departamento específico.
+*   **Lienzo de Alta Definición con Encabezado Institucional:**
+    *   Cada gráfica se dibuja en un lienzo temporal de ancho dinámico (`Math.max(1200, labelCount * 65)`) con franja institucional Flex Blue, título completo, nombre del departamento filtrado, fecha de corte y marca oficial *FLEX LEANVIEW 5'S*.
+    *   Las barras y etiquetas de ejes (`Century Gothic`) se muestran completas, nítidas y sin recortes.
+*   **Manejo Elegante de Casos Cero (0 Acciones Vencidas):**
+    *   Si un departamento tiene 0 acciones vencidas o por vencer, en lugar de generar un gráfico vacío o arrojar error, genera una tarjeta oficial con marco verde indicando *¡Excelente! 0 acciones vencidas en el departamento. 100% de cumplimiento con SLA*.
+*   **Resiliencia y Recuperación de Estado:**
+    *   Se blindó `generateVisualReport()` con control de errores `try...catch` y una función `resetBtn()` garantizada que restaura el botón a `Generar PNG` y lo rehabilita de inmediato en cualquier flujo de éxito o error.

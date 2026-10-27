@@ -2407,7 +2407,7 @@
             <p style="margin-bottom: 20px; font-size: 14px; color: var(--color-text-muted);">Selecciona el tipo de reporte para descargar la imagen PNG.</p>
             
             <div style="margin-bottom: 15px; text-align: left;">
-                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Departamento (Filtro para Gráficas):</label>
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Departamento (Filtro para Gráficas y Reportes):</label>
                 <select id="report-dept-select" class="login-input" style="cursor: pointer;">
                     <option value="">Todos los Departamentos</option>
                 </select>
@@ -10013,6 +10013,13 @@
                         depts.add(item.department);
                     }
                 });
+                if (typeof allOwnersDirectory !== 'undefined' && Array.isArray(allOwnersDirectory)) {
+                    allOwnersDirectory.forEach(item => {
+                        if (item.department && item.department !== 'Sin Departamento' && item.department !== 'Gemba' && item.department !== 'Gemba Walk') {
+                            depts.add(item.department);
+                        }
+                    });
+                }
                 Array.from(depts).sort().forEach(d => {
                     const opt = document.createElement('option');
                     opt.value = d;
@@ -10064,379 +10071,989 @@
             }
         }
 
+        // ==========================================
+        // EXPORTACIÓN DE GRÁFICAS DEL DASHBOARD
+        // ==========================================
+        async function generateChartReport(type, reportDept) {
+            let baseData = (typeof globalFilteredData !== 'undefined' && globalFilteredData.length > 0)
+                ? [...globalFilteredData]
+                : (typeof allAuditData !== 'undefined' ? allAuditData.filter(item => item.department !== 'Gemba' && item.department !== 'Gemba Walk') : []);
+
+            if (reportDept) {
+                baseData = baseData.filter(item => item.department === reportDept);
+            }
+
+            let chartConfig = null;
+            let chartTitle = '';
+            let fileName = 'Grafica.png';
+            let zeroStateMessage = '';
+
+            if (type === 'chart_scores') {
+                fileName = 'Score_5S_Area.png';
+                chartTitle = reportDept ? `Score 5S por Área - ${reportDept}` : 'Score 5S por Área (Top 10)';
+
+                const audits = getAuditScores(baseData);
+                const areaGroups = {};
+                audits.forEach(audit => {
+                    const loc = audit.location;
+                    if (isDashboardExcludedArea(loc)) return;
+                    if (!areaGroups[loc]) areaGroups[loc] = { sum: 0, count: 0 };
+                    areaGroups[loc].sum += audit.percentage;
+                    areaGroups[loc].count += 1;
+                });
+
+                let areaScores = Object.keys(areaGroups).map(loc => ({
+                    location: loc,
+                    avg: Math.round((areaGroups[loc].sum / areaGroups[loc].count) * 10) / 10
+                }));
+
+                if (reportDept) {
+                    areaScores.sort((a, b) => b.avg - a.avg);
+                } else {
+                    if (typeof areaTopMode !== 'undefined' && areaTopMode === 'worst') {
+                        areaScores.sort((a, b) => a.avg - b.avg);
+                    } else {
+                        areaScores.sort((a, b) => b.avg - a.avg);
+                    }
+                    areaScores = areaScores.slice(0, 10);
+                }
+
+                if (areaScores.length === 0) {
+                    zeroStateMessage = `No hay auditorías registradas${reportDept ? ' para el departamento ' + reportDept : ''}.`;
+                } else {
+                    const labels = areaScores.map(a => a.location);
+                    const scores = areaScores.map(a => a.avg);
+
+                    chartConfig = {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    type: 'line',
+                                    label: 'Meta (95%)',
+                                    datalabels: { display: false },
+                                    data: Array(labels.length).fill(95),
+                                    borderColor: '#EC7063',
+                                    borderWidth: 2,
+                                    borderDash: [6, 4],
+                                    fill: false,
+                                    pointRadius: 0,
+                                    order: 1
+                                },
+                                {
+                                    type: 'bar',
+                                    label: 'Calificación Promedio',
+                                    data: scores,
+                                    backgroundColor: 'rgba(0, 154, 221, 0.75)',
+                                    borderColor: '#009ADD',
+                                    borderWidth: 1.5,
+                                    borderRadius: 4,
+                                    order: 2
+                                }
+                            ]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    grid: { color: '#EAEAEA' },
+                                    ticks: {
+                                        font: { family: 'Century Gothic', size: 12 },
+                                        callback: function(v) { return v + '%'; }
+                                    }
+                                },
+                                x: {
+                                    grid: { display: false },
+                                    ticks: {
+                                        autoSkip: false,
+                                        maxRotation: labels.length > 6 ? 60 : 0,
+                                        minRotation: labels.length > 6 ? 45 : 0,
+                                        font: { family: 'Century Gothic', size: labels.length > 15 ? 10 : 12, weight: 'bold' }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                datalabels: {
+                                    color: '#FFFFFF',
+                                    anchor: 'center',
+                                    align: 'center',
+                                    font: { weight: 'bold', family: 'Century Gothic', size: 12 },
+                                    formatter: function(val, ctx) {
+                                        if (ctx.dataset.type === 'line') return '';
+                                        return val + '%';
+                                    }
+                                },
+                                legend: {
+                                    display: true,
+                                    position: 'top',
+                                    labels: { font: { family: 'Century Gothic', size: 12 } }
+                                }
+                            }
+                        }
+                    };
+                }
+            } else if (type === 'chart_weekly_closure') {
+                fileName = 'Porcentaje_Cierre_Semanal.png';
+                chartTitle = reportDept ? `% Acciones Cerradas por Semana - ${reportDept}` : '% Acciones Cerradas por Semana';
+
+                const weeklyStats = computeWeeklyClosureStats(baseData);
+                const displayStats = weeklyStats.length > 16 ? weeklyStats.slice(-16) : weeklyStats;
+
+                if (displayStats.length === 0) {
+                    zeroStateMessage = `No hay datos semanales${reportDept ? ' para el departamento ' + reportDept : ''}.`;
+                } else {
+                    const closedCounts = displayStats.map(w => w.closed);
+                    const openCounts = displayStats.map(w => w.open);
+                    const overdueCounts = displayStats.map(w => w.overdue);
+                    const labels = displayStats.map(w => `${w.label} (${w.closedPct}%)`);
+
+                    chartConfig = {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'Cerradas',
+                                    data: closedCounts,
+                                    backgroundColor: 'rgba(82, 190, 128, 0.85)',
+                                    borderColor: '#52BE80',
+                                    borderWidth: 1,
+                                    borderRadius: 2
+                                },
+                                {
+                                    label: 'Abiertas',
+                                    data: openCounts,
+                                    backgroundColor: 'rgba(59, 130, 246, 0.82)',
+                                    borderColor: '#3b82f6',
+                                    borderWidth: 1,
+                                    borderRadius: 2
+                                },
+                                {
+                                    label: 'Overdue',
+                                    data: overdueCounts,
+                                    backgroundColor: 'rgba(236, 112, 99, 0.85)',
+                                    borderColor: '#EC7063',
+                                    borderWidth: 1,
+                                    borderRadius: 2
+                                }
+                            ]
+                        },
+                        options: {
+                            scales: {
+                                x: {
+                                    stacked: true,
+                                    grid: { display: false },
+                                    ticks: {
+                                        autoSkip: false,
+                                        maxRotation: 60,
+                                        minRotation: 45,
+                                        font: { family: 'Century Gothic', size: 11, weight: 'bold' }
+                                    }
+                                },
+                                y: {
+                                    stacked: true,
+                                    beginAtZero: true,
+                                    grid: { color: '#EAEAEA' },
+                                    ticks: { font: { family: 'Century Gothic', size: 12 }, precision: 0 }
+                                }
+                            },
+                            plugins: {
+                                datalabels: {
+                                    color: '#FFFFFF',
+                                    anchor: 'center',
+                                    align: 'center',
+                                    font: { weight: 'bold', family: 'Century Gothic', size: 11 },
+                                    formatter: (val) => val > 0 ? val : ''
+                                },
+                                legend: {
+                                    display: true,
+                                    position: 'top',
+                                    labels: { font: { family: 'Century Gothic', size: 12 } }
+                                }
+                            }
+                        }
+                    };
+                }
+            } else if (type === 'chart_dept_overdue') {
+                fileName = 'Acciones_Vencidas.png';
+                let overdueList = (typeof arrOverdue !== 'undefined' && arrOverdue.length > 0)
+                    ? [...arrOverdue]
+                    : baseData.filter(item => {
+                        if (!isValidAction(item)) return false;
+                        const s = (item.status || '').toLowerCase().trim();
+                        if (isActionClosed(item)) return false;
+                        if (s === 'overdue' || s === 'vencida') return true;
+                        if (item.dueDate && item.dueDate !== 'Sin Fecha') {
+                            const d = parseDateRobust(item.dueDate);
+                            const t = new Date(); t.setHours(0,0,0,0);
+                            if (!isNaN(d.getTime()) && d < t) return true;
+                        }
+                        return false;
+                    });
+
+                if (reportDept) {
+                    overdueList = overdueList.filter(item => item.department === reportDept);
+                }
+
+                const groupBy = reportDept ? 'owner' : (typeof overdueGroupBy !== 'undefined' ? overdueGroupBy : 'owner');
+                chartTitle = reportDept
+                    ? `Acciones Vencidas por Responsable - ${reportDept}`
+                    : (groupBy === 'dept' ? 'Acciones Vencidas por Departamento' : 'Acciones Vencidas por Responsable');
+
+                const counts = {};
+                overdueList.forEach(item => {
+                    const key = (groupBy === 'dept') ? (item.department || 'Sin Depto') : (item.owner || 'Sin Asignar');
+                    counts[key] = (counts[key] || 0) + 1;
+                });
+
+                const sorted = Object.keys(counts).map(k => ({ name: k, count: counts[k] })).sort((a, b) => b.count - a.count);
+
+                if (sorted.length === 0) {
+                    zeroStateMessage = `¡Excelente! 0 acciones vencidas${reportDept ? ' en el departamento ' + reportDept : ''}. 100% de cumplimiento con SLA.`;
+                } else {
+                    const labels = sorted.map(d => d.name);
+                    const data = sorted.map(d => d.count);
+
+                    chartConfig = {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Acciones Vencidas',
+                                data: data,
+                                backgroundColor: 'rgba(236, 112, 99, 0.75)',
+                                borderColor: '#EC7063',
+                                borderWidth: 1.5,
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: '#EAEAEA' },
+                                    ticks: { precision: 0, font: { family: 'Century Gothic', size: 12 } }
+                                },
+                                x: {
+                                    grid: { display: false },
+                                    ticks: {
+                                        autoSkip: false,
+                                        maxRotation: labels.length > 6 ? 65 : 0,
+                                        minRotation: labels.length > 6 ? 45 : 0,
+                                        font: { family: 'Century Gothic', size: labels.length > 15 ? 10 : 12, weight: 'bold' }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                datalabels: {
+                                    color: '#FFFFFF',
+                                    anchor: 'center',
+                                    align: 'center',
+                                    font: { weight: 'bold', family: 'Century Gothic', size: 12 },
+                                    formatter: (val) => val > 0 ? val : ''
+                                },
+                                legend: { display: false }
+                            }
+                        }
+                    };
+                }
+            } else if (type === 'chart_aging') {
+                fileName = 'Aging_Acciones.png';
+                let overdueList = (typeof arrOverdue !== 'undefined' && arrOverdue.length > 0)
+                    ? [...arrOverdue]
+                    : baseData.filter(item => {
+                        if (!isValidAction(item)) return false;
+                        const s = (item.status || '').toLowerCase().trim();
+                        if (isActionClosed(item)) return false;
+                        if (s === 'overdue' || s === 'vencida') return true;
+                        if (item.dueDate && item.dueDate !== 'Sin Fecha') {
+                            const d = parseDateRobust(item.dueDate);
+                            const t = new Date(); t.setHours(0,0,0,0);
+                            if (!isNaN(d.getTime()) && d < t) return true;
+                        }
+                        return false;
+                    });
+
+                if (reportDept) {
+                    overdueList = overdueList.filter(item => item.department === reportDept);
+                }
+
+                const groupBy = reportDept ? 'owner' : (typeof agingOverdueGroupBy !== 'undefined' ? agingOverdueGroupBy : 'owner');
+                chartTitle = reportDept
+                    ? `Antigüedad Acciones Vencidas por Responsable - ${reportDept}`
+                    : (groupBy === 'dept' ? 'Antigüedad Acciones Vencidas por Departamento' : 'Antigüedad Acciones Vencidas por Responsable');
+
+                if (overdueList.length === 0) {
+                    zeroStateMessage = `¡Excelente! 0 acciones vencidas${reportDept ? ' en el departamento ' + reportDept : ''}.`;
+                } else {
+                    const dataObj = getStackedAgingData(overdueList, groupBy);
+                    chartConfig = {
+                        type: 'bar',
+                        data: dataObj,
+                        options: {
+                            scales: {
+                                x: {
+                                    stacked: true,
+                                    grid: { display: false },
+                                    ticks: {
+                                        autoSkip: false,
+                                        maxRotation: dataObj.labels.length > 6 ? 65 : 0,
+                                        minRotation: dataObj.labels.length > 6 ? 45 : 0,
+                                        font: { family: 'Century Gothic', size: dataObj.labels.length > 15 ? 10 : 12, weight: 'bold' }
+                                    }
+                                },
+                                y: {
+                                    stacked: true,
+                                    beginAtZero: true,
+                                    grid: { color: '#EAEAEA' },
+                                    ticks: { precision: 0, font: { family: 'Century Gothic', size: 12 } }
+                                }
+                            },
+                            plugins: {
+                                datalabels: {
+                                    color: '#FFFFFF',
+                                    anchor: 'center',
+                                    align: 'center',
+                                    font: { weight: 'bold', family: 'Century Gothic', size: 11 },
+                                    formatter: (val) => val > 0 ? val : ''
+                                },
+                                legend: {
+                                    display: true,
+                                    position: 'top',
+                                    labels: { font: { family: 'Century Gothic', size: 12 } }
+                                }
+                            }
+                        }
+                    };
+                }
+            } else if (type === 'chart_upcoming') {
+                fileName = 'Acciones_por_Vencer.png';
+                let upcomingList = (typeof arrUpcoming !== 'undefined' && arrUpcoming.length > 0)
+                    ? [...arrUpcoming]
+                    : baseData.filter(item => {
+                        if (!isValidAction(item)) return false;
+                        if (isActionClosed(item)) return false;
+                        const s = (item.status || '').toLowerCase().trim();
+                        if (s === 'overdue' || s === 'vencida') return false;
+                        if (item.dueDate && item.dueDate !== 'Sin Fecha') {
+                            const d = parseDateRobust(item.dueDate);
+                            const t = new Date(); t.setHours(0,0,0,0);
+                            if (!isNaN(d.getTime())) {
+                                const diffDays = Math.ceil((d - t) / 86400000);
+                                return diffDays >= 0 && diffDays <= 2;
+                            }
+                        }
+                        return false;
+                    });
+
+                if (reportDept) {
+                    upcomingList = upcomingList.filter(item => item.department === reportDept);
+                }
+
+                const groupBy = reportDept ? 'owner' : (typeof upcomingGroupBy !== 'undefined' ? upcomingGroupBy : 'owner');
+                chartTitle = reportDept
+                    ? `Acciones Próximas a Vencer (<= 2 días) - ${reportDept}`
+                    : (groupBy === 'dept' ? 'Acciones Próximas a Vencer por Depto' : 'Acciones Próximas a Vencer por Responsable');
+
+                const counts = {};
+                upcomingList.forEach(item => {
+                    const key = (groupBy === 'dept') ? (item.department || 'Sin Depto') : (item.owner || 'Sin Asignar');
+                    counts[key] = (counts[key] || 0) + 1;
+                });
+
+                const sorted = Object.keys(counts).map(k => ({ name: k, count: counts[k] })).sort((a, b) => b.count - a.count);
+
+                if (sorted.length === 0) {
+                    zeroStateMessage = `No hay acciones próximas a vencer (0 a 2 días)${reportDept ? ' en el departamento ' + reportDept : ''}.`;
+                } else {
+                    const labels = sorted.map(d => d.name);
+                    const data = sorted.map(d => d.count);
+
+                    chartConfig = {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Próximas a Vencer',
+                                data: data,
+                                backgroundColor: 'rgba(243, 156, 18, 0.75)',
+                                borderColor: '#F39C12',
+                                borderWidth: 1.5,
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: '#EAEAEA' },
+                                    ticks: { precision: 0, font: { family: 'Century Gothic', size: 12 } }
+                                },
+                                x: {
+                                    grid: { display: false },
+                                    ticks: {
+                                        autoSkip: false,
+                                        maxRotation: labels.length > 6 ? 60 : 0,
+                                        minRotation: labels.length > 6 ? 45 : 0,
+                                        font: { family: 'Century Gothic', size: labels.length > 15 ? 10 : 12, weight: 'bold' }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                datalabels: {
+                                    color: '#FFFFFF',
+                                    anchor: 'center',
+                                    align: 'center',
+                                    font: { weight: 'bold', family: 'Century Gothic', size: 12 },
+                                    formatter: (val) => val > 0 ? val : ''
+                                },
+                                legend: { display: false }
+                            }
+                        }
+                    };
+                }
+            } else if (type === 'chart_history') {
+                fileName = 'Historial_Scores.png';
+                chartTitle = reportDept ? `Historial de Scores por Área - ${reportDept}` : 'Historial de Scores (Todas las Áreas)';
+
+                let histData = typeof allAuditData !== 'undefined' ? allAuditData.filter(item => item.responseScore !== -1) : [];
+                if (reportDept) {
+                    histData = histData.filter(item => item.department === reportDept);
+                }
+
+                const audits = getAuditScores(histData);
+                const areaGroups = {};
+                audits.forEach(audit => {
+                    const loc = audit.location;
+                    if (isDashboardExcludedArea(loc)) return;
+                    if (!areaGroups[loc]) areaGroups[loc] = { sum: 0, count: 0 };
+                    areaGroups[loc].sum += audit.percentage;
+                    areaGroups[loc].count += 1;
+                });
+
+                let areaScores = Object.keys(areaGroups).map(loc => ({
+                    location: loc,
+                    avg: Math.round((areaGroups[loc].sum / areaGroups[loc].count) * 10) / 10
+                })).sort((a, b) => b.avg - a.avg);
+
+                if (areaScores.length === 0) {
+                    zeroStateMessage = `No hay historial de auditorías${reportDept ? ' para el departamento ' + reportDept : ''}.`;
+                } else {
+                    const labels = areaScores.map(a => a.location);
+                    const scores = areaScores.map(a => a.avg);
+
+                    chartConfig = {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Calificación Promedio',
+                                data: scores,
+                                backgroundColor: 'rgba(0, 154, 221, 0.75)',
+                                borderColor: '#009ADD',
+                                borderWidth: 1.5,
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    grid: { color: '#EAEAEA' },
+                                    ticks: {
+                                        font: { family: 'Century Gothic', size: 12 },
+                                        callback: function(v) { return v + '%'; }
+                                    }
+                                },
+                                x: {
+                                    grid: { display: false },
+                                    ticks: {
+                                        autoSkip: false,
+                                        maxRotation: labels.length > 8 ? 65 : 0,
+                                        minRotation: labels.length > 8 ? 45 : 0,
+                                        font: { family: 'Century Gothic', size: labels.length > 15 ? 10 : 12, weight: 'bold' }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                datalabels: {
+                                    color: '#FFFFFF',
+                                    anchor: 'center',
+                                    align: 'center',
+                                    font: { weight: 'bold', family: 'Century Gothic', size: 11 },
+                                    formatter: (val) => val + '%'
+                                },
+                                legend: { display: false }
+                            }
+                        }
+                    };
+                }
+            }
+
+            const deptPrefix = reportDept ? reportDept.replace(/[^a-zA-Z0-9]/g, '_') : 'Todos';
+            const dateStr = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' });
+
+            if (zeroStateMessage) {
+                const zeroCanvas = document.createElement('canvas');
+                zeroCanvas.width = 1100;
+                zeroCanvas.height = 360;
+                const zCtx = zeroCanvas.getContext('2d');
+
+                zCtx.fillStyle = '#ffffff';
+                zCtx.fillRect(0, 0, 1100, 360);
+
+                zCtx.fillStyle = '#10b981';
+                zCtx.fillRect(0, 0, 1100, 8);
+
+                zCtx.font = 'bold 24px "Century Gothic", sans-serif';
+                zCtx.fillStyle = '#0f172a';
+                zCtx.textAlign = 'left';
+                zCtx.fillText(chartTitle, 40, 50);
+
+                zCtx.font = '14px "Century Gothic", sans-serif';
+                zCtx.fillStyle = '#64748b';
+                zCtx.fillText(`Departamento: ${reportDept || 'Todos los Departamentos'}   |   Corte: ${dateStr}   |   LeanView 5´S Flex`, 40, 80);
+
+                zCtx.strokeStyle = '#e2e8f0';
+                zCtx.lineWidth = 1;
+                zCtx.beginPath();
+                zCtx.moveTo(40, 100);
+                zCtx.lineTo(1060, 100);
+                zCtx.stroke();
+
+                zCtx.fillStyle = '#f0fdf4';
+                zCtx.strokeStyle = '#bbf7d0';
+                zCtx.lineWidth = 1.5;
+                if (zCtx.roundRect) {
+                    zCtx.beginPath();
+                    zCtx.roundRect(80, 130, 940, 170, 12);
+                    zCtx.fill();
+                    zCtx.stroke();
+                } else {
+                    zCtx.fillRect(80, 130, 940, 170);
+                    zCtx.strokeRect(80, 130, 940, 170);
+                }
+
+                zCtx.font = 'bold 20px "Century Gothic", sans-serif';
+                zCtx.fillStyle = '#166534';
+                zCtx.textAlign = 'center';
+                zCtx.fillText(zeroStateMessage, 550, 205);
+
+                zCtx.font = '15px "Century Gothic", sans-serif';
+                zCtx.fillStyle = '#15803d';
+                zCtx.fillText('No se registran elementos pendientes ni acciones atrasadas para los criterios seleccionados.', 550, 240);
+
+                const link = document.createElement('a');
+                link.download = `${deptPrefix}_${fileName}`;
+                link.href = zeroCanvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                return;
+            }
+
+            if (!chartConfig) {
+                alert('No se pudo inicializar la gráfica para exportar.');
+                return;
+            }
+
+            const labelCount = (chartConfig.data && chartConfig.data.labels) ? chartConfig.data.labels.length : 10;
+            const dynamicWidth = Math.max(1200, Math.min(2800, labelCount * 65));
+            const chartHeight = 520;
+            const headerHeight = 90;
+            const totalWidth = dynamicWidth;
+            const totalHeight = chartHeight + headerHeight + 35;
+
+            const chartCanvas = document.createElement('canvas');
+            chartCanvas.width = totalWidth - 40;
+            chartCanvas.height = chartHeight;
+
+            const chartCtx = chartCanvas.getContext('2d');
+            const chartInstance = new Chart(chartCtx, {
+                ...chartConfig,
+                options: {
+                    ...chartConfig.options,
+                    responsive: false,
+                    animation: false,
+                    maintainAspectRatio: false
+                }
+            });
+
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = totalWidth;
+            finalCanvas.height = totalHeight;
+            const fCtx = finalCanvas.getContext('2d');
+
+            fCtx.fillStyle = '#ffffff';
+            fCtx.fillRect(0, 0, totalWidth, totalHeight);
+
+            fCtx.fillStyle = '#009ADD';
+            fCtx.fillRect(0, 0, totalWidth, 8);
+
+            fCtx.font = 'bold 24px "Century Gothic", sans-serif';
+            fCtx.fillStyle = '#005A9C';
+            fCtx.textAlign = 'left';
+            fCtx.fillText(chartTitle, 35, 45);
+
+            fCtx.font = '14px "Century Gothic", sans-serif';
+            fCtx.fillStyle = '#64748b';
+            fCtx.fillText(`Departamento: ${reportDept || 'Todos los Departamentos'}   |   Fecha: ${dateStr}   |   LeanView 5´S`, 35, 72);
+
+            fCtx.font = 'bold 16px "Century Gothic", sans-serif';
+            fCtx.fillStyle = '#009ADD';
+            fCtx.textAlign = 'right';
+            fCtx.fillText('FLEX LEANVIEW 5\'S', totalWidth - 35, 55);
+
+            fCtx.strokeStyle = '#e2e8f0';
+            fCtx.lineWidth = 1;
+            fCtx.beginPath();
+            fCtx.moveTo(35, 88);
+            fCtx.lineTo(totalWidth - 35, 88);
+            fCtx.stroke();
+
+            fCtx.drawImage(chartCanvas, 20, headerHeight + 10);
+            chartInstance.destroy();
+
+            const link = document.createElement('a');
+            link.download = `${deptPrefix}_${fileName}`;
+            link.href = finalCanvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         async function generateVisualReport() {
             const btn = document.getElementById('btn-generate-report');
             btn.innerText = 'Generando...';
             btn.disabled = true;
 
-            const type = document.getElementById('report-type-select').value;
-            const reportDept = document.getElementById('report-dept-select') ? document.getElementById('report-dept-select').value : '';
+            const resetBtn = () => {
+                btn.innerText = 'Generar PNG';
+                btn.disabled = false;
+            };
 
-            if (type.startsWith('chart_')) {
-                // Generar gráfica del dashboard
-                if (window.currentTab !== 'dashboard') {
-                    switchTab('dashboard'); // Asegurar que las gráficas sean visibles
-                }
-                
-                const originalDept = document.getElementById('filter-department').value;
-                document.getElementById('filter-department').value = reportDept;
-                if (typeof onFilterChange === 'function') {
-                    onFilterChange();
-                }
-                
-                // Esperar a que la gráfica se renderice y anime
-                setTimeout(() => {
-                    let canvasId = '';
-                    let fileName = 'Grafica.png';
-                    if (type === 'chart_scores') { canvasId = 'chartAreaScores'; fileName = 'Score_5S_Area.png'; }
-                    if (type === 'chart_weekly_closure') { canvasId = 'chartWeeklyClosure'; fileName = 'Porcentaje_Cierre_Semanal.png'; }
-                    if (type === 'chart_dept_overdue') { canvasId = 'chartDeptOverdue'; fileName = 'Acciones_Vencidas_Responsables.png'; }
-                    if (type === 'chart_aging') { canvasId = 'chartAgingOverdue'; fileName = 'Aging_Acciones.png'; }
-                    if (type === 'chart_upcoming') { canvasId = 'chartUpcomingDue'; fileName = 'Acciones_por_Vencer.png'; }
-                    if (type === 'chart_history') { canvasId = 'chartHistoryAreaScores'; fileName = 'Historial_Scores.png'; }
+            try {
+                const type = document.getElementById('report-type-select').value;
+                const reportDept = document.getElementById('report-dept-select') ? document.getElementById('report-dept-select').value : '';
 
-                    const canvas = document.getElementById(canvasId);
-                    if (canvas) {
-                        const tempCanvas = document.createElement('canvas');
-                        tempCanvas.width = canvas.width;
-                        tempCanvas.height = canvas.height;
-                        const ctx = tempCanvas.getContext('2d');
-                        ctx.fillStyle = '#ffffff';
-                        ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-                        ctx.drawImage(canvas, 0, 0);
-
-                        const link = document.createElement('a');
-                        const deptPrefix = reportDept ? reportDept.replace(/[^a-zA-Z0-9]/g, '_') : 'Todos';
-                        link.download = `${deptPrefix}_${fileName}`;
-                        link.href = tempCanvas.toDataURL('image/png');
-                        link.click();
-                    } else {
-                        alert('No se pudo encontrar la gráfica solicitada.');
-                    }
-
-                    // Restaurar el filtro
-                    document.getElementById('filter-department').value = originalDept;
-                    if (typeof onFilterChange === 'function') {
-                        onFilterChange();
-                    }
-
+                if (type.startsWith('chart_')) {
+                    await generateChartReport(type, reportDept);
                     document.getElementById('report-modal').style.display = 'none';
-                    btn.innerText = 'Generar PNG';
-                    btn.disabled = false;
-                }, 1200);
-                
-                return;
-            }
+                    resetBtn();
+                    return;
+                }
 
-            const dateStr = document.getElementById('report-date-input').value; // YYYY-MM-DD
-            const weekStr = document.getElementById('report-week-input').value; // YYYY-Www
-            const monthStr = document.getElementById('report-month-input').value; // YYYY-MM
-            const dynamicContent = document.getElementById('report-dynamic-content');
-            const bigDate = document.getElementById('report-big-date');
-            const subtitle = document.getElementById('report-subtitle');
-            const greetingText = document.getElementById('report-greeting-text');
-            
-            let selectedDate = new Date();
-            if (dateStr && type === 'daily') {
-                const parts = dateStr.split('-');
-                selectedDate = new Date(parts[0], parts[1]-1, parts[2]);
-            }
-            
-            const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-            
-            dynamicContent.innerHTML = ''; // Limpiar
-            let reportData = [];
-            
-            let baseForReport = typeof globalFilteredData !== 'undefined' ? [...globalFilteredData] : [];
-            
-            if (typeof window.currentAppMode !== 'undefined' && window.currentAppMode === 'cruzada') {
-                baseForReport = baseForReport.filter(item => item.department === 'Cross Audit');
-            }
-            if (typeof window.currentUserRole !== 'undefined' && window.currentUserRole === 'Auditor Cruzado' && window.currentUserArea) {
-                baseForReport = baseForReport.filter(item => item.cleanLocation === window.currentUserArea);
-            }
-            
-            if (type === 'daily') {
-                bigDate.innerText = `${selectedDate.getDate()} de ${months[selectedDate.getMonth()]}`;
-                subtitle.innerText = 'Resumen Ejecutivo de Auditorías 5S';
+                const dateStr = document.getElementById('report-date-input').value; // YYYY-MM-DD
+                const weekStr = document.getElementById('report-week-input').value; // YYYY-Www
+                const monthStr = document.getElementById('report-month-input').value; // YYYY-MM
+                const dynamicContent = document.getElementById('report-dynamic-content');
+                const bigDate = document.getElementById('report-big-date');
+                const subtitle = document.getElementById('report-subtitle');
+                const greetingText = document.getElementById('report-greeting-text');
                 
-                reportData = baseForReport.filter(item => {
-                    if (!item.openDate || item.openDate === 'Sin Fecha') return false;
+                let selectedDate = new Date();
+                if (dateStr && type === 'daily') {
+                    const parts = dateStr.split('-');
+                    selectedDate = new Date(parts[0], parts[1]-1, parts[2]);
+                }
+                
+                const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                
+                dynamicContent.innerHTML = ''; // Limpiar
+                let reportData = [];
+                
+                let baseForReport = typeof globalFilteredData !== 'undefined' ? [...globalFilteredData] : [];
+                
+                if (typeof window.currentAppMode !== 'undefined' && window.currentAppMode === 'cruzada') {
+                    baseForReport = baseForReport.filter(item => item.department === 'Cross Audit');
+                }
+                if (typeof window.currentUserRole !== 'undefined' && window.currentUserRole === 'Auditor Cruzado' && window.currentUserArea) {
+                    baseForReport = baseForReport.filter(item => item.cleanLocation === window.currentUserArea);
+                }
+                if (reportDept) {
+                    baseForReport = baseForReport.filter(item => item.department === reportDept);
+                }
+                
+                if (type === 'daily') {
+                    bigDate.innerText = `${selectedDate.getDate()} de ${months[selectedDate.getMonth()]}`;
+                    subtitle.innerText = 'Resumen Ejecutivo de Auditorías 5S';
                     
-                    let cleanStr = item.openDate.split(' ')[0].replace(/-/g, '/');
-                    let parts = cleanStr.split('/');
-                    if (parts.length !== 3) return false;
-                    
-                    let y, m, d;
-                    // Detectar si el año está al principio (ej. 2026/07/31 o 26/07/31)
-                    if (parts[0].length === 4 || (parts[0].length === 2 && parts[2].length === 2 && parseInt(parts[0], 10) > 31)) {
-                        y = parseInt(parts[0], 10);
-                        m = parseInt(parts[1], 10) - 1;
-                        d = parseInt(parts[2], 10);
-                    } else {
-                        // Asumir que el año está al final (ej. 31/07/2026, 07/31/2026, 31/07/26, 07/31/26)
-                        y = parseInt(parts[2], 10);
-                        let p1 = parseInt(parts[0], 10);
-                        let p2 = parseInt(parts[1], 10);
+                    reportData = baseForReport.filter(item => {
+                        if (!item.openDate || item.openDate === 'Sin Fecha') return false;
                         
-                        // Sistema inteligente para detectar Mes/Día/Año (Excel US) vs Día/Mes/Año (Latino)
-                        if (p1 > 12) {
-                            d = p1; m = p2 - 1; // El primero es mayor a 12, seguro es el día
-                        } else if (p2 > 12) {
-                            m = p1 - 1; d = p2; // El segundo es mayor a 12, seguro es el día
+                        let cleanStr = item.openDate.split(' ')[0].replace(/-/g, '/');
+                        let parts = cleanStr.split('/');
+                        if (parts.length !== 3) return false;
+                        
+                        let y, m, d;
+                        if (parts[0].length === 4 || (parts[0].length === 2 && parts[2].length === 2 && parseInt(parts[0], 10) > 31)) {
+                            y = parseInt(parts[0], 10);
+                            m = parseInt(parts[1], 10) - 1;
+                            d = parseInt(parts[2], 10);
                         } else {
-                            // En caso de ambigüedad (ej. 05/06/26), asumimos estándar de la aplicación: DD/MM/YY
-                            d = p1; m = p2 - 1;
+                            y = parseInt(parts[2], 10);
+                            let p1 = parseInt(parts[0], 10);
+                            let p2 = parseInt(parts[1], 10);
+                            
+                            if (p1 > 12) {
+                                d = p1; m = p2 - 1;
+                            } else if (p2 > 12) {
+                                m = p1 - 1; d = p2;
+                            } else {
+                                d = p1; m = p2 - 1;
+                            }
                         }
+                        
+                        if (y < 100) y += 2000;
+                        
+                        let dt = new Date(y, m, d);
+                        if (isNaN(dt.getTime())) return false;
+                        
+                        return dt.getFullYear() === selectedDate.getFullYear() && 
+                               dt.getMonth() === selectedDate.getMonth() && 
+                               dt.getDate() === selectedDate.getDate();
+                    });
+                    
+                    const metrics = calculateGlobalMetrics(reportData);
+                    
+                    greetingText.innerHTML = `
+                        Les comparto el resumen ejecutivo de las auditorías realizadas el día de hoy.<br>
+                        <strong>Calificación Promedio del Site: <span style="color: #005A9C; font-size: 28px;">${metrics.avgScore}%</span></strong><br><br>
+                        Agradeceré su pronta colaboración en la atención de las acciones generadas. Recuerden que tienen 7 días para el cierre oportuno.
+                    `;
+                    
+                    await renderAreasCharts(reportData, dynamicContent);
+                    
+                } else if (type === 'weekly') {
+                    let weekNum = 1;
+                    let year = selectedDate.getFullYear();
+                    if (weekStr) {
+                        const parts = weekStr.split('-W');
+                        year = parseInt(parts[0]);
+                        weekNum = parseInt(parts[1]);
                     }
                     
-                    // Si el año viene a 2 dígitos (ej. "26"), lo convertimos a "2026"
-                    if (y < 100) y += 2000;
+                    const firstDayOfYear = new Date(year, 0, 1);
+                    const days = (weekNum - 1) * 7;
+                    const firstDay = new Date(year, 0, 1 + days - firstDayOfYear.getDay());
+                    firstDay.setHours(0,0,0,0);
+                    const lastDay = new Date(firstDay);
+                    lastDay.setDate(firstDay.getDate() + 6);
+                    lastDay.setHours(23,59,59,999);
                     
-                    let dt = new Date(y, m, d);
-                    if (isNaN(dt.getTime())) return false;
+                    bigDate.innerText = `Week ${weekNum}`;
+                    subtitle.innerText = `Del ${firstDay.getDate()} al ${lastDay.getDate()} de ${months[lastDay.getMonth()]}`;
                     
-                    return dt.getFullYear() === selectedDate.getFullYear() && 
-                           dt.getMonth() === selectedDate.getMonth() && 
-                           dt.getDate() === selectedDate.getDate();
-                });
-                
-                const metrics = calculateGlobalMetrics(reportData);
-                
-                greetingText.innerHTML = `
-                    Les comparto el resumen ejecutivo de las auditorías realizadas el día de hoy.<br>
-                    <strong>Calificación Promedio del Site: <span style="color: #005A9C; font-size: 28px;">${metrics.avgScore}%</span></strong><br><br>
-                    Agradeceré su pronta colaboración en la atención de las acciones generadas. Recuerden que tienen 7 días para el cierre oportuno.
-                `;
-                
-                await renderAreasCharts(reportData, dynamicContent);
-                
-            } else if (type === 'weekly') {
-                // Parse YYYY-Www
-                let weekNum = 1;
-                let year = selectedDate.getFullYear();
-                if (weekStr) {
-                    const parts = weekStr.split('-W');
-                    year = parseInt(parts[0]);
-                    weekNum = parseInt(parts[1]);
-                }
-                
-                // Aproximar inicio y fin de la semana seleccionada
-                const firstDayOfYear = new Date(year, 0, 1);
-                const days = (weekNum - 1) * 7;
-                const firstDay = new Date(year, 0, 1 + days - firstDayOfYear.getDay());
-                firstDay.setHours(0,0,0,0);
-                const lastDay = new Date(firstDay);
-                lastDay.setDate(firstDay.getDate() + 6);
-                lastDay.setHours(23,59,59,999);
-                
-                bigDate.innerText = `Week ${weekNum}`;
-                subtitle.innerText = `Del ${firstDay.getDate()} al ${lastDay.getDate()} de ${months[lastDay.getMonth()]}`;
-                
-                reportData = baseForReport.filter(item => {
-                    if (!item.openDate || item.openDate === 'Sin Fecha') return false;
-                    let d = parseDateRobust(item.openDate);
-                    if (isNaN(d.getTime())) return false;
-                    
-                    d.setHours(0,0,0,0);
-                    return d >= firstDay && d <= lastDay;
-                });
-                
-                const metrics = calculateGlobalMetrics(reportData);
-                const overdueData = getOverdueActionsForReport(baseForReport);
-                const weeklyTrendAll = computeWeeklyClosureStats(baseForReport);
-                let totalClosedAll = 0;
-                let totalClosedLateAll = 0;
-                baseForReport.forEach(item => {
-                    if (isValidAction(item) && !isDashboardExcludedArea(item.cleanLocation) && !isDashboardExcludedArea(item.location)) {
-                        if (isActionClosed(item)) {
-                            totalClosedAll++;
-                            if (isActionClosedLate(item)) totalClosedLateAll++;
-                        }
-                    }
-                });
-                const lateClosureGlobalPct = totalClosedAll > 0 ? Math.round((totalClosedLateAll / totalClosedAll) * 100) : 0;
-                
-                greetingText.innerHTML = `
-                    Les comparto el resumen ejecutivo correspondiente a la Semana ${weekNum}.<br>
-                    <strong>Calificación Promedio de la Semana: <span style="color: #005A9C; font-size: 27px;">${metrics.avgScore}%</span></strong><br>
-                    <strong>Total de Acciones Vencidas (Overdue): <span style="color: #dc2626; font-size: 27px;">${overdueData.length}</span></strong><br>
-                    <strong>% de Acciones Cerradas después de Overdue: <span style="color: #d97706; font-size: 27px;">${lateClosureGlobalPct}% (${totalClosedLateAll}/${totalClosedAll})</span></strong><br><br>
-                    Agradeceremos que revisen sus áreas asignadas y den seguimiento tanto a las acciones generadas en la semana como a las acciones vencidas a la brevedad.
-                `;
-                
-                renderWeeklyCharts(reportData, dynamicContent, overdueData, weeklyTrendAll);
-                
-            } else if (type === 'monthly') {
-                // Parse YYYY-MM
-                let year = selectedDate.getFullYear();
-                let month = selectedDate.getMonth();
-                if (monthStr) {
-                    const parts = monthStr.split('-');
-                    year = parseInt(parts[0]);
-                    month = parseInt(parts[1]) - 1; // 0-indexed
-                }
-                
-                const firstDay = new Date(year, month, 1);
-                const lastDay = new Date(year, month + 1, 0); // Last day of month
-                
-                // Previous month bounds
-                let prevYear = year;
-                let prevMonth = month - 1;
-                if (prevMonth < 0) {
-                    prevMonth = 11;
-                    prevYear--;
-                }
-                const firstDayPrev = new Date(prevYear, prevMonth, 1);
-                const lastDayPrev = new Date(prevYear, prevMonth + 1, 0);
-                
-                bigDate.innerText = months[month];
-                subtitle.innerText = `Reporte Mensual 5S - ${year}`;
-                
-                // Extraer baseForReport valid actions
-                const getReportDataForRange = (dStart, dEnd) => {
-                    return baseForReport.filter(item => {
+                    reportData = baseForReport.filter(item => {
                         if (!item.openDate || item.openDate === 'Sin Fecha') return false;
                         let d = parseDateRobust(item.openDate);
                         if (isNaN(d.getTime())) return false;
                         
                         d.setHours(0,0,0,0);
-                        let ds = new Date(dStart); ds.setHours(0,0,0,0);
-                        let de = new Date(dEnd); de.setHours(23,59,59,999);
-                        return d >= ds && d <= de;
+                        return d >= firstDay && d <= lastDay;
                     });
-                };
-                
-                reportData = getReportDataForRange(firstDay, lastDay);
-                const prevReportData = getReportDataForRange(firstDayPrev, lastDayPrev);
-                
-                const metrics = calculateGlobalMetrics(reportData);
-                
-                // Cierre de acciones
-                let closedCount = 0;
-                let closedLateCount = 0;
-                let totalActionCount = 0;
-                reportData.forEach(item => {
-                    if (isValidAction(item)) {
-                        totalActionCount++;
-                        if (isActionClosed(item)) {
-                            closedCount++;
-                            if (isActionClosedLate(item)) closedLateCount++;
-                        }
-                    }
-                });
-                const closureRate = totalActionCount > 0 ? Math.round((closedCount / totalActionCount) * 100) : 0;
-                const lateClosureRate = closedCount > 0 ? Math.round((closedLateCount / closedCount) * 100) : 0;
-                const weeklyTrendMonth = computeWeeklyClosureStats(baseForReport);
-                
-                greetingText.innerHTML = `
-                    Les comparto el reporte mensual de auditorías 5S correspondiente a <strong>${months[month]} ${year}</strong>.<br><br>
-                    <strong>Calificación General del Site: <span style="color: #005A9C; font-size: 27px;">${metrics.avgScore}%</span></strong><br>
-                    <strong>Porcentaje de Cierre de Acciones: <span style="color: #005A9C; font-size: 27px;">${closureRate}%</span></strong><br>
-                    <strong>% de Acciones Cerradas después de Overdue: <span style="color: #d97706; font-size: 27px;">${lateClosureRate}% (${closedLateCount}/${closedCount})</span></strong><br><br>
-                    Agradeceremos que revisen sus áreas asignadas y cierren las acciones vencidas a la brevedad posible, dando prioridad a cerrar las acciones con mayor antigüedad.
-                `;
-                
-                await renderMonthlyCharts(reportData, prevReportData, dynamicContent, lastDay, weeklyTrendMonth);
-                
-            } else if (type === 'due_soon') {
-                bigDate.innerText = 'Por Vencer';
-                subtitle.innerText = 'Acciones a 1-3 días de su límite';
-                
-                const today = new Date();
-                today.setHours(0,0,0,0);
-                
-                reportData = baseForReport.filter(item => {
-                    if (!isValidAction(item)) return false;
-                    const s = (item.status || '').toLowerCase().trim();
-                    if (s === 'closed' || s === 'close' || s === 'cerrada' || s === 'cerrado') return false;
                     
-                    let isOverdue = false;
-                    if (s === 'overdue' || s === 'vencida') {
-                        isOverdue = true;
-                    } else if (item.dueDate && item.dueDate !== 'Sin Fecha') {
-                        let dDate = parseDateRobust(item.dueDate);
-                        if (!isNaN(dDate.getTime())) {
-                            dDate.setHours(0,0,0,0);
-                            if (dDate < today) isOverdue = true;
+                    const metrics = calculateGlobalMetrics(reportData);
+                    const overdueData = getOverdueActionsForReport(baseForReport);
+                    const weeklyTrendAll = computeWeeklyClosureStats(baseForReport);
+                    let totalClosedAll = 0;
+                    let totalClosedLateAll = 0;
+                    baseForReport.forEach(item => {
+                        if (isValidAction(item) && !isDashboardExcludedArea(item.cleanLocation) && !isDashboardExcludedArea(item.location)) {
+                            if (isActionClosed(item)) {
+                                totalClosedAll++;
+                                if (isActionClosedLate(item)) totalClosedLateAll++;
+                            }
                         }
+                    });
+                    const lateClosureGlobalPct = totalClosedAll > 0 ? Math.round((totalClosedLateAll / totalClosedAll) * 100) : 0;
+                    
+                    greetingText.innerHTML = `
+                        Les comparto el resumen ejecutivo correspondiente a la Semana ${weekNum}.<br>
+                        <strong>Calificación Promedio de la Semana: <span style="color: #005A9C; font-size: 27px;">${metrics.avgScore}%</span></strong><br>
+                        <strong>Total de Acciones Vencidas (Overdue): <span style="color: #dc2626; font-size: 27px;">${overdueData.length}</span></strong><br>
+                        <strong>% de Acciones Cerradas después de Overdue: <span style="color: #d97706; font-size: 27px;">${lateClosureGlobalPct}% (${totalClosedLateAll}/${totalClosedAll})</span></strong><br><br>
+                        Agradeceremos que revisen sus áreas asignadas y den seguimiento tanto a las acciones generadas en la semana como a las acciones vencidas a la brevedad.
+                    `;
+                    
+                    renderWeeklyCharts(reportData, dynamicContent, overdueData, weeklyTrendAll);
+                    
+                } else if (type === 'monthly') {
+                    let year = selectedDate.getFullYear();
+                    let month = selectedDate.getMonth();
+                    if (monthStr) {
+                        const parts = monthStr.split('-');
+                        year = parseInt(parts[0]);
+                        month = parseInt(parts[1]) - 1;
                     }
                     
-                    if (isOverdue) return false;
+                    const firstDay = new Date(year, month, 1);
+                    const lastDay = new Date(year, month + 1, 0);
                     
-                    if (item.dueDate && item.dueDate !== 'Sin Fecha') {
-                        let dDate = parseDateRobust(item.dueDate);
-                        if (!isNaN(dDate.getTime())) {
-                            dDate.setHours(0,0,0,0);
-                            const diffTime = dDate - today;
-                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                            if (diffDays >= 0 && diffDays <= 2) return true;
-                        }
+                    let prevYear = year;
+                    let prevMonth = month - 1;
+                    if (prevMonth < 0) {
+                        prevMonth = 11;
+                        prevYear--;
                     }
-                    return false;
-                });
-                
-                greetingText.innerHTML = `
-                    Equipo,<br>Las siguientes acciones están a punto de pasar a estatus Vencido (Overdue) en los próximos 3 días.<br>
-                    <strong>Total de acciones en riesgo: <span style="color: #f59e0b; font-size: 27px;">${reportData.length}</span></strong><br><br>
-                    Requerimos su inmediata atención para resolverlas y mantener nuestra métrica de cierre saludable.
-                `;
-                
-                renderActionChart(reportData, dynamicContent, '#f59e0b', 'Acciones por Vencer por Responsable');
-                
-            } else if (type === 'overdue') {
-                bigDate.innerText = 'Acciones Overdue';
-                subtitle.innerText = 'Fuera de SLA (Acción Inmediata Requerida)';
-                
-                reportData = getOverdueActionsForReport(baseForReport);
-                const weeklyTrendOverdue = computeWeeklyClosureStats(baseForReport);
-                let totalClosedAll = 0;
-                let totalClosedLateAll = 0;
-                baseForReport.forEach(item => {
-                    if (isValidAction(item) && !isDashboardExcludedArea(item.cleanLocation) && !isDashboardExcludedArea(item.location)) {
-                        if (isActionClosed(item)) {
-                            totalClosedAll++;
-                            if (isActionClosedLate(item)) totalClosedLateAll++;
+                    const firstDayPrev = new Date(prevYear, prevMonth, 1);
+                    const lastDayPrev = new Date(prevYear, prevMonth + 1, 0);
+                    
+                    bigDate.innerText = months[month];
+                    subtitle.innerText = `Reporte Mensual 5S - ${year}`;
+                    
+                    const getReportDataForRange = (dStart, dEnd) => {
+                        return baseForReport.filter(item => {
+                            if (!item.openDate || item.openDate === 'Sin Fecha') return false;
+                            let d = parseDateRobust(item.openDate);
+                            if (isNaN(d.getTime())) return false;
+                            
+                            d.setHours(0,0,0,0);
+                            let ds = new Date(dStart); ds.setHours(0,0,0,0);
+                            let de = new Date(dEnd); de.setHours(23,59,59,999);
+                            return d >= ds && d <= de;
+                        });
+                    };
+                    
+                    reportData = getReportDataForRange(firstDay, lastDay);
+                    const prevReportData = getReportDataForRange(firstDayPrev, lastDayPrev);
+                    
+                    const metrics = calculateGlobalMetrics(reportData);
+                    
+                    let closedCount = 0;
+                    let closedLateCount = 0;
+                    let totalActionCount = 0;
+                    reportData.forEach(item => {
+                        if (isValidAction(item)) {
+                            totalActionCount++;
+                            if (isActionClosed(item)) {
+                                closedCount++;
+                                if (isActionClosedLate(item)) closedLateCount++;
+                            }
                         }
-                    }
-                });
-                const lateClosureGlobalPct = totalClosedAll > 0 ? Math.round((totalClosedLateAll / totalClosedAll) * 100) : 0;
+                    });
+                    const closureRate = totalActionCount > 0 ? Math.round((closedCount / totalActionCount) * 100) : 0;
+                    const lateClosureRate = closedCount > 0 ? Math.round((closedLateCount / closedCount) * 100) : 0;
+                    const weeklyTrendMonth = computeWeeklyClosureStats(baseForReport);
+                    
+                    greetingText.innerHTML = `
+                        Les comparto el reporte mensual de auditorías 5S correspondiente a <strong>${months[month]} ${year}</strong>.<br><br>
+                        <strong>Calificación General del Site: <span style="color: #005A9C; font-size: 27px;">${metrics.avgScore}%</span></strong><br>
+                        <strong>Porcentaje de Cierre de Acciones: <span style="color: #005A9C; font-size: 27px;">${closureRate}%</span></strong><br>
+                        <strong>% de Acciones Cerradas después de Overdue: <span style="color: #d97706; font-size: 27px;">${lateClosureRate}% (${closedLateCount}/${closedCount})</span></strong><br><br>
+                        Agradeceremos que revisen sus áreas asignadas y cierren las acciones vencidas a la brevedad posible, dando prioridad a cerrar las acciones con mayor antigüedad.
+                    `;
+                    
+                    await renderMonthlyCharts(reportData, prevReportData, dynamicContent, lastDay, weeklyTrendMonth);
+                    
+                } else if (type === 'due_soon') {
+                    bigDate.innerText = 'Por Vencer';
+                    subtitle.innerText = 'Acciones a 1-3 días de su límite';
+                    
+                    const today = new Date();
+                    today.setHours(0,0,0,0);
+                    
+                    reportData = baseForReport.filter(item => {
+                        if (!isValidAction(item)) return false;
+                        const s = (item.status || '').toLowerCase().trim();
+                        if (s === 'closed' || s === 'close' || s === 'cerrada' || s === 'cerrado') return false;
+                        
+                        let isOverdue = false;
+                        if (s === 'overdue' || s === 'vencida') {
+                            isOverdue = true;
+                        } else if (item.dueDate && item.dueDate !== 'Sin Fecha') {
+                            let dDate = parseDateRobust(item.dueDate);
+                            if (!isNaN(dDate.getTime())) {
+                                dDate.setHours(0,0,0,0);
+                                if (dDate < today) isOverdue = true;
+                            }
+                        }
+                        
+                        if (isOverdue) return false;
+                        
+                        if (item.dueDate && item.dueDate !== 'Sin Fecha') {
+                            let dDate = parseDateRobust(item.dueDate);
+                            if (!isNaN(dDate.getTime())) {
+                                dDate.setHours(0,0,0,0);
+                                const diffTime = dDate - today;
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                if (diffDays >= 0 && diffDays <= 2) return true;
+                            }
+                        }
+                        return false;
+                    });
+                    
+                    greetingText.innerHTML = `
+                        Equipo,<br>Las siguientes acciones están a punto de pasar a estatus Vencido (Overdue) en los próximos 3 días.<br>
+                        <strong>Total de acciones en riesgo: <span style="color: #f59e0b; font-size: 27px;">${reportData.length}</span></strong><br><br>
+                        Requerimos su inmediata atención para resolverlas y mantener nuestra métrica de cierre saludable.
+                    `;
+                    
+                    renderActionChart(reportData, dynamicContent, '#f59e0b', 'Acciones por Vencer por Responsable');
+                    
+                } else if (type === 'overdue') {
+                    bigDate.innerText = 'Acciones Overdue';
+                    subtitle.innerText = 'Fuera de SLA (Acción Inmediata Requerida)';
+                    
+                    reportData = getOverdueActionsForReport(baseForReport);
+                    const weeklyTrendOverdue = computeWeeklyClosureStats(baseForReport);
+                    let totalClosedAll = 0;
+                    let totalClosedLateAll = 0;
+                    baseForReport.forEach(item => {
+                        if (isValidAction(item) && !isDashboardExcludedArea(item.cleanLocation) && !isDashboardExcludedArea(item.location)) {
+                            if (isActionClosed(item)) {
+                                totalClosedAll++;
+                                if (isActionClosedLate(item)) totalClosedLateAll++;
+                            }
+                        }
+                    });
+                    const lateClosureGlobalPct = totalClosedAll > 0 ? Math.round((totalClosedLateAll / totalClosedAll) * 100) : 0;
+                    
+                    greetingText.innerHTML = `
+                        Equipo,<br>Se muestra a continuación las acciones que ya se encuentran VENCIDAS (fuera de SLA), con todos los responsables visibles.<br>
+                        <strong>Total de acciones vencidas: <span style="color: #dc2626; font-size: 27px;">${reportData.length}</span></strong> &nbsp;|&nbsp;
+                        <strong>% de Acciones Cerradas Post-Overdue: <span style="color: #d97706; font-size: 27px;">${lateClosureGlobalPct}% (${totalClosedLateAll}/${totalClosedAll})</span></strong><br><br>
+                        Por favor, pónganse en contacto con los responsables mencionados para el cierre y plan de contingencia inmediato, dando prioridad a cerrar las acciones con mayor antigüedad.
+                    `;
+                    
+                    renderAgeActionChart(reportData, dynamicContent, '#dc2626', 'Máx. Antigüedad de Acciones Vencidas por Responsable', weeklyTrendOverdue);
+                }
                 
-                greetingText.innerHTML = `
-                    Equipo,<br>Se muestra a continuación las acciones que ya se encuentran VENCIDAS (fuera de SLA), con todos los responsables visibles.<br>
-                    <strong>Total de acciones vencidas: <span style="color: #dc2626; font-size: 27px;">${reportData.length}</span></strong> &nbsp;|&nbsp;
-                    <strong>% de Acciones Cerradas Post-Overdue: <span style="color: #d97706; font-size: 27px;">${lateClosureGlobalPct}% (${totalClosedLateAll}/${totalClosedAll})</span></strong><br><br>
-                    Por favor, pónganse en contacto con los responsables mencionados para el cierre y plan de contingencia inmediato, dando prioridad a cerrar las acciones con mayor antigüedad.
-                `;
-                
-                renderAgeActionChart(reportData, dynamicContent, '#dc2626', 'Máx. Antigüedad de Acciones Vencidas por Responsable', weeklyTrendOverdue);
+                setTimeout(() => {
+                    const target = document.getElementById('visual-report');
+                    target.style.display = 'block';
+                    
+                    html2canvas(target, { 
+                        scale: 2, 
+                        useCORS: true, 
+                        backgroundColor: '#ffffff',
+                        logging: false
+                    }).then(canvas => {
+                        const link = document.createElement('a');
+                        const deptPrefix = reportDept ? reportDept.replace(/[^a-zA-Z0-9]/g, '_') + '_' : '';
+                        link.download = `Reporte_5S_${deptPrefix}${type}_${Date.now()}.png`;
+                        link.href = canvas.toDataURL('image/png');
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        document.getElementById('report-modal').style.display = 'none';
+                    }).catch(err => {
+                        console.error("Error al generar imagen de reporte:", err);
+                        alert("Error al generar la imagen: " + (err && err.message ? err.message : err) + "\nRevisa la consola para más detalles.");
+                    }).finally(() => {
+                        resetBtn();
+                    });
+                }, 1000);
+
+            } catch (err) {
+                console.error("Error al procesar la solicitud de reporte:", err);
+                alert("Hubo un error al generar la imagen: " + (err && err.message ? err.message : err));
+                resetBtn();
             }
-            
-            setTimeout(() => {
-                const target = document.getElementById('visual-report');
-                target.style.display = 'block';
-                
-                html2canvas(target, { 
-                    scale: 2, 
-                    useCORS: true, 
-                    backgroundColor: '#ffffff',
-                    logging: false
-                }).then(canvas => {
-                    const link = document.createElement('a');
-                    link.download = `Reporte_5S_${type}_${Date.now()}.png`;
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-                    
-                    document.getElementById('report-modal').style.display = 'none';
-                    btn.innerText = 'Generar PNG';
-                    btn.disabled = false;
-                }).catch(err => {
-                    console.error("Error al generar imagen de reporte:", err);
-                    alert("Error al generar la imagen: " + (err && err.message ? err.message : err) + "\nRevisa la consola para más detalles.");
-                    btn.innerText = 'Generar PNG';
-                    btn.disabled = false;
-                });
-            }, 1000);
         }
 
         function renderReportWeeklyClosureChart(canvasId, weeklyTrend) {
