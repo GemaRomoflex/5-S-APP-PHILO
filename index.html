@@ -1434,6 +1434,31 @@
             background-color: #e6e6e6;
         }
 
+        .btn-chart-export {
+            font-size: 11px;
+            padding: 4px 8px;
+            background-color: #f0f9ff;
+            color: #0284c7;
+            border: 1px solid #bae6fd;
+            border-radius: var(--border-radius);
+            font-family: var(--font-family);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            height: fit-content;
+            white-space: nowrap;
+        }
+
+        .btn-chart-export:hover {
+            background-color: #0284c7;
+            color: #ffffff;
+            border-color: #0284c7;
+            box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);
+        }
+
         /* --- DATA TABLE --- */
         .table-card {
             background-color: var(--color-bg-white);
@@ -2131,6 +2156,126 @@
             font-size: 16px;
             font-weight: bold;
             color: var(--color-text);
+        }
+
+        /* --- SECCIÓN DE ÁREAS AUDITADAS POR SEMANA --- */
+        .weekly-coverage-section {
+            background: var(--color-bg-white);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 22px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        [data-theme="competition"] .weekly-coverage-section {
+            display: none !important;
+        }
+        .weekly-coverage-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 18px;
+        }
+        .week-audit-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 16px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+        .week-audit-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+            border-color: #cbd5e1;
+        }
+        .week-audit-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .week-audit-title-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .week-audit-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .week-audit-dates {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .week-audit-counter-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .week-progress-track {
+            width: 100%;
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .week-progress-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 0.4s ease;
+        }
+        .week-areas-chips-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding-top: 4px;
+        }
+        .week-area-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #1e293b;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .week-area-chip:hover {
+            background: #e0f2fe;
+            border-color: #7dd3fc;
+            color: #0369a1;
+        }
+        .week-area-chip.missing {
+            background: #fff1f2;
+            border: 1px dashed #fda4af;
+            color: #9f1239;
+            opacity: 0.85;
+        }
+        .week-area-chip-score {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 1px 5px;
+            border-radius: 4px;
         }
         /* --- COMPETITION RACETRACK --- */
         .racetrack-container {
@@ -2985,9 +3130,15 @@
 
                 <!-- VISTA CONTROL DE ÁREAS -->
                 <div id="view-areas" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
-                    <div class="chart-header" style="justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--color-border); margin-bottom: 10px;">
-                        <h2 style="margin: 0; font-size: 24px; color: var(--color-text);">Control de Áreas</h2>
-                        <div class="search-box">
+                    <div class="chart-header" style="justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--color-border); margin-bottom: 10px; flex-wrap: wrap; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                            <h2 style="margin: 0; font-size: 24px; color: var(--color-text);">Control de Áreas</h2>
+                            <div style="display: inline-flex; background: #f1f5f9; padding: 4px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                                <button id="btn-areas-tab-catalog" type="button" onclick="switchAreasSubView('catalog')" style="border: none; background: #005A9C; color: white; font-weight: 700; font-size: 13px; padding: 6px 14px; border-radius: 6px; cursor: pointer; transition: all 0.2s;">🏭 Catálogo de Áreas</button>
+                                <button id="btn-areas-tab-weekly" type="button" onclick="switchAreasSubView('weekly')" style="border: none; background: transparent; color: #334155; font-weight: 700; font-size: 13px; padding: 6px 14px; border-radius: 6px; cursor: pointer; transition: all 0.2s;">📅 Áreas Auditadas por Semana</button>
+                            </div>
+                        </div>
+                        <div class="search-box" id="areas-catalog-search-box">
                             <svg class="search-icon" viewBox="0 0 24 24">
                                 <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                             </svg>
@@ -2996,6 +3147,9 @@
                     </div>
                     <div class="areas-grid" id="areas-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
                         <!-- Las tarjetas de áreas se generarán aquí con JS -->
+                    </div>
+                    <div id="areas-weekly-subview-container" class="hidden" style="display: flex; flex-direction: column; gap: 18px;">
+                        <!-- Se inyecta el espejo de áreas auditadas por semana aquí -->
                     </div>
                 </div>
 
@@ -3172,6 +3326,12 @@
                     <span class="kpi-value" id="kpi-closed-late-percent" style="color: #d97706;">0.0%</span>
                     <span class="kpi-subtitle" id="kpi-closed-late-sub">0 de 0 cerradas</span>
                 </div>
+                <!-- Áreas Auditadas en la Semana más reciente -->
+                <div class="kpi-card score" style="border-top-color: #0284c7; cursor: pointer;" onclick="scrollToWeeklyAuditedSection()" title="Haz clic para ir a la sección de Áreas Auditadas por Semana">
+                    <span class="kpi-title">Áreas Auditadas (Sem.)</span>
+                    <span class="kpi-value" id="kpi-weekly-areas-count" style="color: #0284c7;">0/40</span>
+                    <span class="kpi-subtitle" id="kpi-weekly-areas-sub">Semana actual · Ver lista ▼</span>
+                </div>
             </section>
 
             <!-- SECCIÓN DE GRÁFICAS FILA 1 -->
@@ -3183,6 +3343,7 @@
                         <div class="chart-controls" onclick="event.stopPropagation()">
                             <button id="btn-toggle-sort" class="btn-toggle active-toggle" onclick="toggleAreaTop10('worst')">Top 10 Peores</button>
                             <button id="btn-toggle-sort-best" class="btn-toggle" onclick="toggleAreaTop10('best')">Top 10 Mejores</button>
+                            <button class="btn-chart-export" title="Descargar GrÃ¡fica en Imagen PNG" onclick="exportDedicatedCardChart('scores')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>PNG</span></button>
                         </div>
                     </div>
                     <div class="chart-container">
@@ -3196,6 +3357,7 @@
                         <span class="chart-title">📊 Acciones por Semana (Abiertas / Cerradas / Overdue y % Cierre)</span>
                         <div class="chart-controls" onclick="event.stopPropagation()">
                             <span id="badge-weekly-late-summary" style="font-size: 11px; background: #fef3c7; color: #b45309; padding: 4px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #fcd34d;">Post-Overdue: 0%</span>
+                            <button class="btn-chart-export" title="Descargar GrÃ¡fica en Imagen PNG" onclick="exportDedicatedCardChart('weekly_closure')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>PNG</span></button>
                         </div>
                     </div>
                     <div class="chart-container">
@@ -3213,6 +3375,7 @@
                         <div class="chart-controls" onclick="event.stopPropagation()">
                             <button id="btn-toggle-overdue-dept" class="btn-toggle" onclick="setOverdueGroupBy('dept')">Depto</button>
                             <button id="btn-toggle-overdue-owner" class="btn-toggle active-toggle" onclick="setOverdueGroupBy('owner')">Responsable</button>
+                            <button class="btn-chart-export" title="Descargar GrÃ¡fica en Imagen PNG" onclick="exportDedicatedCardChart('dept_overdue')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>PNG</span></button>
                         </div>
                     </div>
                     <div class="chart-container" id="container-dept-overdue" style="min-height: 300px;">
@@ -3227,6 +3390,7 @@
                         <div class="chart-controls" onclick="event.stopPropagation()">
                             <button id="btn-toggle-aging-overdue-dept" class="btn-toggle" onclick="setAgingOverdueGroupBy('dept')">Depto</button>
                             <button id="btn-toggle-aging-overdue-owner" class="btn-toggle active-toggle" onclick="setAgingOverdueGroupBy('owner')">Responsable</button>
+                            <button class="btn-chart-export" title="Descargar GrÃ¡fica en Imagen PNG" onclick="exportDedicatedCardChart('aging')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>PNG</span></button>
                         </div>
                     </div>
                     <div class="chart-container" id="container-aging-overdue" style="min-height: 300px;">
@@ -3241,11 +3405,54 @@
                         <div class="chart-controls" onclick="event.stopPropagation()">
                             <button id="btn-toggle-upcoming-dept" class="btn-toggle active-toggle" onclick="setUpcomingGroupBy('dept')">Depto</button>
                             <button id="btn-toggle-upcoming-owner" class="btn-toggle" onclick="setUpcomingGroupBy('owner')">Responsable</button>
+                            <button class="btn-chart-export" title="Descargar GrÃ¡fica en Imagen PNG" onclick="exportDedicatedCardChart('upcoming')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>PNG</span></button>
                         </div>
                     </div>
                     <div class="chart-container" id="container-upcoming-due" style="min-height: 280px;">
                         <canvas id="chartUpcomingDue"></canvas>
                     </div>
+                </div>
+            </section>
+
+            <!-- SECCIÓN NUEVA: ÁREAS AUDITADAS POR SEMANA -->
+            <section class="weekly-coverage-section" id="weekly-audited-areas-section">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 14px;">
+                    <div>
+                        <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                            <span>📋 Áreas Auditadas por Semana</span>
+                            <span id="weekly-coverage-header-badge" style="font-size: 12px; font-weight: 700; background: #e0f2fe; color: #0369a1; padding: 3px 10px; border-radius: 12px; border: 1px solid #bae6fd;">40 Áreas Operativas</span>
+                        </h3>
+                        <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">Control semanal de cobertura de auditorías 5S (X/40 áreas auditadas) y listado detallado de áreas evaluadas en cada semana.</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <label for="weekly-areas-week-filter" style="font-size: 12px; font-weight: 700; color: #475569;">Semana:</label>
+                            <select id="weekly-areas-week-filter" class="filter-select" style="width: auto; padding: 6px 10px; font-size: 13px;" onchange="renderWeeklyAuditedAreasSection()">
+                                <option value="all">Todas las semanas</option>
+                            </select>
+                        </div>
+                        <div style="position: relative;">
+                            <input type="text" id="weekly-areas-search-input" class="filter-select" placeholder="🔍 Filtrar área (ej. Pack, L15)..." style="width: 210px; padding: 6px 10px; font-size: 13px;" oninput="renderWeeklyAuditedAreasSection()">
+                        </div>
+                        <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #475569; cursor: pointer; background: #f8fafc; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <input type="checkbox" id="weekly-areas-show-missing" onchange="renderWeeklyAuditedAreasSection()">
+                            <span>Ver también áreas no auditadas</span>
+                        </label>
+                        <button class="btn-chart-export" title="Descargar Cobertura Semanal en Imagen PNG" onclick="exportWeeklyAuditedAreasPNG()">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <span>PNG</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Resumen rápido superior -->
+                <div id="weekly-areas-summary-strip" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px;">
+                    <!-- Inyectado dinámicamente -->
+                </div>
+
+                <!-- Contenedor de tarjetas semanales -->
+                <div class="weekly-coverage-cards-grid" id="weekly-audited-cards-container">
+                    <!-- Inyectado dinámicamente -->
                 </div>
             </section>
         </main> <!-- END CONTENIDO DASHBOARD -->
@@ -4747,6 +4954,9 @@
             renderChartUpcomingDue();
             renderChartDeptOverdue();
             renderChartAgingOverdue();
+            if (typeof renderWeeklyAuditedAreasSection === 'function') {
+                renderWeeklyAuditedAreasSection();
+            }
 
             // ----------------------------------------------------
             // (Tracker removido)
@@ -8049,13 +8259,17 @@
             } else if (origin === 'areas') {
                 document.getElementById('view-areas').classList.add('hidden');
                 document.getElementById('view-dashboard').classList.remove('hidden'); // Fix: Encender el dashboard general
+                document.getElementById('dashboard-content')?.classList.add('hidden');
                 document.getElementById('view-layout-main')?.classList.add('hidden'); // Ocultar el mapa explícitamente
+            } else if (origin === 'dashboard') {
+                document.getElementById('dashboard-content')?.classList.add('hidden');
+                document.getElementById('view-layout-main')?.classList.add('hidden');
             }
 
             document.getElementById('view-layout-detail').classList.remove('hidden');
             
             // Cambiar texto del botón Atrás
-            document.getElementById('btn-back-deepdive').textContent = origin === 'layout' ? '◄ Volver al Mapa' : '◄ Volver a la Lista';
+            document.getElementById('btn-back-deepdive').textContent = origin === 'layout' ? '◄ Volver al Mapa' : (origin === 'dashboard' ? '◄ Volver al Dashboard' : '◄ Volver a la Lista');
             
             const labelStr = currentViewMode === 'sectors' ? 'Sector' : 'Área';
             document.getElementById('layout-detail-title').textContent = `Detalle Ejecutivo: ${areaId} (${labelStr})`;
@@ -8267,6 +8481,9 @@
             } else if (layoutDetailOrigin === 'areas') {
                 document.getElementById('view-dashboard').classList.add('hidden'); // Fix: Apagar el dashboard general
                 document.getElementById('view-areas').classList.remove('hidden');
+            } else if (layoutDetailOrigin === 'dashboard') {
+                document.getElementById('view-dashboard').classList.remove('hidden');
+                document.getElementById('dashboard-content')?.classList.remove('hidden');
             }
         }
 
@@ -9838,6 +10055,9 @@
 
                 container.appendChild(card);
             });
+            if (typeof renderWeeklyAuditedAreasSection === 'function') {
+                renderWeeklyAuditedAreasSection();
+            }
         }
 
         function filterAreasList() {
@@ -9851,6 +10071,499 @@
                     card.style.display = 'none';
                 }
             });
+        }
+
+        // =========================================================================
+        // --- MÓDULO: COBERTURA DE ÁREAS AUDITADAS POR SEMANA (X / 40 ÁREAS) ---
+        // =========================================================================
+        const OFFICIAL_OPERATIONAL_AREAS = [
+            'Assembly', 'Assembly 2', 'Assembly 3', 'Bonepile', 'Conteos internos',
+            'Critical repair 1', 'Critical repair 2', 'Critical repair 3', 'Cuarto limpio', 'Debug',
+            'Digdug', 'Disassembly', 'Embarque', 'Equipment room', 'Fresh market',
+            'Hv alto valor', 'Ict', 'Incoming', 'Ist', 'L11 bottom',
+            'L11 top', 'L12 bottom', 'L12 top', 'L13 bottom', 'L13 top',
+            'L14 bottom', 'L14 top', 'L15', 'L16', 'Moonshine',
+            'Pack', 'Pasillo pack-warehouse', 'Pasillo smt-smkt', 'Receipt', 'Rma glp',
+            'Smkt backend', 'Smkt smt', 'Surtido de material', 'Tool Room', 'Usis'
+        ];
+
+        function getOfficialOperationalAreasCatalog() {
+            const obsoleteOrExcluded = new Set([
+                'control tower', 'rma vlp', 'l13', 'eliminar', 'n/a', 'sin área', 'sin area'
+            ]);
+            const catalogMap = new Map();
+            OFFICIAL_OPERATIONAL_AREAS.forEach(a => {
+                catalogMap.set(a.toLowerCase().trim(), a);
+            });
+            if (typeof allAuditData !== 'undefined' && Array.isArray(allAuditData)) {
+                allAuditData.forEach(item => {
+                    if (!item || item.department === 'Gemba' || item.department === 'Gemba Walk') return;
+                    const loc = (item.cleanLocation || '').trim();
+                    if (!loc) return;
+                    const low = loc.toLowerCase();
+                    if (obsoleteOrExcluded.has(low)) return;
+                    if (isDashboardExcludedArea(loc)) return;
+                    if (!catalogMap.has(low)) {
+                        catalogMap.set(low, loc);
+                    }
+                });
+            }
+            return Array.from(catalogMap.values()).sort((a, b) => a.localeCompare(b));
+        }
+
+        function formatShortDateRange(startDate, endDate) {
+            const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            const d1 = String(startDate.getDate()).padStart(2, '0');
+            const m1 = months[startDate.getMonth()];
+            const d2 = String(endDate.getDate()).padStart(2, '0');
+            const m2 = months[endDate.getMonth()];
+            const y2 = endDate.getFullYear();
+            return `${d1} ${m1} – ${d2} ${m2} ${y2}`;
+        }
+
+        function computeWeeklyAuditedAreas(sourceData) {
+            const dataList = Array.isArray(sourceData) && sourceData.length > 0
+                ? sourceData
+                : (typeof allAuditData !== 'undefined' ? allAuditData.filter(item => item.department !== 'Gemba' && item.department !== 'Gemba Walk' && item.department !== 'Cross Audit') : []);
+
+            const catalog = getOfficialOperationalAreasCatalog();
+            const totalCatalogCount = catalog.length; // 40 áreas operativas
+
+            // Obtener calificaciones por auditoría
+            const audits = getAuditScores(dataList);
+            const weekMap = {};
+
+            audits.forEach(audit => {
+                const loc = (audit.location || '').trim();
+                if (!loc || loc === 'Eliminar' || loc === 'Sin Área' || loc === 'N/a') return;
+                if (isDashboardExcludedArea(loc)) return;
+                if (!audit.date || audit.date === 'Sin Fecha') return;
+
+                const d = parseDateRobust(audit.date);
+                if (isNaN(d.getTime())) return;
+                d.setHours(0, 0, 0, 0);
+
+                const wInfo = getWeekInfoFromDate(d);
+                if (!weekMap[wInfo.key]) {
+                    const bounds = getWeekBoundsFromYearWeek(wInfo.year, wInfo.week);
+                    weekMap[wInfo.key] = {
+                        key: wInfo.key,
+                        year: wInfo.year,
+                        week: wInfo.week,
+                        label: `Semana ${wInfo.week} (Week ${wInfo.week})`,
+                        shortLabel: `Week ${wInfo.week}`,
+                        weekStart: bounds.weekStart,
+                        weekEnd: bounds.weekEnd,
+                        dateRangeStr: formatShortDateRange(bounds.weekStart, bounds.weekEnd),
+                        areasMap: {}
+                    };
+                }
+
+                const normLoc = loc.toLowerCase();
+                if (!weekMap[wInfo.key].areasMap[normLoc]) {
+                    // Usar nombre canónico del catálogo si existe
+                    const canonical = catalog.find(c => c.toLowerCase() === normLoc) || loc;
+                    weekMap[wInfo.key].areasMap[normLoc] = {
+                        name: canonical,
+                        scoreSum: 0,
+                        auditCount: 0,
+                        latestDate: audit.date
+                    };
+                }
+                const entry = weekMap[wInfo.key].areasMap[normLoc];
+                entry.scoreSum += audit.percentage;
+                entry.auditCount += 1;
+                if (audit.date > entry.latestDate) {
+                    entry.latestDate = audit.date;
+                }
+            });
+
+            // También respaldar cualquier registro con openDate y cleanLocation por si alguna fila no entró en getAuditScores
+            dataList.forEach(item => {
+                if (!item || item.department === 'Gemba' || item.department === 'Gemba Walk') return;
+                const loc = (item.cleanLocation || '').trim();
+                if (!loc || loc === 'Eliminar' || loc === 'Sin Área' || loc === 'N/a') return;
+                if (isDashboardExcludedArea(loc)) return;
+                if (!item.openDate || item.openDate === 'Sin Fecha') return;
+
+                const datePart = String(item.openDate).split(' ')[0];
+                const d = parseDateRobust(datePart);
+                if (isNaN(d.getTime())) return;
+                d.setHours(0, 0, 0, 0);
+
+                const wInfo = getWeekInfoFromDate(d);
+                if (!weekMap[wInfo.key]) {
+                    const bounds = getWeekBoundsFromYearWeek(wInfo.year, wInfo.week);
+                    weekMap[wInfo.key] = {
+                        key: wInfo.key,
+                        year: wInfo.year,
+                        week: wInfo.week,
+                        label: `Semana ${wInfo.week} (Week ${wInfo.week})`,
+                        shortLabel: `Week ${wInfo.week}`,
+                        weekStart: bounds.weekStart,
+                        weekEnd: bounds.weekEnd,
+                        dateRangeStr: formatShortDateRange(bounds.weekStart, bounds.weekEnd),
+                        areasMap: {}
+                    };
+                }
+                const normLoc = loc.toLowerCase();
+                if (!weekMap[wInfo.key].areasMap[normLoc]) {
+                    const canonical = catalog.find(c => c.toLowerCase() === normLoc) || loc;
+                    weekMap[wInfo.key].areasMap[normLoc] = {
+                        name: canonical,
+                        scoreSum: 0,
+                        auditCount: 0,
+                        latestDate: datePart
+                    };
+                }
+            });
+
+            // Ordenar semanas de la más reciente a la más antigua
+            const sortedKeys = Object.keys(weekMap).sort().reverse();
+
+            return sortedKeys.map(k => {
+                const w = weekMap[k];
+                const auditedAreas = Object.values(w.areasMap)
+                    .map(a => ({
+                        name: a.name,
+                        avgScore: a.auditCount > 0 ? Math.round((a.scoreSum / a.auditCount) * 10) / 10 : null,
+                        auditCount: Math.max(1, a.auditCount),
+                        latestDate: a.latestDate
+                    }))
+                    .sort((a, b) => a.name.localeCompare(b.name));
+
+                const auditedSetLower = new Set(auditedAreas.map(a => a.name.toLowerCase()));
+                const missingAreas = catalog.filter(c => !auditedSetLower.has(c.toLowerCase()));
+
+                const scoredAreas = auditedAreas.filter(a => a.avgScore !== null);
+                const weekAvgScore = scoredAreas.length > 0
+                    ? Math.round((scoredAreas.reduce((s, x) => s + x.avgScore, 0) / scoredAreas.length) * 10) / 10
+                    : 0;
+
+                const auditedCount = auditedAreas.length;
+                const coveragePct = totalCatalogCount > 0 ? Math.round((auditedCount / totalCatalogCount) * 100) : 0;
+
+                return {
+                    ...w,
+                    auditedAreas,
+                    missingAreas,
+                    auditedCount,
+                    totalCatalogCount,
+                    coveragePct,
+                    weekAvgScore
+                };
+            });
+        }
+
+        function scrollToWeeklyAuditedSection() {
+            const sec = document.getElementById('weekly-audited-areas-section');
+            if (sec) {
+                sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function toggleWeekMissingAreas(weekKey) {
+            const el = document.getElementById(`week-missing-wrap-${weekKey}`);
+            const btn = document.getElementById(`btn-week-missing-${weekKey}`);
+            if (!el) return;
+            const isHidden = el.style.display === 'none';
+            el.style.display = isHidden ? 'flex' : 'none';
+            if (btn) {
+                const count = el.dataset.missingCount || '0';
+                btn.innerHTML = isHidden
+                    ? `▲ Ocultar áreas no auditadas (${count})`
+                    : `⏳ Ver ${count} áreas no auditadas en esta semana ▼`;
+            }
+        }
+
+        function openAreaFromWeeklyChip(areaName, originView) {
+            const stats = calculateAreaStats(areaName);
+            openLayoutDetail(areaName, stats, originView || 'dashboard');
+        }
+
+        function renderWeeklyAuditedAreasSection() {
+            const baseData = (typeof globalFilteredData !== 'undefined' && globalFilteredData.length > 0)
+                ? globalFilteredData
+                : (typeof allAuditData !== 'undefined' ? allAuditData.filter(item => item.department !== 'Gemba' && item.department !== 'Gemba Walk' && item.department !== 'Cross Audit') : []);
+
+            const weeklyList = computeWeeklyAuditedAreas(baseData);
+            const catalog = getOfficialOperationalAreasCatalog();
+            const totalAreasCount = catalog.length;
+
+            // Actualizar badge del encabezado
+            const headerBadge = document.getElementById('weekly-coverage-header-badge');
+            if (headerBadge) {
+                headerBadge.textContent = `${totalAreasCount} Áreas Operativas`;
+            }
+
+            // Actualizar tarjeta KPI superior en el Dashboard
+            const kpiValEl = document.getElementById('kpi-weekly-areas-count');
+            const kpiSubEl = document.getElementById('kpi-weekly-areas-sub');
+            if (weeklyList.length > 0) {
+                const latestWeek = weeklyList[0];
+                if (kpiValEl) kpiValEl.textContent = `${latestWeek.auditedCount}/${latestWeek.totalCatalogCount}`;
+                if (kpiSubEl) kpiSubEl.textContent = `${latestWeek.shortLabel} (${latestWeek.coveragePct}% auditado) · Ver lista ▼`;
+            } else {
+                if (kpiValEl) kpiValEl.textContent = `0/${totalAreasCount}`;
+                if (kpiSubEl) kpiSubEl.textContent = `Sin registros semanales`;
+            }
+
+            // Poblar selector de semanas preservando selección
+            const weekSelect = document.getElementById('weekly-areas-week-filter');
+            let selectedWeek = weekSelect ? weekSelect.value : 'all';
+            if (weekSelect) {
+                const prevVal = weekSelect.value || 'all';
+                weekSelect.innerHTML = '<option value="all">Todas las semanas</option>';
+                weeklyList.forEach(w => {
+                    const opt = document.createElement('option');
+                    opt.value = w.key;
+                    opt.textContent = `${w.shortLabel} (${w.dateRangeStr}) — ${w.auditedCount}/${w.totalCatalogCount} áreas`;
+                    weekSelect.appendChild(opt);
+                });
+                if (prevVal === 'all' || weeklyList.some(w => w.key === prevVal)) {
+                    weekSelect.value = prevVal;
+                    selectedWeek = prevVal;
+                } else {
+                    weekSelect.value = 'all';
+                    selectedWeek = 'all';
+                }
+            }
+
+            // Renderizar tira de resumen rápido
+            const summaryStrip = document.getElementById('weekly-areas-summary-strip');
+            if (summaryStrip) {
+                if (weeklyList.length === 0) {
+                    summaryStrip.innerHTML = '';
+                } else {
+                    const latest = weeklyList[0];
+                    const bestWeek = [...weeklyList].sort((a, b) => b.auditedCount - a.auditedCount)[0];
+                    const avgAudited = Math.round(weeklyList.reduce((acc, w) => acc + w.auditedCount, 0) / weeklyList.length);
+                    const avgPct = totalAreasCount > 0 ? Math.round((avgAudited / totalAreasCount) * 100) : 0;
+
+                    summaryStrip.innerHTML = `
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #0284c7; border-radius: 8px; padding: 12px 14px;">
+                            <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Última Semana (${latest.shortLabel})</div>
+                            <div style="font-size: 22px; font-weight: 900; color: #0f172a; margin-top: 2px;">${latest.auditedCount}/${latest.totalCatalogCount} <span style="font-size: 13px; font-weight: 700; color: #0284c7;">áreas auditadas (${latest.coveragePct}%)</span></div>
+                            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">${latest.dateRangeStr} · Score Prom: <strong>${latest.weekAvgScore}%</strong></div>
+                        </div>
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #10b981; border-radius: 8px; padding: 12px 14px;">
+                            <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Mayor Cobertura Semanal</div>
+                            <div style="font-size: 22px; font-weight: 900; color: #0f172a; margin-top: 2px;">${bestWeek.auditedCount}/${bestWeek.totalCatalogCount} <span style="font-size: 13px; font-weight: 700; color: #059669;">áreas auditadas (${bestWeek.coveragePct}%)</span></div>
+                            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">${bestWeek.shortLabel} (${bestWeek.dateRangeStr})</div>
+                        </div>
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #6366f1; border-radius: 8px; padding: 12px 14px;">
+                            <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Promedio por Semana</div>
+                            <div style="font-size: 22px; font-weight: 900; color: #0f172a; margin-top: 2px;">${avgAudited}/${totalAreasCount} <span style="font-size: 13px; font-weight: 700; color: #4f46e5;">áreas/sem (${avgPct}%)</span></div>
+                            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">En ${weeklyList.length} semanas con registro</div>
+                        </div>
+                    `;
+                }
+            }
+
+            const searchInput = document.getElementById('weekly-areas-search-input');
+            const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            const showMissingGlobal = document.getElementById('weekly-areas-show-missing')?.checked || false;
+
+            // Filtrar semanas según selector y búsqueda
+            let filteredWeeks = weeklyList;
+            if (selectedWeek && selectedWeek !== 'all') {
+                filteredWeeks = filteredWeeks.filter(w => w.key === selectedWeek);
+            }
+            if (searchQuery) {
+                filteredWeeks = filteredWeeks.filter(w =>
+                    w.auditedAreas.some(a => a.name.toLowerCase().includes(searchQuery)) ||
+                    w.shortLabel.toLowerCase().includes(searchQuery) ||
+                    w.dateRangeStr.toLowerCase().includes(searchQuery)
+                );
+            }
+
+            const cardsHtml = buildWeeklyAuditedCardsHTML(filteredWeeks, searchQuery, showMissingGlobal, 'dashboard');
+            const container = document.getElementById('weekly-audited-cards-container');
+            if (container) {
+                container.innerHTML = cardsHtml;
+            }
+
+            // También actualizar la sub-vista dentro de la pestaña "Areas" si existe
+            const areasWeeklyContainer = document.getElementById('areas-weekly-subview-container');
+            if (areasWeeklyContainer) {
+                areasWeeklyContainer.innerHTML = `
+                    <div class="weekly-coverage-section" style="padding: 18px 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+                            <div>
+                                <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a;">📅 Áreas Auditadas por Semana (${totalAreasCount} Áreas Operativas)</h3>
+                                <p style="margin: 3px 0 0 0; font-size: 13px; color: #64748b;">Haz clic en cualquier área de la lista para ver su detalle de calificación, acciones y responsables.</p>
+                            </div>
+                        </div>
+                        <div class="weekly-coverage-cards-grid">
+                            ${buildWeeklyAuditedCardsHTML(weeklyList, '', showMissingGlobal, 'areas')}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function buildWeeklyAuditedCardsHTML(weeksArray, searchQuery, showMissingGlobal, originView) {
+            if (!weeksArray || weeksArray.length === 0) {
+                return `<div style="grid-column: 1 / -1; text-align: center; padding: 30px; color: #64748b; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1;">No se encontraron semanas con áreas auditadas para el filtro actual.</div>`;
+            }
+
+            return weeksArray.map(w => {
+                // Color de badge según cobertura
+                let badgeBg = '#e0f2fe';
+                let badgeText = '#0369a1';
+                let barColor = '#0284c7';
+                if (w.coveragePct >= 75) {
+                    badgeBg = '#dcfce7';
+                    badgeText = '#15803d';
+                    barColor = '#10b981';
+                } else if (w.coveragePct < 40) {
+                    badgeBg = '#fef3c7';
+                    badgeText = '#b45309';
+                    barColor = '#f59e0b';
+                }
+
+                // Filtrar o resaltar áreas si hay búsqueda
+                const displayedAudited = searchQuery
+                    ? w.auditedAreas.filter(a => a.name.toLowerCase().includes(searchQuery) || w.shortLabel.toLowerCase().includes(searchQuery))
+                    : w.auditedAreas;
+
+                const auditedChipsHtml = displayedAudited.map((area, idx) => {
+                    let scoreBadgeHtml = '';
+                    if (area.avgScore !== null) {
+                        let sBg = '#dcfce7';
+                        let sCol = '#166534';
+                        if (area.avgScore < 80) {
+                            sBg = '#fee2e2';
+                            sCol = '#991b1b';
+                        } else if (area.avgScore < 95) {
+                            sBg = '#fef3c7';
+                            sCol = '#92400e';
+                        }
+                        scoreBadgeHtml = `<span class="week-area-chip-score" style="background:${sBg}; color:${sCol};">${area.avgScore.toFixed(0)}%</span>`;
+                    }
+                    const escapedName = area.name.replace(/'/g, "\\'");
+                    return `
+                        <span class="week-area-chip" onclick="openAreaFromWeeklyChip('${escapedName}', '${originView}')" title="Auditada el ${area.latestDate}${area.avgScore !== null ? ' · Score: ' + area.avgScore.toFixed(1) + '%' : ''} — Clic para ver detalle">
+                            <span style="color: #10b981; font-weight: 800;">✓</span>
+                            <span>${idx + 1}. ${area.name}</span>
+                            ${scoreBadgeHtml}
+                        </span>
+                    `;
+                }).join('');
+
+                const missingChipsHtml = w.missingAreas.map(areaName => {
+                    const escapedName = areaName.replace(/'/g, "\\'");
+                    return `
+                        <span class="week-area-chip missing" onclick="openAreaFromWeeklyChip('${escapedName}', '${originView}')" title="No registrada en ${w.shortLabel} — Clic para ver detalle del área">
+                            <span>⏳ ${areaName}</span>
+                        </span>
+                    `;
+                }).join('');
+
+                const uniqueSuffix = `${originView}_${w.key.replace(/[^a-zA-Z0-9]/g, '_')}`;
+
+                return `
+                    <div class="week-audit-card">
+                        <div class="week-audit-card-top">
+                            <div class="week-audit-title-group">
+                                <div class="week-audit-title">
+                                    <span>📅 ${w.shortLabel}</span>
+                                    <span style="font-size: 12px; font-weight: 700; color: #475569; background: #f1f5f9; padding: 2px 8px; border-radius: 6px;">Score Prom: ${w.weekAvgScore}%</span>
+                                </div>
+                                <span class="week-audit-dates">${w.dateRangeStr}</span>
+                            </div>
+                            <div class="week-audit-counter-badge" style="background: ${badgeBg}; color: ${badgeText}; border: 1px solid ${barColor}40;">
+                                <span>${w.auditedCount}/${w.totalCatalogCount} áreas auditadas</span>
+                                <span style="opacity: 0.85;">(${w.coveragePct}%)</span>
+                            </div>
+                        </div>
+
+                        <div class="week-progress-track">
+                            <div class="week-progress-fill" style="width: ${Math.min(100, w.coveragePct)}%; background: ${barColor};"></div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+                            <span style="font-size: 12px; font-weight: 700; color: #334155;">✅ Lista de áreas auditadas (${w.auditedCount}):</span>
+                            ${w.missingAreas.length > 0 ? `
+                                <button type="button" id="btn-week-missing-${uniqueSuffix}" onclick="toggleWeekMissingAreas('${uniqueSuffix}')" style="background: none; border: none; color: #0284c7; font-size: 11px; font-weight: 700; cursor: pointer; padding: 2px 4px;">
+                                    ${showMissingGlobal ? `▲ Ocultar áreas no auditadas (${w.missingAreas.length})` : `⏳ Ver ${w.missingAreas.length} áreas no auditadas en esta semana ▼`}
+                                </button>
+                            ` : `<span style="font-size: 11px; font-weight: 700; color: #16a34a;">🎉 ¡100% de áreas auditadas!</span>`}
+                        </div>
+
+                        <div class="week-areas-chips-wrap">
+                            ${auditedChipsHtml}
+                        </div>
+
+                        ${w.missingAreas.length > 0 ? `
+                            <div id="week-missing-wrap-${uniqueSuffix}" data-missing-count="${w.missingAreas.length}" class="week-areas-chips-wrap" style="display: ${showMissingGlobal ? 'flex' : 'none'}; margin-top: 6px; padding-top: 8px; border-top: 1px dashed #e2e8f0;">
+                                <div style="width: 100%; font-size: 11px; font-weight: 700; color: #9f1239; margin-bottom: 2px;">⏳ Áreas sin auditoría registrada en ${w.shortLabel} (${w.missingAreas.length}):</div>
+                                ${missingChipsHtml}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function switchAreasSubView(mode) {
+            const gridContainer = document.getElementById('areas-grid-container');
+            const weeklyContainer = document.getElementById('areas-weekly-subview-container');
+            const searchBox = document.getElementById('areas-catalog-search-box');
+            const btnCatalog = document.getElementById('btn-areas-tab-catalog');
+            const btnWeekly = document.getElementById('btn-areas-tab-weekly');
+
+            if (mode === 'weekly') {
+                if (gridContainer) gridContainer.style.display = 'none';
+                if (searchBox) searchBox.style.display = 'none';
+                if (weeklyContainer) {
+                    weeklyContainer.classList.remove('hidden');
+                    weeklyContainer.style.display = 'flex';
+                }
+                if (btnWeekly) {
+                    btnWeekly.style.background = '#005A9C';
+                    btnWeekly.style.color = 'white';
+                }
+                if (btnCatalog) {
+                    btnCatalog.style.background = 'transparent';
+                    btnCatalog.style.color = '#334155';
+                }
+                renderWeeklyAuditedAreasSection();
+            } else {
+                if (gridContainer) gridContainer.style.display = 'grid';
+                if (searchBox) searchBox.style.display = 'flex';
+                if (weeklyContainer) {
+                    weeklyContainer.classList.add('hidden');
+                    weeklyContainer.style.display = 'none';
+                }
+                if (btnCatalog) {
+                    btnCatalog.style.background = '#005A9C';
+                    btnCatalog.style.color = 'white';
+                }
+                if (btnWeekly) {
+                    btnWeekly.style.background = 'transparent';
+                    btnWeekly.style.color = '#334155';
+                }
+            }
+        }
+
+        async function exportWeeklyAuditedAreasPNG() {
+            const section = document.getElementById('weekly-audited-areas-section');
+            if (!section || typeof html2canvas === 'undefined') return;
+            try {
+                const canvas = await html2canvas(section, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff'
+                });
+                const link = document.createElement('a');
+                link.download = `Areas_Auditadas_Por_Semana_${new Date().toISOString().slice(0, 10)}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (err) {
+                console.error('Error al exportar PNG de áreas auditadas por semana:', err);
+                alert('Hubo un error al generar la imagen PNG.');
+            }
         }
     </script>
 
@@ -10026,7 +10739,14 @@
                     opt.textContent = d;
                     deptSelect.appendChild(opt);
                 });
-                deptSelect.value = currentVal;
+                const tableDeptVal = document.getElementById('filter-dept') ? document.getElementById('filter-dept').value : '';
+                if (tableDeptVal && depts.has(tableDeptVal)) {
+                    deptSelect.value = tableDeptVal;
+                } else if (currentVal && depts.has(currentVal)) {
+                    deptSelect.value = currentVal;
+                } else {
+                    deptSelect.value = '';
+                }
             }
             
             // Configurar default a la semana actual para el input tipo week
@@ -10074,7 +10794,33 @@
         // ==========================================
         // EXPORTACIÓN DE GRÁFICAS DEL DASHBOARD
         // ==========================================
-        async function generateChartReport(type, reportDept) {
+        // EXPORTACIÃ“N DE GRÃFICAS DEL DASHBOARD
+        // ==========================================
+        function exportDedicatedCardChart(chartType) {
+            // 1. Detectar si hay filtro de departamento activo en la tabla/dashboard
+            const deptSelect = document.getElementById('filter-dept');
+            let dept = (deptSelect && deptSelect.value) ? deptSelect.value.trim() : '';
+
+            // 2. Formatear tipo de gráfica
+            const fullType = chartType.startsWith('chart_') ? chartType : ('chart_' + chartType);
+
+            // 3. Determinar agrupación activa si no hay departamento filtrado
+            let forceGroupBy = null;
+            if (!dept) {
+                if (chartType === 'dept_overdue') {
+                    forceGroupBy = typeof overdueGroupBy !== 'undefined' ? overdueGroupBy : 'owner';
+                } else if (chartType === 'aging') {
+                    forceGroupBy = typeof agingOverdueGroupBy !== 'undefined' ? agingOverdueGroupBy : 'owner';
+                } else if (chartType === 'upcoming') {
+                    forceGroupBy = typeof upcomingGroupBy !== 'undefined' ? upcomingGroupBy : 'dept';
+                }
+            }
+
+            // 4. Generar y descargar la gráfica
+            generateChartReport(fullType, dept, forceGroupBy);
+        }
+
+        async function generateChartReport(type, reportDept, forceGroupBy) {
             let baseData = (typeof globalFilteredData !== 'undefined' && globalFilteredData.length > 0)
                 ? [...globalFilteredData]
                 : (typeof allAuditData !== 'undefined' ? allAuditData.filter(item => item.department !== 'Gemba' && item.department !== 'Gemba Walk') : []);
@@ -10085,12 +10831,19 @@
 
             let chartConfig = null;
             let chartTitle = '';
+            let themeColor = '#005A9C';
+            let themeBorder = '#004080';
             let fileName = 'Grafica.png';
             let zeroStateMessage = '';
+            let summaryStats = [];
+
+            const todayStr = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' });
 
             if (type === 'chart_scores') {
                 fileName = 'Score_5S_Area.png';
-                chartTitle = reportDept ? `Score 5S por Área - ${reportDept}` : 'Score 5S por Área (Top 10)';
+                themeColor = '#005A9C';
+                themeBorder = '#004080';
+                chartTitle = reportDept ? `Score 5S por Ãrea - ${reportDept}` : 'Score 5S por Ãrea (Top 10)';
 
                 const audits = getAuditScores(baseData);
                 const areaGroups = {};
@@ -10121,8 +10874,16 @@
                 if (areaScores.length === 0) {
                     zeroStateMessage = `No hay auditorías registradas${reportDept ? ' para el departamento ' + reportDept : ''}.`;
                 } else {
+                    const avgTotal = Math.round((areaScores.reduce((acc, c) => acc + c.avg, 0) / areaScores.length) * 10) / 10;
+                    summaryStats = [
+                        { label: 'Promedio General', value: `${avgTotal}%` },
+                        { label: 'Ãreas Evaluadas', value: String(areaScores.length) },
+                        { label: 'Meta de Sitio', value: '95%' }
+                    ];
+
                     const labels = areaScores.map(a => a.location);
                     const scores = areaScores.map(a => a.avg);
+                    const n = labels.length;
 
                     chartConfig = {
                         type: 'bar',
@@ -10134,7 +10895,7 @@
                                     label: 'Meta (95%)',
                                     datalabels: { display: false },
                                     data: Array(labels.length).fill(95),
-                                    borderColor: '#EC7063',
+                                    borderColor: '#EF4444',
                                     borderWidth: 2,
                                     borderDash: [6, 4],
                                     fill: false,
@@ -10145,22 +10906,39 @@
                                     type: 'bar',
                                     label: 'Calificación Promedio',
                                     data: scores,
-                                    backgroundColor: 'rgba(0, 154, 221, 0.75)',
+                                    backgroundColor: 'rgba(0, 154, 221, 0.85)',
                                     borderColor: '#009ADD',
                                     borderWidth: 1.5,
-                                    borderRadius: 4,
+                                    borderRadius: 6,
+                                    maxBarThickness: 46,
+                                    minBarLength: 6,
+                                    categoryPercentage: n <= 3 ? 0.35 : 0.65,
+                                    barPercentage: 0.85,
                                     order: 2
                                 }
                             ]
                         },
                         options: {
+                            devicePixelRatio: 1,
+                            responsive: false,
+                            animation: false,
+                            maintainAspectRatio: false,
+                            layout: {
+                                padding: {
+                                    top: 25,
+                                    bottom: n > 4 ? 25 : 10,
+                                    left: 15,
+                                    right: 25
+                                }
+                            },
                             scales: {
                                 y: {
                                     beginAtZero: true,
                                     max: 100,
-                                    grid: { color: '#EAEAEA' },
+                                    grid: { color: '#F1F5F9' },
                                     ticks: {
-                                        font: { family: 'Century Gothic', size: 12 },
+                                        font: { family: "'Segoe UI', 'Century Gothic', sans-serif", size: 12, weight: 'bold' },
+                                        color: '#64748B',
                                         callback: function(v) { return v + '%'; }
                                     }
                                 },
@@ -10168,18 +10946,20 @@
                                     grid: { display: false },
                                     ticks: {
                                         autoSkip: false,
-                                        maxRotation: labels.length > 6 ? 60 : 0,
-                                        minRotation: labels.length > 6 ? 45 : 0,
-                                        font: { family: 'Century Gothic', size: labels.length > 15 ? 10 : 12, weight: 'bold' }
+                                        maxRotation: n > 4 ? 45 : 0,
+                                        minRotation: n > 4 ? 30 : 0,
+                                        font: { family: "'Segoe UI', 'Century Gothic', sans-serif", size: n > 15 ? 11 : 12, weight: 'bold' },
+                                        color: '#1E293B'
                                     }
                                 }
                             },
                             plugins: {
                                 datalabels: {
-                                    color: '#FFFFFF',
-                                    anchor: 'center',
-                                    align: 'center',
-                                    font: { weight: 'bold', family: 'Century Gothic', size: 12 },
+                                    color: '#1E293B',
+                                    anchor: 'end',
+                                    align: 'top',
+                                    offset: 4,
+                                    font: { weight: 'bold', family: "'Segoe UI', 'Century Gothic', sans-serif", size: 13 },
                                     formatter: function(val, ctx) {
                                         if (ctx.dataset.type === 'line') return '';
                                         return val + '%';
@@ -10188,15 +10968,17 @@
                                 legend: {
                                     display: true,
                                     position: 'top',
-                                    labels: { font: { family: 'Century Gothic', size: 12 } }
+                                    labels: { font: { family: "'Segoe UI', 'Century Gothic', sans-serif", size: 12, weight: 'bold' } }
                                 }
                             }
                         }
                     };
                 }
             } else if (type === 'chart_weekly_closure') {
-                fileName = 'Porcentaje_Cierre_Semanal.png';
-                chartTitle = reportDept ? `% Acciones Cerradas por Semana - ${reportDept}` : '% Acciones Cerradas por Semana';
+                fileName = 'Cierre_Semanal.png';
+                themeColor = '#10B981';
+                themeBorder = '#059669';
+                chartTitle = reportDept ? `% Acciones Cerradas por Semana - ${reportDept}` : 'Acciones por Semana (Abiertas / Cerradas / Overdue y % Cierre)';
 
                 const weeklyStats = computeWeeklyClosureStats(baseData);
                 const displayStats = weeklyStats.length > 16 ? weeklyStats.slice(-16) : weeklyStats;
@@ -10208,6 +10990,17 @@
                     const openCounts = displayStats.map(w => w.open);
                     const overdueCounts = displayStats.map(w => w.overdue);
                     const labels = displayStats.map(w => `${w.label} (${w.closedPct}%)`);
+                    const n = labels.length;
+
+                    const totalClosed = closedCounts.reduce((a, b) => a + b, 0);
+                    const totalActions = totalClosed + openCounts.reduce((a, b) => a + b, 0) + overdueCounts.reduce((a, b) => a + b, 0);
+                    const globalClosedPct = totalActions > 0 ? Math.round((totalClosed / totalActions) * 100) : 0;
+
+                    summaryStats = [
+                        { label: 'Efectividad Global', value: `${globalClosedPct}%` },
+                        { label: 'Acciones Cerradas', value: String(totalClosed) },
+                        { label: 'Semanas Analizadas', value: String(displayStats.length) }
+                    ];
 
                     chartConfig = {
                         type: 'bar',
@@ -10217,46 +11010,62 @@
                                 {
                                     label: 'Cerradas',
                                     data: closedCounts,
-                                    backgroundColor: 'rgba(82, 190, 128, 0.85)',
-                                    borderColor: '#52BE80',
+                                    backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                                    borderColor: '#10B981',
                                     borderWidth: 1,
-                                    borderRadius: 2
+                                    borderRadius: 4,
+                                    maxBarThickness: 38
                                 },
                                 {
                                     label: 'Abiertas',
                                     data: openCounts,
-                                    backgroundColor: 'rgba(59, 130, 246, 0.82)',
-                                    borderColor: '#3b82f6',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.85)',
+                                    borderColor: '#3B82F6',
                                     borderWidth: 1,
-                                    borderRadius: 2
+                                    borderRadius: 4,
+                                    maxBarThickness: 38
                                 },
                                 {
                                     label: 'Overdue',
                                     data: overdueCounts,
-                                    backgroundColor: 'rgba(236, 112, 99, 0.85)',
-                                    borderColor: '#EC7063',
+                                    backgroundColor: 'rgba(239, 68, 68, 0.85)',
+                                    borderColor: '#EF4444',
                                     borderWidth: 1,
-                                    borderRadius: 2
+                                    borderRadius: 4,
+                                    maxBarThickness: 38
                                 }
                             ]
                         },
                         options: {
+                            devicePixelRatio: 1,
+                            responsive: false,
+                            animation: false,
+                            maintainAspectRatio: false,
+                            layout: {
+                                padding: {
+                                    top: 20,
+                                    bottom: 25,
+                                    left: 15,
+                                    right: 25
+                                }
+                            },
                             scales: {
                                 x: {
                                     stacked: true,
                                     grid: { display: false },
                                     ticks: {
                                         autoSkip: false,
-                                        maxRotation: 60,
-                                        minRotation: 45,
-                                        font: { family: 'Century Gothic', size: 11, weight: 'bold' }
+                                        maxRotation: 55,
+                                        minRotation: 40,
+                                        font: { family: "'Segoe UI', 'Century Gothic', sans-serif", size: 11, weight: 'bold' },
+                                        color: '#1E293B'
                                     }
                                 },
                                 y: {
                                     stacked: true,
                                     beginAtZero: true,
-                                    grid: { color: '#EAEAEA' },
-                                    ticks: { font: { family: 'Century Gothic', size: 12 }, precision: 0 }
+                                    grid: { color: '#F1F5F9' },
+                                    ticks: { font: { family: "'Segoe UI', 'Century Gothic', sans-serif", size: 12, weight: 'bold' }, precision: 0, color: '#64748B' }
                                 }
                             },
                             plugins: {
@@ -10264,13 +11073,13 @@
                                     color: '#FFFFFF',
                                     anchor: 'center',
                                     align: 'center',
-                                    font: { weight: 'bold', family: 'Century Gothic', size: 11 },
+                                    font: { weight: 'bold', family: "'Segoe UI', 'Century Gothic', sans-serif", size: 11 },
                                     formatter: (val) => val > 0 ? val : ''
                                 },
                                 legend: {
                                     display: true,
                                     position: 'top',
-                                    labels: { font: { family: 'Century Gothic', size: 12 } }
+                                    labels: { font: { family: "'Segoe UI', 'Century Gothic', sans-serif", size: 12, weight: 'bold' }, boxWidth: 14 }
                                 }
                             }
                         }
@@ -10278,6 +11087,9 @@
                 }
             } else if (type === 'chart_dept_overdue') {
                 fileName = 'Acciones_Vencidas.png';
+                themeColor = '#EF4444';
+                themeBorder = '#DC2626';
+
                 let overdueList = (typeof arrOverdue !== 'undefined' && arrOverdue.length > 0)
                     ? [...arrOverdue]
                     : baseData.filter(item => {
@@ -10297,7 +11109,9 @@
                     overdueList = overdueList.filter(item => item.department === reportDept);
                 }
 
-                const groupBy = reportDept ? 'owner' : (typeof overdueGroupBy !== 'undefined' ? overdueGroupBy : 'owner');
+                // Si se selecciona un departamento especÃ­fico, SIEMPRE desglosar por owner (responsable)!
+                const groupBy = reportDept ? 'owner' : (forceGroupBy || (typeof overdueGroupBy !== 'undefined' ? overdueGroupBy : 'dept'));
+
                 chartTitle = reportDept
                     ? `Acciones Vencidas por Responsable - ${reportDept}`
                     : (groupBy === 'dept' ? 'Acciones Vencidas por Departamento' : 'Acciones Vencidas por Responsable');
@@ -10309,12 +11123,20 @@
                 });
 
                 const sorted = Object.keys(counts).map(k => ({ name: k, count: counts[k] })).sort((a, b) => b.count - a.count);
+                const totalOverdue = overdueList.length;
 
                 if (sorted.length === 0) {
-                    zeroStateMessage = `¡Excelente! 0 acciones vencidas${reportDept ? ' en el departamento ' + reportDept : ''}. 100% de cumplimiento con SLA.`;
+                    zeroStateMessage = `Â¡Excelente! 0 acciones vencidas${reportDept ? ' en el departamento ' + reportDept : ''}. 100% de cumplimiento SLA.`;
                 } else {
+                    summaryStats = [
+                        { label: 'Total Vencidas', value: String(totalOverdue) },
+                        { label: groupBy === 'dept' ? 'Deptos Afectados' : 'Responsables', value: String(sorted.length) },
+                        { label: 'Mayor Incidencia', value: `${sorted[0].name} (${sorted[0].count})` }
+                    ];
+
                     const labels = sorted.map(d => d.name);
                     const data = sorted.map(d => d.count);
+                    const n = labels.length;
 
                     chartConfig = {
                         type: 'bar',
@@ -10323,35 +11145,64 @@
                             datasets: [{
                                 label: 'Acciones Vencidas',
                                 data: data,
-                                backgroundColor: 'rgba(236, 112, 99, 0.75)',
-                                borderColor: '#EC7063',
+                                backgroundColor: 'rgba(239, 68, 68, 0.85)',
+                                borderColor: '#DC2626',
                                 borderWidth: 1.5,
-                                borderRadius: 4
+                                borderRadius: 6,
+                                maxBarThickness: 46,
+                                minBarLength: 6,
+                                categoryPercentage: n <= 3 ? 0.35 : 0.65,
+                                barPercentage: 0.85
                             }]
                         },
                         options: {
+                            devicePixelRatio: 1,
+                            responsive: false,
+                            animation: false,
+                            maintainAspectRatio: false,
+                            layout: {
+                                padding: {
+                                    top: 25,
+                                    bottom: n > 4 ? 25 : 10,
+                                    left: 15,
+                                    right: 25
+                                }
+                            },
                             scales: {
                                 y: {
                                     beginAtZero: true,
-                                    grid: { color: '#EAEAEA' },
-                                    ticks: { precision: 0, font: { family: 'Century Gothic', size: 12 } }
+                                    grid: { color: '#F1F5F9' },
+                                    ticks: {
+                                        precision: 0,
+                                        stepSize: 1,
+                                        font: { family: "'Segoe UI', 'Century Gothic', sans-serif", size: 13, weight: 'bold' },
+                                        color: '#64748B'
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: 'Cantidad de Acciones Vencidas',
+                                        color: '#64748B',
+                                        font: { family: "'Segoe UI', 'Century Gothic', sans-serif", size: 12, weight: 'bold' }
+                                    }
                                 },
                                 x: {
                                     grid: { display: false },
                                     ticks: {
                                         autoSkip: false,
-                                        maxRotation: labels.length > 6 ? 65 : 0,
-                                        minRotation: labels.length > 6 ? 45 : 0,
-                                        font: { family: 'Century Gothic', size: labels.length > 15 ? 10 : 12, weight: 'bold' }
+                                        maxRotation: n > 4 ? 45 : 0,
+                                        minRotation: n > 4 ? 30 : 0,
+                                        font: { family: "'Segoe UI', 'Century Gothic', sans-serif", size: n > 15 ? 11 : 12, weight: 'bold' },
+                                        color: '#1E293B'
                                     }
                                 }
                             },
                             plugins: {
                                 datalabels: {
-                                    color: '#FFFFFF',
-                                    anchor: 'center',
-                                    align: 'center',
-                                    font: { weight: 'bold', family: 'Century Gothic', size: 12 },
+                                    color: '#1E293B',
+                                    anchor: 'end',
+                                    align: 'top',
+                                    offset: 4,
+                                    font: { weight: 'bold', family: "'Segoe UI', 'Century Gothic', sans-serif", size: 14 },
                                     formatter: (val) => val > 0 ? val : ''
                                 },
                                 legend: { display: false }
@@ -10361,6 +11212,9 @@
                 }
             } else if (type === 'chart_aging') {
                 fileName = 'Aging_Acciones.png';
+                themeColor = '#D97706';
+                themeBorder = '#B45309';
+
                 let overdueList = (typeof arrOverdue !== 'undefined' && arrOverdue.length > 0)
                     ? [...arrOverdue]
                     : baseData.filter(item => {
@@ -10380,35 +11234,75 @@
                     overdueList = overdueList.filter(item => item.department === reportDept);
                 }
 
-                const groupBy = reportDept ? 'owner' : (typeof agingOverdueGroupBy !== 'undefined' ? agingOverdueGroupBy : 'owner');
+                const groupBy = reportDept ? 'owner' : (forceGroupBy || (typeof agingOverdueGroupBy !== 'undefined' ? agingOverdueGroupBy : 'dept'));
                 chartTitle = reportDept
-                    ? `Antigüedad Acciones Vencidas por Responsable - ${reportDept}`
-                    : (groupBy === 'dept' ? 'Antigüedad Acciones Vencidas por Departamento' : 'Antigüedad Acciones Vencidas por Responsable');
+                    ? `AntigÃ¼edad Acciones Vencidas por Responsable - ${reportDept}`
+                    : (groupBy === 'dept' ? 'AntigÃ¼edad Acciones Vencidas por Departamento' : 'AntigÃ¼edad Acciones Vencidas por Responsable');
 
                 if (overdueList.length === 0) {
-                    zeroStateMessage = `¡Excelente! 0 acciones vencidas${reportDept ? ' en el departamento ' + reportDept : ''}.`;
+                    zeroStateMessage = `Â¡Excelente! 0 acciones vencidas${reportDept ? ' en el departamento ' + reportDept : ''}.`;
                 } else {
                     const dataObj = getStackedAgingData(overdueList, groupBy);
+                    const n = dataObj.labels.length;
+                    const totalOverdue = overdueList.length;
+
+                    summaryStats = [
+                        { label: 'Total Vencidas', value: String(totalOverdue) },
+                        { label: groupBy === 'dept' ? 'Deptos Afectados' : 'Responsables', value: String(n) },
+                        { label: 'Rango CrÃ­tico', value: '+30 dÃ­as' }
+                    ];
+
+                    if (dataObj.datasets) {
+                        dataObj.datasets.forEach(ds => {
+                            ds.maxBarThickness = 46;
+                            ds.borderRadius = 4;
+                        });
+                    }
+
                     chartConfig = {
                         type: 'bar',
                         data: dataObj,
                         options: {
+                            devicePixelRatio: 1,
+                            responsive: false,
+                            animation: false,
+                            maintainAspectRatio: false,
+                            layout: {
+                                padding: {
+                                    top: 15,
+                                    bottom: n > 4 ? 25 : 10,
+                                    left: 15,
+                                    right: 25
+                                }
+                            },
                             scales: {
                                 x: {
                                     stacked: true,
                                     grid: { display: false },
                                     ticks: {
                                         autoSkip: false,
-                                        maxRotation: dataObj.labels.length > 6 ? 65 : 0,
-                                        minRotation: dataObj.labels.length > 6 ? 45 : 0,
-                                        font: { family: 'Century Gothic', size: dataObj.labels.length > 15 ? 10 : 12, weight: 'bold' }
+                                        maxRotation: n > 4 ? 45 : 0,
+                                        minRotation: n > 4 ? 30 : 0,
+                                        font: { family: "'Segoe UI', 'Century Gothic', sans-serif", size: n > 15 ? 11 : 12, weight: 'bold' },
+                                        color: '#1E293B'
                                     }
                                 },
                                 y: {
                                     stacked: true,
                                     beginAtZero: true,
-                                    grid: { color: '#EAEAEA' },
-                                    ticks: { precision: 0, font: { family: 'Century Gothic', size: 12 } }
+                                    grid: { color: '#F1F5F9' },
+                                    ticks: {
+                                        precision: 0,
+                                        stepSize: 1,
+                                        font: { family: "'Segoe UI', 'Century Gothic', sans-serif", size: 13, weight: 'bold' },
+                                        color: '#64748B'
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: 'Cantidad de Acciones Vencidas',
+                                        color: '#64748B',
+                                        font: { family: "'Segoe UI', 'Century Gothic', sans-serif", size: 12, weight: 'bold' }
+                                    }
                                 }
                             },
                             plugins: {
@@ -10416,13 +11310,17 @@
                                     color: '#FFFFFF',
                                     anchor: 'center',
                                     align: 'center',
-                                    font: { weight: 'bold', family: 'Century Gothic', size: 11 },
+                                    font: { weight: 'bold', family: "'Segoe UI', 'Century Gothic', sans-serif", size: 12 },
                                     formatter: (val) => val > 0 ? val : ''
                                 },
                                 legend: {
                                     display: true,
                                     position: 'top',
-                                    labels: { font: { family: 'Century Gothic', size: 12 } }
+                                    labels: {
+                                        font: { family: "'Segoe UI', 'Century Gothic', sans-serif", size: 12, weight: 'bold' },
+                                        boxWidth: 14,
+                                        padding: 15
+                                    }
                                 }
                             }
                         }
@@ -10430,6 +11328,9 @@
                 }
             } else if (type === 'chart_upcoming') {
                 fileName = 'Acciones_por_Vencer.png';
+                themeColor = '#F59E0B';
+                themeBorder = '#D97706';
+
                 let upcomingList = (typeof arrUpcoming !== 'undefined' && arrUpcoming.length > 0)
                     ? [...arrUpcoming]
                     : baseData.filter(item => {
@@ -10452,10 +11353,10 @@
                     upcomingList = upcomingList.filter(item => item.department === reportDept);
                 }
 
-                const groupBy = reportDept ? 'owner' : (typeof upcomingGroupBy !== 'undefined' ? upcomingGroupBy : 'owner');
+                const groupBy = reportDept ? 'owner' : (forceGroupBy || (typeof upcomingGroupBy !== 'undefined' ? upcomingGroupBy : 'dept'));
                 chartTitle = reportDept
-                    ? `Acciones Próximas a Vencer (<= 2 días) - ${reportDept}`
-                    : (groupBy === 'dept' ? 'Acciones Próximas a Vencer por Depto' : 'Acciones Próximas a Vencer por Responsable');
+                    ? `Acciones PrÃ³ximas a Vencer (<= 2 dÃ­as) - ${reportDept}`
+                    : (groupBy === 'dept' ? 'Acciones PrÃ³ximas a Vencer por Depto' : 'Acciones PrÃ³ximas a Vencer por Responsable');
 
                 const counts = {};
                 upcomingList.forEach(item => {
@@ -10464,49 +11365,86 @@
                 });
 
                 const sorted = Object.keys(counts).map(k => ({ name: k, count: counts[k] })).sort((a, b) => b.count - a.count);
+                const totalUpcoming = upcomingList.length;
 
                 if (sorted.length === 0) {
-                    zeroStateMessage = `No hay acciones próximas a vencer (0 a 2 días)${reportDept ? ' en el departamento ' + reportDept : ''}.`;
+                    zeroStateMessage = `No hay acciones prÃ³ximas a vencer (0 a 2 dÃ­as)${reportDept ? ' en el departamento ' + reportDept : ''}.`;
                 } else {
+                    summaryStats = [
+                        { label: 'Por Vencer (<=2d)', value: String(totalUpcoming) },
+                        { label: groupBy === 'dept' ? 'Deptos Involucrados' : 'Responsables', value: String(sorted.length) },
+                        { label: 'Mayor Volumen', value: `${sorted[0].name} (${sorted[0].count})` }
+                    ];
+
                     const labels = sorted.map(d => d.name);
                     const data = sorted.map(d => d.count);
+                    const n = labels.length;
 
                     chartConfig = {
                         type: 'bar',
                         data: {
                             labels: labels,
                             datasets: [{
-                                label: 'Próximas a Vencer',
+                                label: 'PrÃ³ximas a Vencer',
                                 data: data,
-                                backgroundColor: 'rgba(243, 156, 18, 0.75)',
-                                borderColor: '#F39C12',
+                                backgroundColor: 'rgba(245, 158, 11, 0.85)',
+                                borderColor: '#D97706',
                                 borderWidth: 1.5,
-                                borderRadius: 4
+                                borderRadius: 6,
+                                maxBarThickness: 46,
+                                minBarLength: 6,
+                                categoryPercentage: n <= 3 ? 0.35 : 0.65,
+                                barPercentage: 0.85
                             }]
                         },
                         options: {
+                            devicePixelRatio: 1,
+                            responsive: false,
+                            animation: false,
+                            maintainAspectRatio: false,
+                            layout: {
+                                padding: {
+                                    top: 25,
+                                    bottom: n > 4 ? 25 : 10,
+                                    left: 15,
+                                    right: 25
+                                }
+                            },
                             scales: {
                                 y: {
                                     beginAtZero: true,
-                                    grid: { color: '#EAEAEA' },
-                                    ticks: { precision: 0, font: { family: 'Century Gothic', size: 12 } }
+                                    grid: { color: '#F1F5F9' },
+                                    ticks: {
+                                        precision: 0,
+                                        stepSize: 1,
+                                        font: { family: "'Segoe UI', 'Century Gothic', sans-serif", size: 13, weight: 'bold' },
+                                        color: '#64748B'
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: 'Acciones por Vencer',
+                                        color: '#64748B',
+                                        font: { family: "'Segoe UI', 'Century Gothic', sans-serif", size: 12, weight: 'bold' }
+                                    }
                                 },
                                 x: {
                                     grid: { display: false },
                                     ticks: {
                                         autoSkip: false,
-                                        maxRotation: labels.length > 6 ? 60 : 0,
-                                        minRotation: labels.length > 6 ? 45 : 0,
-                                        font: { family: 'Century Gothic', size: labels.length > 15 ? 10 : 12, weight: 'bold' }
+                                        maxRotation: n > 4 ? 45 : 0,
+                                        minRotation: n > 4 ? 30 : 0,
+                                        font: { family: "'Segoe UI', 'Century Gothic', sans-serif", size: n > 15 ? 11 : 12, weight: 'bold' },
+                                        color: '#1E293B'
                                     }
                                 }
                             },
                             plugins: {
                                 datalabels: {
-                                    color: '#FFFFFF',
-                                    anchor: 'center',
-                                    align: 'center',
-                                    font: { weight: 'bold', family: 'Century Gothic', size: 12 },
+                                    color: '#1E293B',
+                                    anchor: 'end',
+                                    align: 'top',
+                                    offset: 4,
+                                    font: { weight: 'bold', family: "'Segoe UI', 'Century Gothic', sans-serif", size: 14 },
                                     formatter: (val) => val > 0 ? val : ''
                                 },
                                 legend: { display: false }
@@ -10516,7 +11454,9 @@
                 }
             } else if (type === 'chart_history') {
                 fileName = 'Historial_Scores.png';
-                chartTitle = reportDept ? `Historial de Scores por Área - ${reportDept}` : 'Historial de Scores (Todas las Áreas)';
+                themeColor = '#005A9C';
+                themeBorder = '#004080';
+                chartTitle = reportDept ? `Historial de Scores por Ãrea - ${reportDept}` : 'Historial de Scores (Todas las Ãreas)';
 
                 let histData = typeof allAuditData !== 'undefined' ? allAuditData.filter(item => item.responseScore !== -1) : [];
                 if (reportDept) {
@@ -10539,10 +11479,18 @@
                 })).sort((a, b) => b.avg - a.avg);
 
                 if (areaScores.length === 0) {
-                    zeroStateMessage = `No hay historial de auditorías${reportDept ? ' para el departamento ' + reportDept : ''}.`;
+                    zeroStateMessage = `No hay historial de auditorÃ­as${reportDept ? ' para el departamento ' + reportDept : ''}.`;
                 } else {
+                    const avgTotal = Math.round((areaScores.reduce((acc, c) => acc + c.avg, 0) / areaScores.length) * 10) / 10;
+                    summaryStats = [
+                        { label: 'Promedio HistÃ³rico', value: `${avgTotal}%` },
+                        { label: 'Ãreas Auditadas', value: String(areaScores.length) },
+                        { label: 'Meta de Sitio', value: '95%' }
+                    ];
+
                     const labels = areaScores.map(a => a.location);
                     const scores = areaScores.map(a => a.avg);
+                    const n = labels.length;
 
                     chartConfig = {
                         type: 'bar',
@@ -10551,20 +11499,37 @@
                             datasets: [{
                                 label: 'Calificación Promedio',
                                 data: scores,
-                                backgroundColor: 'rgba(0, 154, 221, 0.75)',
+                                backgroundColor: 'rgba(0, 154, 221, 0.85)',
                                 borderColor: '#009ADD',
                                 borderWidth: 1.5,
-                                borderRadius: 4
+                                borderRadius: 6,
+                                maxBarThickness: 46,
+                                minBarLength: 6,
+                                categoryPercentage: n <= 3 ? 0.35 : 0.65,
+                                barPercentage: 0.85
                             }]
                         },
                         options: {
+                            devicePixelRatio: 1,
+                            responsive: false,
+                            animation: false,
+                            maintainAspectRatio: false,
+                            layout: {
+                                padding: {
+                                    top: 25,
+                                    bottom: n > 4 ? 25 : 10,
+                                    left: 15,
+                                    right: 25
+                                }
+                            },
                             scales: {
                                 y: {
                                     beginAtZero: true,
                                     max: 100,
-                                    grid: { color: '#EAEAEA' },
+                                    grid: { color: '#F1F5F9' },
                                     ticks: {
-                                        font: { family: 'Century Gothic', size: 12 },
+                                        font: { family: "'Segoe UI', 'Century Gothic', sans-serif", size: 12, weight: 'bold' },
+                                        color: '#64748B',
                                         callback: function(v) { return v + '%'; }
                                     }
                                 },
@@ -10572,18 +11537,20 @@
                                     grid: { display: false },
                                     ticks: {
                                         autoSkip: false,
-                                        maxRotation: labels.length > 8 ? 65 : 0,
-                                        minRotation: labels.length > 8 ? 45 : 0,
-                                        font: { family: 'Century Gothic', size: labels.length > 15 ? 10 : 12, weight: 'bold' }
+                                        maxRotation: n > 4 ? 45 : 0,
+                                        minRotation: n > 4 ? 30 : 0,
+                                        font: { family: "'Segoe UI', 'Century Gothic', sans-serif", size: n > 15 ? 11 : 12, weight: 'bold' },
+                                        color: '#1E293B'
                                     }
                                 }
                             },
                             plugins: {
                                 datalabels: {
-                                    color: '#FFFFFF',
-                                    anchor: 'center',
-                                    align: 'center',
-                                    font: { weight: 'bold', family: 'Century Gothic', size: 11 },
+                                    color: '#1E293B',
+                                    anchor: 'end',
+                                    align: 'top',
+                                    offset: 4,
+                                    font: { weight: 'bold', family: "'Segoe UI', 'Century Gothic', sans-serif", size: 13 },
                                     formatter: (val) => val + '%'
                                 },
                                 legend: { display: false }
@@ -10594,61 +11561,69 @@
             }
 
             const deptPrefix = reportDept ? reportDept.replace(/[^a-zA-Z0-9]/g, '_') : 'Todos';
-            const dateStr = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' });
 
             if (zeroStateMessage) {
-                const zeroCanvas = document.createElement('canvas');
-                zeroCanvas.width = 1100;
-                zeroCanvas.height = 360;
-                const zCtx = zeroCanvas.getContext('2d');
+                const zCanvas = document.createElement('canvas');
+                const zWidth = 1100;
+                const zHeight = 400;
+                const scale = 2;
+                zCanvas.width = zWidth * scale;
+                zCanvas.height = zHeight * scale;
+                const zCtx = zCanvas.getContext('2d');
+                zCtx.scale(scale, scale);
 
-                zCtx.fillStyle = '#ffffff';
-                zCtx.fillRect(0, 0, 1100, 360);
+                zCtx.fillStyle = '#FFFFFF';
+                zCtx.fillRect(0, 0, zWidth, zHeight);
 
-                zCtx.fillStyle = '#10b981';
-                zCtx.fillRect(0, 0, 1100, 8);
+                zCtx.fillStyle = '#10B981';
+                zCtx.fillRect(0, 0, zWidth, 8);
 
-                zCtx.font = 'bold 24px "Century Gothic", sans-serif';
-                zCtx.fillStyle = '#0f172a';
+                zCtx.font = 'bold 15px "Segoe UI", sans-serif';
+                zCtx.fillStyle = '#005A9C';
+                zCtx.textAlign = 'right';
+                zCtx.fillText("FLEX LEANVIEW 5'S", zWidth - 40, 42);
+
+                zCtx.font = 'bold 24px "Segoe UI", sans-serif';
+                zCtx.fillStyle = '#0F172A';
                 zCtx.textAlign = 'left';
-                zCtx.fillText(chartTitle, 40, 50);
+                zCtx.fillText(chartTitle, 40, 48);
 
-                zCtx.font = '14px "Century Gothic", sans-serif';
-                zCtx.fillStyle = '#64748b';
-                zCtx.fillText(`Departamento: ${reportDept || 'Todos los Departamentos'}   |   Corte: ${dateStr}   |   LeanView 5´S Flex`, 40, 80);
+                zCtx.font = '14px "Segoe UI", sans-serif';
+                zCtx.fillStyle = '#64748B';
+                zCtx.fillText(`Departamento: ${reportDept || 'Todos los Departamentos'}   |   Corte: ${todayStr}   |   LeanView 5'S Flex`, 40, 78);
 
-                zCtx.strokeStyle = '#e2e8f0';
+                zCtx.strokeStyle = '#E2E8F0';
                 zCtx.lineWidth = 1;
                 zCtx.beginPath();
-                zCtx.moveTo(40, 100);
-                zCtx.lineTo(1060, 100);
+                zCtx.moveTo(40, 95);
+                zCtx.lineTo(zWidth - 40, 95);
                 zCtx.stroke();
 
-                zCtx.fillStyle = '#f0fdf4';
-                zCtx.strokeStyle = '#bbf7d0';
+                zCtx.fillStyle = '#F0FDF4';
+                zCtx.strokeStyle = '#BBF7D0';
                 zCtx.lineWidth = 1.5;
                 if (zCtx.roundRect) {
                     zCtx.beginPath();
-                    zCtx.roundRect(80, 130, 940, 170, 12);
+                    zCtx.roundRect(80, 135, zWidth - 160, 210, 14);
                     zCtx.fill();
                     zCtx.stroke();
                 } else {
-                    zCtx.fillRect(80, 130, 940, 170);
-                    zCtx.strokeRect(80, 130, 940, 170);
+                    zCtx.fillRect(80, 135, zWidth - 160, 210);
+                    zCtx.strokeRect(80, 135, zWidth - 160, 210);
                 }
 
-                zCtx.font = 'bold 20px "Century Gothic", sans-serif';
+                zCtx.font = 'bold 22px "Segoe UI", sans-serif';
                 zCtx.fillStyle = '#166534';
                 zCtx.textAlign = 'center';
-                zCtx.fillText(zeroStateMessage, 550, 205);
+                zCtx.fillText(zeroStateMessage, zWidth / 2, 220);
 
-                zCtx.font = '15px "Century Gothic", sans-serif';
-                zCtx.fillStyle = '#15803d';
-                zCtx.fillText('No se registran elementos pendientes ni acciones atrasadas para los criterios seleccionados.', 550, 240);
+                zCtx.font = '15px "Segoe UI", sans-serif';
+                zCtx.fillStyle = '#15803D';
+                zCtx.fillText('Excelente desempeÃ±o operativo. No se registran incidencias pendientes en los criterios seleccionados.', zWidth / 2, 265);
 
                 const link = document.createElement('a');
                 link.download = `${deptPrefix}_${fileName}`;
-                link.href = zeroCanvas.toDataURL('image/png');
+                link.href = zCanvas.toDataURL('image/png');
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -10656,67 +11631,126 @@
             }
 
             if (!chartConfig) {
-                alert('No se pudo inicializar la gráfica para exportar.');
+                alert('No se pudo inicializar la grÃ¡fica para exportar.');
                 return;
             }
 
             const labelCount = (chartConfig.data && chartConfig.data.labels) ? chartConfig.data.labels.length : 10;
-            const dynamicWidth = Math.max(1200, Math.min(2800, labelCount * 65));
-            const chartHeight = 520;
-            const headerHeight = 90;
-            const totalWidth = dynamicWidth;
-            const totalHeight = chartHeight + headerHeight + 35;
+            const canvasWidth = labelCount <= 5 ? 1100 : (labelCount <= 12 ? 1250 : Math.min(2600, 1250 + (labelCount - 12) * 60));
+            const canvasHeight = 720;
+            const headerHeight = 150;
+            const chartAreaX = 40;
+            const chartAreaY = headerHeight + 15;
+            const chartAreaWidth = canvasWidth - 80;
+            const chartAreaHeight = canvasHeight - chartAreaY - 25;
 
+            // Renderizado en canvas temporal offscreen con devicePixelRatio: 1 (evita bug de zoom y corte)
             const chartCanvas = document.createElement('canvas');
-            chartCanvas.width = totalWidth - 40;
-            chartCanvas.height = chartHeight;
-
+            chartCanvas.width = chartAreaWidth;
+            chartCanvas.height = chartAreaHeight;
             const chartCtx = chartCanvas.getContext('2d');
+
             const chartInstance = new Chart(chartCtx, {
                 ...chartConfig,
                 options: {
                     ...chartConfig.options,
+                    devicePixelRatio: 1,
                     responsive: false,
                     animation: false,
                     maintainAspectRatio: false
                 }
             });
 
+            // Canvas final con escala 2X para calidad nÃ­tida HD
+            const scale = 2;
             const finalCanvas = document.createElement('canvas');
-            finalCanvas.width = totalWidth;
-            finalCanvas.height = totalHeight;
+            finalCanvas.width = canvasWidth * scale;
+            finalCanvas.height = canvasHeight * scale;
             const fCtx = finalCanvas.getContext('2d');
+            fCtx.scale(scale, scale);
 
-            fCtx.fillStyle = '#ffffff';
-            fCtx.fillRect(0, 0, totalWidth, totalHeight);
+            // 1. Fondo blanco puro
+            fCtx.fillStyle = '#FFFFFF';
+            fCtx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-            fCtx.fillStyle = '#009ADD';
-            fCtx.fillRect(0, 0, totalWidth, 8);
+            // 2. Barra superior con color temÃ¡tico
+            fCtx.fillStyle = themeColor;
+            fCtx.fillRect(0, 0, canvasWidth, 8);
 
-            fCtx.font = 'bold 24px "Century Gothic", sans-serif';
+            // 3. TÃ­tulo de Flex LeanView en esquina superior derecha
+            fCtx.font = 'bold 15px "Segoe UI", sans-serif';
             fCtx.fillStyle = '#005A9C';
-            fCtx.textAlign = 'left';
-            fCtx.fillText(chartTitle, 35, 45);
-
-            fCtx.font = '14px "Century Gothic", sans-serif';
-            fCtx.fillStyle = '#64748b';
-            fCtx.fillText(`Departamento: ${reportDept || 'Todos los Departamentos'}   |   Fecha: ${dateStr}   |   LeanView 5´S`, 35, 72);
-
-            fCtx.font = 'bold 16px "Century Gothic", sans-serif';
-            fCtx.fillStyle = '#009ADD';
             fCtx.textAlign = 'right';
-            fCtx.fillText('FLEX LEANVIEW 5\'S', totalWidth - 35, 55);
+            fCtx.fillText("FLEX LEANVIEW 5'S", canvasWidth - 40, 42);
 
-            fCtx.strokeStyle = '#e2e8f0';
+            // 4. TÃ­tulo principal del reporte
+            fCtx.font = 'bold 24px "Segoe UI", sans-serif';
+            fCtx.fillStyle = '#0F172A';
+            fCtx.textAlign = 'left';
+            fCtx.fillText(chartTitle, 40, 48);
+
+            // 5. Fila de metadatos
+            fCtx.font = '13px "Segoe UI", sans-serif';
+            fCtx.fillStyle = '#64748B';
+            const deptDisplay = reportDept ? `Departamento: ${reportDept}` : 'Alcance: Todos los Departamentos';
+            fCtx.fillText(`${deptDisplay}   â€¢   Corte al: ${todayStr}   â€¢   Generado automÃ¡ticamente por LeanView`, 40, 75);
+
+            // 6. Tarjetas de resumen ejecutivo (KPI mini-boxes)
+            if (summaryStats && summaryStats.length > 0) {
+                let badgeX = 40;
+                summaryStats.forEach(stat => {
+                    const boxPadding = 14;
+                    fCtx.font = 'bold 13px "Segoe UI", sans-serif';
+                    const valWidth = fCtx.measureText(stat.value).width;
+                    fCtx.font = '11px "Segoe UI", sans-serif';
+                    const labelWidth = fCtx.measureText(stat.label.toUpperCase()).width;
+                    const badgeW = Math.max(140, Math.max(valWidth, labelWidth) + boxPadding * 2);
+
+                    fCtx.fillStyle = '#F8FAFC';
+                    fCtx.strokeStyle = '#E2E8F0';
+                    fCtx.lineWidth = 1;
+                    if (fCtx.roundRect) {
+                        fCtx.beginPath();
+                        fCtx.roundRect(badgeX, 90, badgeW, 46, 8);
+                        fCtx.fill();
+                        fCtx.stroke();
+                    } else {
+                        fCtx.fillRect(badgeX, 90, badgeW, 46);
+                        fCtx.strokeRect(badgeX, 90, badgeW, 46);
+                    }
+
+                    fCtx.fillStyle = '#64748B';
+                    fCtx.font = 'bold 10px "Segoe UI", sans-serif';
+                    fCtx.textAlign = 'left';
+                    fCtx.fillText(stat.label.toUpperCase(), badgeX + boxPadding, 106);
+
+                    fCtx.fillStyle = themeBorder;
+                    fCtx.font = 'bold 16px "Segoe UI", sans-serif';
+                    fCtx.fillText(stat.value, badgeX + boxPadding, 126);
+
+                    badgeX += badgeW + 12;
+                });
+            }
+
+            // 7. Línea divisoria
+            fCtx.strokeStyle = '#E2E8F0';
             fCtx.lineWidth = 1;
             fCtx.beginPath();
-            fCtx.moveTo(35, 88);
-            fCtx.lineTo(totalWidth - 35, 88);
+            fCtx.moveTo(40, headerHeight);
+            fCtx.lineTo(canvasWidth - 40, headerHeight);
             fCtx.stroke();
 
-            fCtx.drawImage(chartCanvas, 20, headerHeight + 10);
+            // 8. Dibujado exacto del canvas con 9 parámetros (cero distorsión, cero corte)
+            fCtx.drawImage(
+                chartCanvas,
+                0, 0, chartCanvas.width, chartCanvas.height,
+                chartAreaX, chartAreaY, chartAreaWidth, chartAreaHeight
+            );
+
+            // Destruir instancia para liberar memoria
             chartInstance.destroy();
 
+            // 9. Descarga directa en PNG
             const link = document.createElement('a');
             link.download = `${deptPrefix}_${fileName}`;
             link.href = finalCanvas.toDataURL('image/png');

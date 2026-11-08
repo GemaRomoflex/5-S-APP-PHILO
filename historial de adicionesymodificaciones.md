@@ -276,3 +276,13 @@ La base de datos (Supabase) almacena exclusivamente métricas, hallazgos y audit
     *   Si un departamento tiene 0 acciones vencidas o por vencer, en lugar de generar un gráfico vacío o arrojar error, genera una tarjeta oficial con marco verde indicando *¡Excelente! 0 acciones vencidas en el departamento. 100% de cumplimiento con SLA*.
 *   **Resiliencia y Recuperación de Estado:**
     *   Se blindó `generateVisualReport()` con control de errores `try...catch` y una función `resetBtn()` garantizada que restaura el botón a `Generar PNG` y lo rehabilita de inmediato en cualquier flujo de éxito o error.
+
+### [Noviembre 2026] - Sección de Cobertura de Áreas Auditadas por Semana (`X/40 Áreas Auditadas`)
+*   **Catálogo Oficial de 40 Áreas Operativas (`OFFICIAL_OPERATIONAL_AREAS` y `getOfficialOperationalAreasCatalog`):**
+    *   Se consolidó el catálogo base de las **40 áreas operativas activas** de la planta (excluyendo áreas comunes no operativas como `Lobby`, `Monitores`, `Visitas`, `Oficinas` y locaciones dadas de baja como `Control tower` o `Rma vlp`).
+*   **Cálculo y Agrupación Semanal (`computeWeeklyAuditedAreas`):**
+    *   Calcula para cada semana del año (`Week XX` con su rango de fechas `DD Mes – DD Mes YYYY`) el total de áreas auditadas frente al catálogo (`X/40 áreas auditadas`), el porcentaje de cobertura semanal, el promedio de calificación 5S de la semana, la lista ordenada de áreas auditadas (con su calificación promedio `%` y fecha de auditoría) y la lista de áreas pendientes/no auditadas en esa semana.
+*   **Visualización en Dashboard y en Pestaña Control de Áreas (`renderWeeklyAuditedAreasSection`):**
+    *   **Tarjeta KPI Superior en Dashboard:** Se añadió la tarjeta `Áreas Auditadas (Sem.)` mostrando `X/40` de la semana más reciente con acceso rápido (scroll suave) hacia la sección semanal.
+    *   **Sección Interactiva en Dashboard (`#weekly-audited-areas-section`):** Incluye tira de resumen (Última Semana, Mayor Cobertura Semanal y Promedio por Semana), filtro por semana específica, buscador en tiempo real por nombre de área, opción para desplegar las áreas no auditadas de cada semana, exportación directa a imagen **PNG** (`exportWeeklyAuditedAreasPNG()`) y tarjetas semanales con chips interactivos que abren el detalle ejecutivo de cada área al hacer clic.
+    *   **Sub-vista en Pestaña `Areas` (`switchAreasSubView`):** Se agregó un selector en `Control de Áreas` para alternar entre `🏭 Catálogo de Áreas` y `📅 Áreas Auditadas por Semana`.
