@@ -2601,8 +2601,8 @@
                 <button class="btn-toggle-sidebar" onclick="toggleSidebar()" style="background:none; border:none; color:white; cursor:pointer; position: absolute; top: 0; right: 15px;" title="Minimizar Menú">
                     <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
                 </button>
-                <img src="./flex_logo.png" class="sidebar-logo" alt="Flex Logo" style="width: 80px; height: auto; margin-top: 25px;" />
-                <div class="sidebar-title" style="margin-top: 5px;">
+                <div class="sidebar-title" style="margin-top: 25px;">
+                    <div style="font-size: 20px; font-weight: 800; letter-spacing: 2px; margin-bottom: 4px;">AXIOM</div>
                     LeanView 5´S
                 </div>
             </div>
@@ -3347,7 +3347,7 @@
 
                         <!-- PISTA DE CARRERAS (MODO COMPETENCIA) -->
                         <section class="racetrack-container" id="competition-track-container">
-                            <h2 style="color: white; text-align: center; margin-bottom: 20px; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;">Copa 5S Flex</h2>
+                            <h2 style="color: white; text-align: center; margin-bottom: 20px; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;">Copa 5S Axiom</h2>
                             <!-- Los carriles se inyectarán aquí vía JS -->
                         </section>
 
@@ -3477,7 +3477,7 @@
             <div id="tv-slide-dashboard" class="tv-slide tv-active">
                 <div class="tv-dash-header">
                     <span class="tv-dash-title">📊 Dashboard 5S — Acciones y Métricas</span>
-                    <span class="tv-dash-logo">LeanView · Flex</span>
+                    <span class="tv-dash-logo">LeanView · Axiom</span>
                 </div>
                 <div class="tv-kpis-row">
                     <div class="tv-kpi-card score">
@@ -3595,7 +3595,7 @@
                         </div>
 
                         <div class="tv-notice-footer">
-                            <span id="tv-notice-shift-name">TURNO EN CURSO</span> · FLEX GUADALAJARA 5S
+                            <span id="tv-notice-shift-name">TURNO EN CURSO</span> · AXIOM GUADALAJARA 5S
                         </div>
                     </div>
                 </div>
@@ -6701,7 +6701,7 @@
             const url = URL.createObjectURL(blob);
             
             link.setAttribute('href', url);
-            link.setAttribute('download', `flex_acciones_activas_5S_${new Date().toISOString().slice(0,10)}.csv`);
+            link.setAttribute('download', `axiom_acciones_activas_5S_${new Date().toISOString().slice(0,10)}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
@@ -6742,13 +6742,13 @@
 
             const csvRows = [
                 ['AuditID', 'ActionID', 'Location', 'ResponseScore', 'ActionLogDepartament', 'ActionLogOwner', 'ActionLogStatus', 'ActionLogDueDate', 'ActionLogOpenDate', 'Comments'],
-                ['AUD-2026-001', 'ACT-101', 'Flex -> Building 1 -> Assembly -> L11 TOP', '3', 'Production', 'John Doe', 'Open', dMinus(-15), dMinus(5) + ' 08:00:00', 'Requires urgent clean-up, floor has oil spills.'],
-                ['AUD-2026-001', 'ACT-102', 'Flex -> Building 1 -> Assembly -> L11 TOP', '4', 'Maintenance', 'Jane Smith', 'Close', dMinus(-5), dMinus(12) + ' 09:30:00', 'Toolbox not in standard location. Checked and resolved.'],
-                ['AUD-2026-002', 'ACT-104', 'Flex -> Building 1 -> SMT -> L16', '1', 'Production', 'Carlos Ruiz', 'Overdue', dMinus(10), dMinus(40) + ' 10:00:00', 'ESD band test failed, "highly critical, needs retest \n immediately".'],
-                ['AUD-2026-002', 'ACT-106', 'Flex -> Building 1 -> SMT -> L16', '2', 'Maintenance', 'Luis Perez', 'Re-assigned', dMinus(-20), dMinus(22) + ' 11:00:00', 'Reassigned from Quality to Maintenance due to electrical issues.'],
-                ['AUD-2026-003', 'ACT-107', 'Flex -> Building 2 -> Logistics -> Incoming', '2', 'Logistics', 'Luis Perez', 'Waiting for approval', dMinus(-30), dMinus(15) + ' 12:00:00', 'Waiting for supervisor approval on new racks layout, "layout plan A, B, and C".'],
-                ['AUD-2026-003', 'ACT-108', 'Flex -> Building 2 -> Logistics -> Incoming', '4', 'EHS', 'Ana Martinez', '', dMinus(-1), dMinus(8) + ' 13:00:00', ''],
-                ['AUD-2026-004', 'ACT-110', 'Flex -> Building 2 -> Quality -> Cuarto Limpio', '4', 'Quality', 'Maria Gomez', 'Overdue', dMinus(5), dMinus(35) + ' 14:00:00', 'Calibrations overdue by 2 weeks. Audit finding #12.']
+                ['AUD-2026-001', 'ACT-101', 'Axiom -> Building 1 -> Assembly -> L11 TOP', '3', 'Production', 'John Doe', 'Open', dMinus(-15), dMinus(5) + ' 08:00:00', 'Requires urgent clean-up, floor has oil spills.'],
+                ['AUD-2026-001', 'ACT-102', 'Axiom -> Building 1 -> Assembly -> L11 TOP', '4', 'Maintenance', 'Jane Smith', 'Close', dMinus(-5), dMinus(12) + ' 09:30:00', 'Toolbox not in standard location. Checked and resolved.'],
+                ['AUD-2026-002', 'ACT-104', 'Axiom -> Building 1 -> SMT -> L16', '1', 'Production', 'Carlos Ruiz', 'Overdue', dMinus(10), dMinus(40) + ' 10:00:00', 'ESD band test failed, "highly critical, needs retest \n immediately".'],
+                ['AUD-2026-002', 'ACT-106', 'Axiom -> Building 1 -> SMT -> L16', '2', 'Maintenance', 'Luis Perez', 'Re-assigned', dMinus(-20), dMinus(22) + ' 11:00:00', 'Reassigned from Quality to Maintenance due to electrical issues.'],
+                ['AUD-2026-003', 'ACT-107', 'Axiom -> Building 2 -> Logistics -> Incoming', '2', 'Logistics', 'Luis Perez', 'Waiting for approval', dMinus(-30), dMinus(15) + ' 12:00:00', 'Waiting for supervisor approval on new racks layout, "layout plan A, B, and C".'],
+                ['AUD-2026-003', 'ACT-108', 'Axiom -> Building 2 -> Logistics -> Incoming', '4', 'EHS', 'Ana Martinez', '', dMinus(-1), dMinus(8) + ' 13:00:00', ''],
+                ['AUD-2026-004', 'ACT-110', 'Axiom -> Building 2 -> Quality -> Cuarto Limpio', '4', 'Quality', 'Maria Gomez', 'Overdue', dMinus(5), dMinus(35) + ' 14:00:00', 'Calibrations overdue by 2 weeks. Audit finding #12.']
             ];
 
             let csvContent = '\uFEFF';
@@ -11666,7 +11666,7 @@
                 zCtx.font = 'bold 15px "Segoe UI", sans-serif';
                 zCtx.fillStyle = '#005A9C';
                 zCtx.textAlign = 'right';
-                zCtx.fillText("FLEX LEANVIEW 5'S", zWidth - 40, 42);
+                zCtx.fillText("AXIOM LEANVIEW 5'S", zWidth - 40, 42);
 
                 zCtx.font = 'bold 24px "Segoe UI", sans-serif';
                 zCtx.fillStyle = '#0F172A';
@@ -11675,7 +11675,7 @@
 
                 zCtx.font = '14px "Segoe UI", sans-serif';
                 zCtx.fillStyle = '#64748B';
-                zCtx.fillText(`Departamento: ${reportDept || 'Todos los Departamentos'}   |   Corte: ${todayStr}   |   LeanView 5'S Flex`, 40, 78);
+                zCtx.fillText(`Departamento: ${reportDept || 'Todos los Departamentos'}   |   Corte: ${todayStr}   |   LeanView 5'S Axiom`, 40, 78);
 
                 zCtx.strokeStyle = '#E2E8F0';
                 zCtx.lineWidth = 1;
@@ -11766,7 +11766,7 @@
             fCtx.font = 'bold 15px "Segoe UI", sans-serif';
             fCtx.fillStyle = '#005A9C';
             fCtx.textAlign = 'right';
-            fCtx.fillText("FLEX LEANVIEW 5'S", canvasWidth - 40, 42);
+            fCtx.fillText("AXIOM LEANVIEW 5'S", canvasWidth - 40, 42);
 
             // 4. TÃ­tulo principal del reporte
             fCtx.font = 'bold 24px "Segoe UI", sans-serif';
@@ -13714,7 +13714,7 @@
                         "Les comparto las acciones generadas durante el Gemba Walk realizado el día de hoy.",
                         "Les recordamos que estas acciones deben atenderse con la máxima prioridad para asegurar",
                         "que nuestras áreas reflejen un ambiente profesional, seguro y alineado con los",
-                        "estándares de excelencia de Flex.",
+                        "estándares de excelencia de Axiom.",
                         "Gracias por su apoyo y seguimiento oportuno."
                     ];
                     
@@ -13747,7 +13747,7 @@
                     }
                     
                     // Unir todo el mensaje en un solo string para hacer wrap correctamente
-                    const fullMsg = "Buenos días. Les comparto las acciones generadas durante el Gemba Walk realizado el día de hoy. Les recordamos que estas acciones deben atenderse con la máxima prioridad para asegurar que nuestras áreas reflejen un ambiente profesional, seguro y alineado con los estándares de excelencia de Flex. Gracias por su apoyo y seguimiento oportuno.";
+                    const fullMsg = "Buenos días. Les comparto las acciones generadas durante el Gemba Walk realizado el día de hoy. Les recordamos que estas acciones deben atenderse con la máxima prioridad para asegurar que nuestras áreas reflejen un ambiente profesional, seguro y alineado con los estándares de excelencia de Axiom. Gracias por su apoyo y seguimiento oportuno.";
                     
                     textY = drawWrappedText(fullMsg, 50, textY, width - 100, baseFont + 15);
                     
