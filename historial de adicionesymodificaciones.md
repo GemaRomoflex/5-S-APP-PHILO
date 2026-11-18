@@ -289,3 +289,25 @@ La base de datos (Supabase) almacena exclusivamente métricas, hallazgos y audit
     *   **2. Tarjetas de Resumen KPI:** Resumen rápido de la última semana, semana con mayor cobertura histórica y promedio semanal de cobertura.
     *   **3. Desglose Detallado por Semana:** Lista completa de áreas auditadas por cada semana con selector de semana, buscador en tiempo real, chips de áreas interactivos (que abren su detalle ejecutivo y permiten volver con un clic) y visualización de áreas pendientes.
     *   **4. Exportación en Alta Definición:** Botón `📸 Exportar PNG` (`exportWeeklyAuditedAreasPNG`) para compartir el reporte de cobertura.
+
+### [Noviembre 2026] - Rebranding Axiom, Eliminación de Modo Competencia, Randomización de Calendario y Acciones por Auditor
+*   **1. Eliminación Definitiva del Modo Competencia:**
+    *   Se eliminó por completo el "Modo Competencia" (circuito estilo Mario Kart, pistas de carreras, botones de activación, podio de premiación, sprites de karts y scripts asociados en Modo TV y Dashboard principal).
+    *   Se depuraron todas las referencias CSS (`[data-theme="competition"]`, `.racetrack-container`, `.track-lane`, `.progress-trail`, `.podium-container`), variables de estado (`isCompetitionMode`) y funciones (`toggleCompetitionMode()`, `renderCompetitionRace()`).
+*   **2. Randomización y Reparto de Auditorías en Calendario con Frecuencia Dinámica:**
+    *   En el modal `#auto-scheduler-modal` se introdujo la selección de frecuencia de programación: **Semanales (1 semana)**, **Quincenales (2 semanas)** y **Mensuales (4 semanas / Mes completo)**.
+    *   Se implementó la opción de distribución entre **Rotación Oficial Continua** (respetando secuencia histórica) y **Randomizar / Aleatorio** (shuffle balanceado de áreas por semana).
+    *   El motor de generación calcula automáticamente los rangos de fechas de inicio a fin para cada semana del periodo seleccionado, renderiza una vista previa interactiva con tarjetas individuales por semana y persiste en lote las asignaciones en Supabase (`events` y `audit_schedules`).
+*   **3. Rebranding Axiom (Negro, Gris y Verde Bosque):**
+    *   Se migró la identidad corporativa de Flex a Axiom, reemplazando todos los tonos azules (`#005A9C`, `#0070C0`, `#009ADD`, `#0284c7`, `#3b82f6`) por la paleta oficial: **Negro Carbón (`#121212`)**, **Gris Neutro (`#f4f5f7` / `#e5e7eb` / `#6b7280`)** y **Verde Bosque (`#1e5631` / `#2d6a4f`)**.
+    *   Se actualizaron las variables CSS raíz (`:root`), tarjetas de indicadores KPI, fondos y barras de progreso del Modo TV, gráficas de Chart.js (promedios, acciones en proceso, áreas evaluadas), cabeceras de reportes visuales de canvas y comunicados.
+    *   El auditor Jose en el calendario se actualizó de azul `#0070C0` a verde bosque `#1e5631`.
+*   **4. Nueva Sección: "Acciones por Auditor" en Auditorías 5S:**
+    *   **Detección y Esteganografía desde CSV:** En `mapHeaders()` y `processFile()`, se implementó la extracción automática del nombre del auditor a partir de la **columna F (índice 5)** o **columna P (índice 15)** (así como encabezados que contengan palabras clave como `Auditor`, `Inspector`, `Audited By`).
+    *   Conforme a las Reglas de Arquitectura 1 y 2, el auditor se persiste en Supabase dentro de `comments` mediante la etiqueta esteganográfica `\nAUDITOR:${nombreAuditor}`, limpiándose de forma transparente al visualizarse mediante `getCleanComment()`.
+    *   Al cargar desde Supabase en `loadFromSupabase()`, se extrae `item.auditorName` para su uso en memoria.
+    *   **Interfaz de Usuario (`#section-actions-by-auditor`):** Ubicada dentro de la vista de Auditorías Cruzadas 5S y accesible directamente desde el nuevo elemento de navegación `👥 Acciones por Auditor` (`#nav-actions-by-auditor`) en la sidebar.
+    *   **Funcionalidades:**
+        *   Tarjetas separadas por cada auditor con degradado Axiom (negro carbón a verde bosque), avatar e indicadores de métricas individuales (Total de acciones, Abiertas, Vencidas, Cerradas y % de Cierre).
+        *   Tablas detalladas con ID de Acción, Área, Hallazgo/Acción limpio, Dueño responsable, Fechas de apertura/compromiso, badge de estatus con colores temáticos y enlace a fotografía de evidencia.
+        *   Filtros interactivos en tiempo real por Auditor específico, Estatus (Abiertas, Vencidas, Cerradas) y campo de búsqueda predictiva.
