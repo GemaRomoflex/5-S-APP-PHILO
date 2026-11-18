@@ -2853,12 +2853,6 @@
 
                     </div>
                 </div>
-                                </button>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
 
                 <!-- VISTA CONTROL DE ÁREAS -->
                 <div id="view-areas" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
@@ -3736,14 +3730,53 @@
                 .trim();
         }
 
+        function isValidPersonName(str) {
+            if (!str || typeof str !== 'string') return false;
+            const s = str.trim();
+            if (s === '' || s.toLowerCase() === 'null' || s.toLowerCase() === 'undefined' || s.toLowerCase() === 'n/a' || s.toLowerCase() === 'sin asignar' || s.toLowerCase() === 'sin fecha') return false;
+            if (!isNaN(s)) return false; // Solo números
+            if (/^\d{1,4}[-/]\d{1,2}[-/]\d{1,4}/.test(s)) return false; // Fechas
+            if (/^\d{1,2}:\d{2}/.test(s)) return false; // Horas
+            const lower = s.toLowerCase();
+            if (['open', 'closed', 'close', 'overdue', 'cerrado', 'cerrada', 're-assigned', 'waiting for approval', 'in process', 'en proceso'].includes(lower)) return false;
+            return true;
+        }
+
         function getActionAuditor(item) {
             if (!item) return 'Sin Auditor Asignado';
-            if (item.auditorName && String(item.auditorName).trim()) return String(item.auditorName).trim();
-            if (item.auditor && String(item.auditor).trim()) return String(item.auditor).trim();
+            if (item.auditorName && String(item.auditorName).trim() && item.auditorName !== 'Sin Auditor Asignado') return String(item.auditorName).trim();
+            if (item.auditor && String(item.auditor).trim() && item.auditor !== 'Sin Auditor Asignado') return String(item.auditor).trim();
             const rawComments = String(item.comments || '');
             const match = rawComments.match(/AUDITOR:([^\r\n]+)/);
             if (match && match[1] && match[1].trim()) {
                 return match[1].trim();
+            }
+            // Fallback 1: Buscar si en calendarEvents hay evento para esta área/fecha
+            const evList = (window.calendarEvents && window.calendarEvents.length > 0) ? window.calendarEvents : (typeof calendarEvents !== 'undefined' ? calendarEvents : []);
+            if (evList && evList.length > 0 && item.cleanLocation) {
+                const normLoc = item.cleanLocation.toLowerCase().trim();
+                const itemDate = item.openDate ? String(item.openDate).split(' ')[0] : '';
+                const matchEv = evList.find(ev => {
+                    if (!ev.auditor || !ev.area_name) return false;
+                    const evArea = ev.area_name.toLowerCase().trim();
+                    const areaMatch = evArea === normLoc || evArea.includes(normLoc) || normLoc.includes(evArea);
+                    if (!areaMatch) return false;
+                    if (itemDate && ev.date) return ev.date === itemDate;
+                    return true;
+                });
+                if (matchEv && matchEv.auditor && matchEv.auditor.trim()) {
+                    return matchEv.auditor.trim();
+                }
+            }
+            // Fallback 2: Si el owner contiene un auditor estándar (Gema, Alisson, Jose, Montse)
+            if (item.owner && item.owner !== 'Sin Asignar' && item.owner !== 'N/A' && item.owner.trim()) {
+                const o = item.owner.trim();
+                const lowerO = o.toLowerCase();
+                const knownAuditors = ['gema', 'alisson', 'jose', 'montse'];
+                const matched = knownAuditors.find(ka => lowerO.includes(ka));
+                if (matched) {
+                    return matched.charAt(0).toUpperCase() + matched.slice(1);
+                }
             }
             return 'Sin Auditor Asignado';
         }
@@ -4025,16 +4058,17 @@
             if (tabId === 'data') {
                 document.getElementById('view-data').classList.remove('hidden');
                 document.getElementById('main-header').classList.remove('hidden');
-            } else if (tabId === 'dashboard' || tabId === 'gemba-dashboard') {
+            } else if (tabId === 'dashboard') {
                 document.getElementById('view-dashboard').classList.remove('hidden');
                 document.getElementById('dashboard-content').classList.remove('hidden');
                 updateDashboard();
-            } else if (tabId === 'actions' || tabId === 'gemba-actions') {
+            } else if (tabId === 'actions') {
+                currentAppMode = '5s';
                 document.getElementById('view-dashboard').classList.remove('hidden');
+                document.getElementById('dashboard-content').classList.add('hidden');
                 document.getElementById('view-actions-editor').classList.remove('hidden');
                 initActionsEditor();
             } else if (tabId === 'calendar') {
-                document.getElementById('view-dashboard').classList.remove('hidden');
                 document.getElementById('view-calendar').classList.remove('hidden');
                 initCalendar();
             } else if (tabId === 'areas') {
@@ -4044,18 +4078,35 @@
                 document.getElementById('view-weekly-audits').classList.remove('hidden');
                 renderWeeklyAuditedCoverageChart();
                 renderWeeklyAuditedAreasSection();
-            } else if (tabId === 'gemba') {
-                document.getElementById('view-dashboard').classList.remove('hidden');
-                document.getElementById('view-gemba-dashboard').classList.remove('hidden');
-                document.getElementById('view-gemba-admin').classList.add('hidden');
-                document.getElementById('view-gemba-participant').classList.add('hidden');
-                populateGembaAreasSelect(); // Llenado dinámico
-            } else if (tabId === 'actions-by-auditor') {
+            } else if (tabId === 'gemba-dashboard') {
+                currentAppMode = 'gemba';
                 document.getElementById('view-dashboard').classList.remove('hidden');
                 document.getElementById('dashboard-content').classList.add('hidden');
                 document.getElementById('view-actions-editor').classList.add('hidden');
-                document.getElementById('view-calendar').classList.add('hidden');
-                document.getElementById('view-areas').classList.add('hidden');
+                document.getElementById('view-gemba-dashboard').classList.remove('hidden');
+                document.getElementById('view-gemba-admin').classList.add('hidden');
+                document.getElementById('view-gemba-participant').classList.add('hidden');
+                initGembaDashboard();
+            } else if (tabId === 'gemba-actions') {
+                currentAppMode = 'gemba';
+                document.getElementById('view-dashboard').classList.remove('hidden');
+                document.getElementById('dashboard-content').classList.add('hidden');
+                document.getElementById('view-gemba-dashboard').classList.add('hidden');
+                document.getElementById('view-gemba-admin').classList.add('hidden');
+                document.getElementById('view-gemba-participant').classList.add('hidden');
+                document.getElementById('view-actions-editor').classList.remove('hidden');
+                initActionsEditor();
+            } else if (tabId === 'gemba') {
+                currentAppMode = 'gemba';
+                document.getElementById('view-dashboard').classList.remove('hidden');
+                document.getElementById('dashboard-content').classList.add('hidden');
+                document.getElementById('view-actions-editor').classList.add('hidden');
+                document.getElementById('view-gemba-dashboard').classList.remove('hidden');
+                document.getElementById('view-gemba-admin').classList.add('hidden');
+                document.getElementById('view-gemba-participant').classList.add('hidden');
+                populateGembaAreasSelect();
+                initGembaDashboard();
+            } else if (tabId === 'actions-by-auditor') {
                 document.getElementById('view-cross-audit').classList.remove('hidden');
                 hideCrossAuditForm();
                 if (typeof renderActionsByAuditorSection === 'function') {
@@ -4067,11 +4118,6 @@
                 }, 100);
             } else {
                 // Cualquier otra pestaña (audits)
-                document.getElementById('view-dashboard').classList.remove('hidden');
-                document.getElementById('dashboard-content').classList.add('hidden');
-                document.getElementById('view-actions-editor').classList.add('hidden');
-                document.getElementById('view-calendar').classList.add('hidden');
-                document.getElementById('view-areas').classList.add('hidden');
                 document.getElementById('view-cross-audit').classList.remove('hidden');
                 
                 // Si la función ya está definida, iniciar el formulario y el landing
@@ -4182,6 +4228,11 @@
 
             // Flujo Normal
             if (data && data.length > 0) {
+                // Pre-cargar eventos de calendario para poder correlacionar auditores
+                try {
+                    await loadCalendarEvents();
+                } catch(e) { console.warn("No se pudo pre-cargar calendario:", e); }
+
                 // Mapear los datos para corregir problemas de case-sensitivity (minúsculas de Supabase)
                 const mappedData = data.map(item => {
                     let oDate = item.openDate !== undefined ? item.openDate : item.opendate;
@@ -4196,6 +4247,12 @@
                     if (!auditor && item.comments) {
                         const matchAuditor = String(item.comments).match(/AUDITOR:([^\r\n]+)/);
                         if (matchAuditor && matchAuditor[1]) auditor = matchAuditor[1].trim();
+                    }
+                    if (!auditor) {
+                        const fallbackAuditor = getActionAuditor(item);
+                        if (fallbackAuditor && fallbackAuditor !== 'Sin Auditor Asignado') {
+                            auditor = fallbackAuditor;
+                        }
                     }
                     
                     // Eliminar la 'T' del tiempo universal para compatibilidad con todos los reportes
@@ -4331,18 +4388,28 @@
 
                     // Extracción de Auditor (Columna F / índice 5 o Columna P / índice 15)
                     let auditorVal = '';
-                    if (headerMap.auditor !== -1) {
-                        auditorVal = getValue(headerMap.auditor, '');
+                    if (headerMap.auditor !== -1 && row[headerMap.auditor] && isValidPersonName(row[headerMap.auditor])) {
+                        auditorVal = row[headerMap.auditor].trim();
                     }
                     if (!auditorVal) {
-                        if (row.length > 15 && row[15] && row[15].trim()) {
-                            auditorVal = row[15].trim();
-                        } else if (row.length > 5 && row[5] && row[5].trim() && headerMap.owner !== 5) {
-                            auditorVal = row[5].trim();
+                        const valP = (row.length > 15 && row[15]) ? row[15].trim() : '';
+                        const valF = (row.length > 5 && row[5]) ? row[5].trim() : '';
+                        if (isValidPersonName(valP)) {
+                            auditorVal = valP;
+                        } else if (isValidPersonName(valF)) {
+                            auditorVal = valF;
+                        } else if (valP) {
+                            auditorVal = valP;
+                        } else if (valF) {
+                            auditorVal = valF;
                         }
                     }
-                    if (auditorVal && !comments.includes('AUDITOR:')) {
-                        comments += `\nAUDITOR:${auditorVal}`;
+                    if (auditorVal) {
+                        if (comments.includes('AUDITOR:')) {
+                            comments = comments.replace(/AUDITOR:[^\r\n]+/, `AUDITOR:${auditorVal}`);
+                        } else {
+                            comments += `\nAUDITOR:${auditorVal}`;
+                        }
                     }
 
                     if (isActionClosed({ status }) && closeDateClean) {
@@ -4373,7 +4440,9 @@
                         status: status,
                         dueDate: dueDate,
                         openDate: openDate,
-                        comments: comments
+                        comments: comments,
+                        auditorName: auditorVal,
+                        auditor: auditorVal
                     };
                 }).filter(item => item !== null);
 
@@ -4493,9 +4562,9 @@
                 } else if (headers.length > 5 && norm[5] && (norm[5].includes('audit') || norm[5].includes('user') || norm[5].includes('name') || norm[5].includes('nombre'))) {
                     auditorIdx = 5;
                 } else if (headers.length > 15) {
-                    auditorIdx = 15; // Columna P
-                } else if (headers.length > 5 && map.owner !== 5) {
-                    auditorIdx = 5;  // Columna F
+                    auditorIdx = 15; // Regla del usuario: Columna P
+                } else if (headers.length > 5) {
+                    auditorIdx = 5;  // Regla del usuario: Columna F
                 }
             }
             map.auditor = auditorIdx;
@@ -4505,7 +4574,9 @@
             if (map.location === -1) map.location = 2;
             if (map.score === -1) map.score = 3;
             if (map.dept === -1) map.dept = 4;
-            if (map.owner === -1) map.owner = 5;
+            if (map.owner === -1) {
+                map.owner = (map.auditor === 5) ? -1 : 5;
+            }
             if (map.status === -1) map.status = 6;
             if (map.date === -1) map.date = 7;
             if (map.openDate === -1) map.openDate = headers.length - 1 > 7 ? headers.length - 1 : 8;
@@ -13801,19 +13872,26 @@
         }
 
         function initGembaDashboard() {
-            document.getElementById('view-gemba-admin').classList.add('hidden');
-            document.getElementById('view-gemba-participant').classList.add('hidden');
+            const adminV = document.getElementById('view-gemba-admin');
+            if (adminV) adminV.classList.add('hidden');
+            const partV = document.getElementById('view-gemba-participant');
+            if (partV) partV.classList.add('hidden');
             
-            const gembaData = allAuditData.filter(d => d.department === 'Gemba');
+            const gembaData = (allAuditData || []).filter(d => d.department === 'Gemba' || d.department === 'Gemba Walk');
             
             // Render Table
             const tbody = document.querySelector('#gemba-actions-table tbody');
-            tbody.innerHTML = '';
+            if (tbody) tbody.innerHTML = '';
             
             let cats = {};
             let pris = { 'Baja': 0, 'Media': 0, 'Alta': 0 };
 
+            if (gembaData.length === 0 && tbody) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 30px; color: var(--color-text-muted); font-size: 14px;">No se encontraron acciones registradas para Gemba Walks.</td></tr>';
+            }
+
             gembaData.forEach(item => {
+                if (!tbody) return;
                 const tr = document.createElement('tr');
                 
                 let cat = 'N/A';
@@ -13827,7 +13905,7 @@
                 
                 let justAction = rawAction.replace(/\[GEMBA - .*?\] Prioridad: .*?\n/, '');
                 
-                if (item.status !== 'Closed' && item.status !== 'Close' && !item.status.includes('cerrad')) {
+                if (item.status !== 'Closed' && item.status !== 'Close' && !String(item.status || '').toLowerCase().includes('cerrad')) {
                     cats[cat] = (cats[cat] || 0) + 1;
                     if (pris[pri] !== undefined) pris[pri]++;
                 }
@@ -13844,48 +13922,57 @@
                     justAction = justAction.replace(/\nEVIDENCE:.*/, '');
                 }
 
+                const actIdShort = (item.actionId || '').substring(0, 10);
+                const openD = (item.openDate || '').split(' ')[0] || '-';
+
                 tr.innerHTML = `
-                    <td>${item.actionId.substring(0,10)}<br><small style="color:gray;">${item.openDate.split(' ')[0]}</small></td>
-                    <td>${item.cleanLocation}</td>
+                    <td>${actIdShort}<br><small style="color:gray;">${openD}</small></td>
+                    <td>${item.cleanLocation || 'N/A'}</td>
                     <td>${cat}</td>
                     <td><span style="background:${badgeColor}; color:white; padding:3px 8px; border-radius:12px; font-size:12px;">${pri}</span></td>
                     <td style="max-width: 250px;">${justAction}</td>
                     <td>${photosHtml}</td>
-                    <td>${item.status}</td>
+                    <td>${item.status || 'Open'}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
             // Render Category Chart
-            const ctxCat = document.getElementById('chart-gemba-category').getContext('2d');
-            if (chartGembaCat) chartGembaCat.destroy();
-            chartGembaCat = new Chart(ctxCat, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(cats),
-                    datasets: [{
-                        data: Object.values(cats),
-                        backgroundColor: ['#1e5631', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
-                    }]
-                },
-                options: { maintainAspectRatio: false, plugins: { datalabels: { color: '#fff', font: { weight: 'bold' } } } }
-            });
+            const canvasCat = document.getElementById('chart-gemba-category');
+            if (canvasCat) {
+                const ctxCat = canvasCat.getContext('2d');
+                if (chartGembaCat) chartGembaCat.destroy();
+                chartGembaCat = new Chart(ctxCat, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(cats).length > 0 ? Object.keys(cats) : ['Sin Categoría'],
+                        datasets: [{
+                            data: Object.values(cats).length > 0 ? Object.values(cats) : [0],
+                            backgroundColor: ['#1e5631', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+                        }]
+                    },
+                    options: { maintainAspectRatio: false, plugins: { datalabels: { color: '#fff', font: { weight: 'bold' } } } }
+                });
+            }
 
             // Render Priority Chart
-            const ctxPri = document.getElementById('chart-gemba-priority').getContext('2d');
-            if (chartGembaPri) chartGembaPri.destroy();
-            chartGembaPri = new Chart(ctxPri, {
-                type: 'bar',
-                data: {
-                    labels: ['Alta', 'Media', 'Baja'],
-                    datasets: [{
-                        label: 'Abiertas',
-                        data: [pris['Alta'], pris['Media'], pris['Baja']],
-                        backgroundColor: ['#ef4444', '#f59e0b', '#10b981']
-                    }]
-                },
-                options: { maintainAspectRatio: false, plugins: { datalabels: { color: '#fff', font: { weight: 'bold' }, anchor: 'center', align: 'center' }, legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-            });
+            const canvasPri = document.getElementById('chart-gemba-priority');
+            if (canvasPri) {
+                const ctxPri = canvasPri.getContext('2d');
+                if (chartGembaPri) chartGembaPri.destroy();
+                chartGembaPri = new Chart(ctxPri, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Alta', 'Media', 'Baja'],
+                        datasets: [{
+                            label: 'Abiertas',
+                            data: [pris['Alta'], pris['Media'], pris['Baja']],
+                            backgroundColor: ['#ef4444', '#f59e0b', '#10b981']
+                        }]
+                    },
+                    options: { maintainAspectRatio: false, plugins: { datalabels: { color: '#fff', font: { weight: 'bold' }, anchor: 'center', align: 'center' }, legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+                });
+            }
         }
 
         async function generateGembaReport(dateRaw, actions, customMsg = "Se comparten acciones generadas durante el Gemba, favor de darles prioridad según su nivel.") {

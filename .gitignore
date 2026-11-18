@@ -3,3 +3,6 @@ owners_temp.json
 *.xlsx
 temp_git.log
 Directorio_owners_extracted/
+check_*.ps1
+diff.patch
+

@@ -311,3 +311,23 @@ La base de datos (Supabase) almacena exclusivamente métricas, hallazgos y audit
         *   Tarjetas separadas por cada auditor con degradado Axiom (negro carbón a verde bosque), avatar e indicadores de métricas individuales (Total de acciones, Abiertas, Vencidas, Cerradas y % de Cierre).
         *   Tablas detalladas con ID de Acción, Área, Hallazgo/Acción limpio, Dueño responsable, Fechas de apertura/compromiso, badge de estatus con colores temáticos y enlace a fotografía de evidencia.
         *   Filtros interactivos en tiempo real por Auditor específico, Estatus (Abiertas, Vencidas, Cerradas) y campo de búsqueda predictiva.
+
+### [Noviembre 2026] - Corrección de Vistas en Blanco (DOM Nesting / `switchTab`) y Asignación de Auditores desde Columnas F y P
+*   **1. Corrección de Vistas en Blanco (`Dashboard`, `Actions Editor`, `Áreas` y `Gemba`):**
+    *   **Causa Raíz de Estructura DOM:** En `index.html` (líneas 2854-2861), se detectaron y removieron etiquetas de cierre duplicadas (`</button></div></div></div></div>`) dejadas residualmente al cerrar el modal de auto-calendarización. Estas etiquetas cerraban anticipadamente los contenedores estructurales principales (`.dashboard-container`, `.main-content` y `.app-layout`), expulsando del viewport a `#view-areas`, `#view-weekly-audits`, `#view-dashboard`, `#view-actions-editor` y los tres módulos de Gemba (`#view-gemba-dashboard`, `#view-gemba-admin`, `#view-gemba-participant`), provocando que se quedaran completamente en blanco al no heredar el layout ni el flujo de pantalla.
+    *   **Reestructuración y Enrutamiento en `switchTab(tabId)`:**
+        *   Se corrigió el enrutamiento para que cada pestaña active de forma exclusiva e independiente su propio contenedor de vista y oculte limpiamente los demás.
+        *   `dashboard`: activa `#view-dashboard` y `#dashboard-content`, invocando `updateDashboard()`.
+        *   `actions`: activa `#view-dashboard` y revela `#view-actions-editor`, ocultando `#dashboard-content` e iniciando `initActionsEditor()`.
+        *   `areas`: activa `#view-areas` e invoca `initAreasList()`.
+        *   `calendar`: activa únicamente `#view-calendar` e inicia `initCalendar()`, sin acoplar `#view-dashboard`.
+        *   `gemba-dashboard`: activa `#view-dashboard` y revela de forma dedicada `#view-gemba-dashboard` (ocultando `#dashboard-content` de 5S), llamando a `initGembaDashboard()`.
+        *   `gemba-actions`: activa `#view-actions-editor` en modo `currentAppMode = 'gemba'` e inicia `initActionsEditor()`.
+        *   `gemba`: activa `#view-gemba-dashboard`, poblando los selectores con `populateGembaAreasSelect()` e inicializando `initGembaDashboard()`.
+        *   `actions-by-auditor` y `audits`: activan de forma limpia `#view-cross-audit` sin acoplar contenedores ajenos.
+*   **2. Corrección y Fortalecimiento en Detección de Auditores (Columnas F y P):**
+    *   **Corrección en `mapHeaders()`:** Se eliminó la condición errónea `&& map.owner !== 5` que bloqueaba por completo la asignación de la columna F (índice 5) como auditor. Ahora se asigna la columna P (índice 15) o F (índice 5) respetando la directriz explícita del usuario.
+    *   **Extracción Robusta en `processFile()`:** Se incorporó la función validadora `isValidPersonName()` para verificar si el contenido de la columna P o F corresponde a un nombre de persona legítimo (descartando números de score, fechas, horas, estatus u omitidos). Si la columna P tiene un nombre válido, se extrae como Auditor; de lo contrario o en archivos de menos columnas, se extrae de la columna F. El auditor se inyecta en `comments` bajo la etiqueta esteganográfica `\nAUDITOR:${auditorVal}` y se persiste en Supabase.
+    *   **Correlación y Fallback Inteligente para Acciones Existentes:**
+        *   En `loadFromSupabase()`, se pre-cargan los eventos del calendario (`await loadCalendarEvents()`) al iniciar la app.
+        *   En `getActionAuditor(item)`, si una acción histórica no tiene la etiqueta `AUDITOR:` en sus comentarios, el sistema correlaciona el área y fecha de apertura de la acción con `calendar_events` para obtener el auditor que realizó la auditoría, o extrae el nombre si el auditor fue cargado en la columna de responsable (`item.owner`).
