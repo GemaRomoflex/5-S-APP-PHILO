@@ -332,13 +332,22 @@ La base de datos (Supabase) almacena exclusivamente métricas, hallazgos y audit
         *   En `loadFromSupabase()`, se pre-cargan los eventos del calendario (`await loadCalendarEvents()`) al iniciar la app.
         *   En `getActionAuditor(item)`, si una acción histórica no tiene la etiqueta `AUDITOR:` en sus comentarios, el sistema correlaciona el área y fecha de apertura de la acción con `calendar_events` para obtener el auditor que realizó la auditoría, o extrae el nombre si el auditor fue cargado en la columna de responsable (`item.owner`).
 
-### [Noviembre 2026] - Calendario con Auditorías Quincenales por Área y Sustitución de Alisson por Montserrat en Binas
-*   **1. Frecuencia Quincenal de Auditorías por Área:**
-    *   **Enfoque Operativo Quincenal:** Para asegurar que cada área y sector sea auditado estrictamente cada 14-15 días (frecuencia quincenal solicitada), el motor de calendarización (`#auto-scheduler-modal` y función `generateAutoSchedPreview`) adoptó **Quincenales (2 Semanas)** como opción predeterminada y activa.
-    *   **Estructura del Periodo Quincenal / Mensual:**
-        *   **Semanas de Auditoría Operativa (Semanas 1 y 3):** Se programan los sectores activos en las 3 binas rotativas (Lunes: Sectores 1, 2, 3, 4, 5, 7; Viernes: Tool Room; primer lunes del mes: Sectores 6 y 8).
-        *   **Semanas de Seguimiento y Cierre (Semanas 2 y 4):** No se programan auditorías de áreas nuevas, estableciendo una semana dedicada al seguimiento, verificación en piso y cierre formal de hallazgos, garantizando la periodicidad quincenal de cada línea o sector.
-    *   **Tablero de Previsualización (`renderAutoSchedPreviewBoard`):** En las semanas de seguimiento se renderiza la cabecera `"🌿 Semana X (Seguimiento y Cierre de Hallazgos) - Intervalo Quincenal Cumplido"` y en cada día el indicador `"Seguimiento / Sin auditorías"`.
+### [Noviembre 2026] - Calendario con Auditorías Quincenales por Área con Actividad Semanal Continua (Lote 1 y 2) y Asignación de Montserrat
+*   **1. Frecuencia Quincenal por Área con Auditorías Todas las Semanas:**
+    *   **Clarificación y Enfoque de Distribución Continua:** Las auditorías de cada sector/área son quincenales (cada sector se audita exactamente cada 14 días), pero el equipo mantiene auditorías activas todas las semanas. Para lograr esto sin sobrecargar a los auditores ni dejar semanas en blanco, los sectores de las 3 binas se distribuyeron equitativamente en dos lotes quincenales alternos:
+        *   **Lote 1 (Semana A):**
+            *   Lunes: Sector 1 (Bina A), Sector 2 (Bina B), Sector 5 (Bina C) + Sector 6 (Mensual si aplica).
+            *   Viernes: Tool Room (Bina A).
+        *   **Lote 2 (Semana B):**
+            *   Lunes: Sector 3 (Bina A), Sector 4 (Bina B), Sector 7 (Bina C) + Sector 8 (Mensual si aplica).
+    *   **Resultado Operativo:** Cada semana hay entre 3 y 5 auditorías programadas, y cada área o sector individual tiene su ciclo quincenal riguroso (ej. Sector 1 en Sem 1 y Sem 3; Sector 3 en Sem 2 y Sem 4).
+    *   **Actualización en Base de Datos (Supabase):**
+        *   Los eventos de `calendar_events` se redistribuyeron por lotes:
+            *   23 de Noviembre: Lote 1 (Sectores 1, 2, 5, 6) + 27 de Noviembre (Tool Room).
+            *   30 de Noviembre: Lote 2 (Sectores 3, 4, 7, 8).
+            *   7 de Diciembre: Lote 1 (Sectores 1, 2, 5) + 11 de Diciembre (Tool Room).
+            *   14 de Diciembre: Lote 2 (Sectores 3, 4, 7).
+    *   **Tablero de Previsualización (`renderAutoSchedPreviewBoard`):** Cada semana se etiqueta claramente como `Lote 1: Sectores 1, 2, 5 + Tool Room` o `Lote 2: Sectores 3, 4, 7`, mostrando a los 3 auditores activos con carga balanceada todas las semanas.
 *   **2. Sustitución de Alisson por Montserrat en Asignaciones de Auditorías:**
     *   **Exclusión de Alisson y Asignación de Montserrat:** Alisson queda completamente excluida de las asignaciones de auditoría automáticas y manuales por defecto, quedando el equipo oficial de auditores integrado por **Montserrat**, **Jose** y **Gema**.
     *   **Base de Datos en Supabase (`calendar_events`):**

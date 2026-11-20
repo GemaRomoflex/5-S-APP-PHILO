@@ -2681,7 +2681,7 @@
                                 <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 20px;">⚡</div>
                                 <div>
                                     <h3 style="margin: 0; font-size: 19px; font-weight: 700; color: white;">Reparto y Randomización de Auditorías 5S (Por Sectores)</h3>
-                                    <p style="margin: 2px 0 0; font-size: 12px; color: rgba(255,255,255,0.85);">Genera y distribuye auditorías quincenales por sectores entre las 3 binas rotativas (Montserrat, Jose, Gema).</p>
+                                    <p style="margin: 2px 0 0; font-size: 12px; color: rgba(255,255,255,0.85);">Auditorías quincenales por área con actividad semanal continua (Lote 1 y Lote 2) entre las 3 binas rotativas (Montserrat, Jose, Gema).</p>
                                 </div>
                             </div>
                             <button onclick="closeAutoSchedulerModal()" style="background: transparent; color: white; border: none; font-size: 24px; cursor: pointer; padding: 0 6px; line-height: 1;">✕</button>
@@ -2707,15 +2707,15 @@
                                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 12px;">
                                     <label style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #f0fdf4; border: 2px solid #1e5631; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: border-color 0.2s;" id="label-freq-biweekly">
                                         <input type="radio" name="auto-sched-frequency" value="biweekly" checked onchange="onAutoSchedFrequencyChange()" style="accent-color: #1e5631;">
-                                        <span>📅 Quincenales (2 Semanas — Oficial)</span>
+                                        <span>📅 Quincenales (2 Semanas: Lote 1 y 2)</span>
                                     </label>
                                     <label style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: white; border: 2px solid var(--color-border); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: border-color 0.2s;" id="label-freq-monthly">
                                         <input type="radio" name="auto-sched-frequency" value="monthly" onchange="onAutoSchedFrequencyChange()" style="accent-color: #1e5631;">
-                                        <span>📅 Mensuales (4 Semanas)</span>
+                                        <span>📅 Mensuales (4 Semanas: Mes Completo)</span>
                                     </label>
                                     <label style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: white; border: 2px solid var(--color-border); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: border-color 0.2s;" id="label-freq-weekly">
                                         <input type="radio" name="auto-sched-frequency" value="weekly" onchange="onAutoSchedFrequencyChange()" style="accent-color: #1e5631;">
-                                        <span>📅 Semanales (1 Semana)</span>
+                                        <span>📅 Semanales (1 Semana: Lote Activo)</span>
                                     </label>
                                 </div>
 
@@ -9535,13 +9535,13 @@
             }
             if (hintMonthly) {
                 if (numWeeks === 4) {
-                    hintMonthly.textContent = '✨ Frecuencia Mensual: 2 quincenas de auditorías intercaladas con semanas de seguimiento. Incluye Sectores 6 y 8.';
+                    hintMonthly.textContent = '✨ Frecuencia Mensual: 4 semanas continuas con auditorías activas cada semana (2 ciclos quincenales completos para todas las áreas).';
                 } else if (numWeeks === 2) {
-                    hintMonthly.textContent = '🌿 Frecuencia Quincenal: 1 semana de auditorías de sectores y 1 semana de seguimiento y cierre.';
+                    hintMonthly.textContent = '🌿 Frecuencia Quincenal: Auditorías activas cada semana en 2 lotes (Semana 1: Sectores 1, 2, 5 + Tool Room; Semana 2: Sectores 3, 4, 7). Cada área se audita cada 14 días.';
                 } else {
                     hintMonthly.textContent = isFirstMonday
-                        ? '✨ Primer lunes de mes: incluye Sector 6 y 8 rotativos.'
-                        : 'Semana de auditorías de sectores.';
+                        ? '✨ Primer lunes de mes: incluye Sector 6 u 8 rotativo.'
+                        : 'Semana de auditorías de sectores del lote correspondiente.';
                 }
             }
 
@@ -9631,16 +9631,16 @@
 
             if (modeDesc) {
                 if (assignMode === 'random') {
-                    modeDesc.textContent = '🎲 Modo Randomizar: En cada periodo quincenal, los 3 auditores (Montserrat, Jose, Gema) se barajan aleatoriamente entre las Binas para máxima rotación imparcial.';
+                    modeDesc.textContent = '🎲 Modo Randomizar: En cada quincena, los 3 auditores (Montserrat, Jose, Gema) se barajan aleatoriamente entre las Binas, alternando Lote 1 (Sectores 1, 2, 5) y Lote 2 (Sectores 3, 4, 7).';
                 } else {
-                    modeDesc.textContent = '🔄 Rotación Oficial Quincenal: Las auditorías son quincenales por área y rotan continuamente entre las 3 personas (Montserrat, Jose, Gema).';
+                    modeDesc.textContent = '🔄 Rotación Oficial Quincenal: Cada área se audita cada 14 días con actividad semanal continua (Sem 1: Sectores 1, 2, 5 + Tool Room; Sem 2: Sectores 3, 4, 7) rotando entre Montserrat, Jose y Gema.';
                 }
             }
 
             const assignments = [
-                { auditor: assignMode === 'random' ? 'Montserrat / Sorteado' : curCycle.binaA, binaTitle: 'Bina A: Sector 1 + Sector 3', extra: '+ Tool Room (Viernes)' },
-                { auditor: assignMode === 'random' ? 'Jose / Sorteado' : curCycle.binaB, binaTitle: 'Bina B: Sector 2 + Sector 4', extra: 'Líneas 11-13, ICT, Pack' },
-                { auditor: assignMode === 'random' ? 'Gema / Sorteado' : curCycle.binaC, binaTitle: 'Bina C: Sector 5 + Sector 7', extra: 'Almacenes, SMKT y RMA' }
+                { auditor: assignMode === 'random' ? 'Montserrat / Sorteado' : curCycle.binaA, binaTitle: 'Bina A: Sector 1 (Sem 1) + Sector 3 (Sem 2)', extra: '+ Tool Room (Viernes Sem 1)' },
+                { auditor: assignMode === 'random' ? 'Jose / Sorteado' : curCycle.binaB, binaTitle: 'Bina B: Sector 2 (Sem 1) + Sector 4 (Sem 2)', extra: 'Líneas 11-13, ICT, Pack' },
+                { auditor: assignMode === 'random' ? 'Gema / Sorteado' : curCycle.binaC, binaTitle: 'Bina C: Sector 5 (Sem 1) + Sector 7 (Sem 2)', extra: 'Almacenes, SMKT y RMA' }
             ];
 
             assignments.forEach(item => {
@@ -9760,11 +9760,12 @@
                 const monStr = autoSchedAddDays(startMonStr, w * 7);
                 const friStr = autoSchedAddDays(monStr, 4);
 
-                // En modalidad quincenal de cada área, las auditorías se programan cada 2 semanas
-                // Si numWeeks == 1 (semana única), se audita esa semana.
-                // Si numWeeks == 2 o 4 (quincenal/mensual), semanas pares (w=0, w=2) son de auditoría,
-                // y semanas impares (w=1, w=3) son de seguimiento y cierre para garantizar frecuencia quincenal.
-                const isAuditWeek = (numWeeks === 1) || (w % 2 === 0);
+                // Auditorías quincenales por área con actividad semanal continua:
+                // Se alternan Lote 1 y Lote 2 semana con semana para que CADA semana tenga auditorías
+                // y al mismo tiempo CADA área se audite estrictamente cada 14 días (quincenal).
+                const monDate = new Date(monStr + 'T12:00:00');
+                const diffWeeks = Math.round((monDate - baseDate) / (7 * 86400000));
+                const isLot1 = ((diffWeeks % 2) + 2) % 2 === 0;
 
                 const weekDays = [
                     { dayNum: 1, name: 'Lunes', dateStr: autoSchedAddDays(monStr, 0), areas: [] },
@@ -9799,79 +9800,86 @@
                 });
 
                 // Determinación de Binas: Rotación o Random
-                let binaA_Auditor = 'Montserrat', binaB_Auditor = 'Jose', binaC_Auditor = 'Gema';
-                const monDate = new Date(monStr + 'T12:00:00');
+                const quincenaIndex = Math.max(0, Math.floor(diffWeeks / 2));
+                const cycleStep = ((quincenaIndex % 3) + 3) % 3;
+                const curCycle = SECTOR_ROTATION_CYCLE[cycleStep];
 
-                if (isAuditWeek) {
-                    if (assignMode === 'random') {
-                        // Randomizar aleatoriamente los 3 auditores entre las 3 Binas (Alisson excluida, Montserrat asignada)
-                        const pool = ['Montserrat', 'Jose', 'Gema'];
-                        for (let i = pool.length - 1; i > 0; i--) {
-                            const j = Math.floor(Math.random() * (i + 1));
-                            [pool[i], pool[j]] = [pool[j], pool[i]];
-                        }
-                        binaA_Auditor = pool[0];
-                        binaB_Auditor = pool[1];
-                        binaC_Auditor = pool[2];
-                    } else {
-                        // Rotación oficial quincenal de binas
-                        const diffWeeks = Math.round((monDate - baseDate) / (7 * 86400000));
-                        const quincenaIndex = Math.max(0, Math.floor(diffWeeks / 2));
-                        const cycleStep = ((quincenaIndex % 3) + 3) % 3;
-                        const curCycle = SECTOR_ROTATION_CYCLE[cycleStep];
-                        binaA_Auditor = curCycle.binaA;
-                        binaB_Auditor = curCycle.binaB;
-                        binaC_Auditor = curCycle.binaC;
+                let binaA_Auditor = curCycle.binaA;
+                let binaB_Auditor = curCycle.binaB;
+                let binaC_Auditor = curCycle.binaC;
+
+                if (assignMode === 'random') {
+                    // Randomizar aleatoriamente los 3 auditores entre las 3 Binas (Alisson excluida, Montserrat asignada)
+                    const pool = ['Montserrat', 'Jose', 'Gema'];
+                    for (let i = pool.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [pool[i], pool[j]] = [pool[j], pool[i]];
                     }
+                    binaA_Auditor = pool[0];
+                    binaB_Auditor = pool[1];
+                    binaC_Auditor = pool[2];
+                }
 
-                    const mondayDay = weekDays[0];
-                    const fridayDay = weekDays[4];
+                const mondayDay = weekDays[0];
+                const fridayDay = weekDays[4];
 
-                    // 1. Asignar Lunes: Binas operativas
+                if (isLot1) {
+                    // --- LOTE 1 (Sectores 1, 2, 5 + Tool Room) ---
                     if (autoSchedActiveAreas.includes('Sector 1') && !alreadyAssigned.has('SECTOR 1')) {
                         mondayDay.areas.push({ area: 'Sector 1', auditor: binaA_Auditor, isPreserved: false });
-                    }
-                    if (autoSchedActiveAreas.includes('Sector 3') && !alreadyAssigned.has('SECTOR 3')) {
-                        mondayDay.areas.push({ area: 'Sector 3', auditor: binaA_Auditor, isPreserved: false });
                     }
                     if (autoSchedActiveAreas.includes('Sector 2') && !alreadyAssigned.has('SECTOR 2')) {
                         mondayDay.areas.push({ area: 'Sector 2', auditor: binaB_Auditor, isPreserved: false });
                     }
-                    if (autoSchedActiveAreas.includes('Sector 4') && !alreadyAssigned.has('SECTOR 4')) {
-                        mondayDay.areas.push({ area: 'Sector 4', auditor: binaB_Auditor, isPreserved: false });
-                    }
                     if (autoSchedActiveAreas.includes('Sector 5') && !alreadyAssigned.has('SECTOR 5')) {
                         mondayDay.areas.push({ area: 'Sector 5', auditor: binaC_Auditor, isPreserved: false });
+                    }
+
+                    // Mensual Lote 1: Sector 6
+                    const isFirstMonOfWeek = monDate.getDate() <= 7;
+                    const shouldAddMonthly = includeMonthly && (isFirstMonOfWeek || w === 0);
+                    if (shouldAddMonthly) {
+                        const monthNum = monDate.getMonth() + 1;
+                        const rotKey = monthNum % 3;
+                        const monthlyPair = (assignMode === 'random')
+                            ? { sec6: ['Gema', 'Jose', 'Montserrat'].sort(() => Math.random() - 0.5)[0] }
+                            : (SECTOR_MONTHLY_ROTATION[rotKey] || { sec6: 'Gema' });
+
+                        if (autoSchedActiveAreas.includes('Sector 6') && !alreadyAssigned.has('SECTOR 6')) {
+                            mondayDay.areas.push({ area: 'Sector 6', auditor: monthlyPair.sec6, isPreserved: false });
+                        }
+                    }
+
+                    // Viernes Lote 1: Tool Room (Bina A)
+                    if (autoSchedActiveAreas.includes('Tool Room') && !alreadyAssigned.has('TOOL ROOM')) {
+                        fridayDay.areas.push({ area: 'Tool Room', auditor: binaA_Auditor, isPreserved: false });
+                    }
+
+                } else {
+                    // --- LOTE 2 (Sectores 3, 4, 7) ---
+                    if (autoSchedActiveAreas.includes('Sector 3') && !alreadyAssigned.has('SECTOR 3')) {
+                        mondayDay.areas.push({ area: 'Sector 3', auditor: binaA_Auditor, isPreserved: false });
+                    }
+                    if (autoSchedActiveAreas.includes('Sector 4') && !alreadyAssigned.has('SECTOR 4')) {
+                        mondayDay.areas.push({ area: 'Sector 4', auditor: binaB_Auditor, isPreserved: false });
                     }
                     if (autoSchedActiveAreas.includes('Sector 7') && !alreadyAssigned.has('SECTOR 7')) {
                         mondayDay.areas.push({ area: 'Sector 7', auditor: binaC_Auditor, isPreserved: false });
                     }
 
-                    // 2. Sectores Mensuales (Sector 6 y 8)
-                    const isFirstMonOfWeek = monDate.getDate() <= 7;
-                    const shouldAddMonthly = includeMonthly && (numWeeks === 1 ? isFirstMonOfWeek : (w === 0 || isFirstMonOfWeek));
+                    // Mensual Lote 2: Sector 8
+                    const isFirstHalfOfMonth = monDate.getDate() <= 14;
+                    const shouldAddMonthly = includeMonthly && (isFirstHalfOfMonth || w === 1);
                     if (shouldAddMonthly) {
                         const monthNum = monDate.getMonth() + 1;
                         const rotKey = monthNum % 3;
-                        let monthlyPair;
-                        if (assignMode === 'random') {
-                            const mPool = ['Gema', 'Jose', 'Montserrat'].sort(() => Math.random() - 0.5);
-                            monthlyPair = { sec6: mPool[0], sec8: mPool[1] };
-                        } else {
-                            monthlyPair = SECTOR_MONTHLY_ROTATION[rotKey] || { sec6: 'Gema', sec8: 'Jose' };
-                        }
+                        const monthlyPair = (assignMode === 'random')
+                            ? { sec8: ['Gema', 'Jose', 'Montserrat'].sort(() => Math.random() - 0.5)[1] }
+                            : (SECTOR_MONTHLY_ROTATION[rotKey] || { sec8: 'Jose' });
 
-                        if (autoSchedActiveAreas.includes('Sector 6') && !alreadyAssigned.has('SECTOR 6')) {
-                            mondayDay.areas.push({ area: 'Sector 6', auditor: monthlyPair.sec6, isPreserved: false });
-                        }
                         if (autoSchedActiveAreas.includes('Sector 8') && !alreadyAssigned.has('SECTOR 8')) {
                             mondayDay.areas.push({ area: 'Sector 8', auditor: monthlyPair.sec8, isPreserved: false });
                         }
-                    }
-
-                    // 3. Asignar Viernes: Tool Room
-                    if (autoSchedActiveAreas.includes('Tool Room') && !alreadyAssigned.has('TOOL ROOM')) {
-                        fridayDay.areas.push({ area: 'Tool Room', auditor: binaA_Auditor, isPreserved: false });
                     }
                 }
 
@@ -9892,7 +9900,7 @@
                     weekIndex: w,
                     monStr: monStr,
                     friStr: friStr,
-                    isAuditWeek: isAuditWeek,
+                    isLot1: isLot1,
                     binaA: binaA_Auditor,
                     binaB: binaB_Auditor,
                     binaC: binaC_Auditor,
@@ -9917,7 +9925,7 @@
             kpisContainer.innerHTML = '';
 
             const freqName = numWeeks === 1 ? '1 semana' : (numWeeks === 2 ? 'quincenal (2 semanas)' : 'mensual (4 semanas)');
-            subtitle.textContent = `Generados: ${autoSchedGeneratedSchedule.length} sectores en ${freqName} ${preservedCount > 0 ? `(${preservedCount} conservados)` : ''}`;
+            subtitle.textContent = `Generados: ${autoSchedGeneratedSchedule.length} sectores en ${freqName} (${weeksData.length} semanas con auditorías activas) ${preservedCount > 0 ? `(${preservedCount} conservados)` : ''}`;
 
             // Totales por auditor
             const auditorCounts = { 'Montserrat': 0, 'Jose': 0, 'Gema': 0 };
@@ -9958,11 +9966,8 @@
                 const wHeader = document.createElement('div');
                 wHeader.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding-bottom: 6px; border-bottom: 2px solid var(--color-border); font-size: 13px; font-weight: 700; color: var(--color-text);';
                 
-                if (w.isAuditWeek) {
-                    wHeader.innerHTML = `<span>📅 Semana ${wIdx + 1} (Auditorías Quincenales): ${w.monStr.split('-').slice(1).join('/')} al ${w.friStr.split('-').slice(1).join('/')}</span> <span style="font-size: 12px; color: var(--color-text-muted); font-weight: normal;">Binas: A (${w.binaA}), B (${w.binaB}), C (${w.binaC})</span>`;
-                } else {
-                    wHeader.innerHTML = `<span>🌿 Semana ${wIdx + 1} (Seguimiento y Cierre de Hallazgos): ${w.monStr.split('-').slice(1).join('/')} al ${w.friStr.split('-').slice(1).join('/')}</span> <span style="font-size: 12px; color: #1e5631; font-weight: 600;">Intervalo Quincenal Cumplido</span>`;
-                }
+                const lotLabel = w.isLot1 ? 'Lote 1: Sectores 1, 2, 5 + Tool Room' : 'Lote 2: Sectores 3, 4, 7';
+                wHeader.innerHTML = `<span>📅 Semana ${wIdx + 1} (${lotLabel}): ${w.monStr.split('-').slice(1).join('/')} al ${w.friStr.split('-').slice(1).join('/')}</span> <span style="font-size: 12px; color: #1e5631; font-weight: 700;">Binas: A (${w.binaA}), B (${w.binaB}), C (${w.binaC})</span>`;
                 weekBlock.appendChild(wHeader);
 
                 const weekGrid = document.createElement('div');
@@ -9980,7 +9985,7 @@
                     if (day.areas.length === 0) {
                         const emptyMsg = document.createElement('div');
                         emptyMsg.style.cssText = 'font-size: 10px; color: var(--color-text-muted); text-align: center; padding: 12px 2px; font-style: italic;';
-                        emptyMsg.textContent = w.isAuditWeek ? 'Día libre' : 'Seguimiento / Sin auditorías';
+                        emptyMsg.textContent = 'Día libre';
                         col.appendChild(emptyMsg);
                     } else {
                         day.areas.forEach(item => {
