@@ -4440,9 +4440,7 @@
                         status: status,
                         dueDate: dueDate,
                         openDate: openDate,
-                        comments: comments,
-                        auditorName: auditorVal,
-                        auditor: auditorVal
+                        comments: comments
                     };
                 }).filter(item => item !== null);
 
@@ -4679,7 +4677,21 @@
             const chunkSize = 500;
             for (let i = 0; i < newItems.length; i += chunkSize) {
                 const chunk = newItems.slice(i, i + chunkSize);
-                const { error } = await supabaseClient.from('actions').upsert(chunk, { onConflict: 'actionId' });
+                // Sanitizar para asegurar estricta conformidad con el esquema oficial de Supabase (sin columnas extra)
+                const sanitizedChunk = chunk.map(item => ({
+                    actionId: item.actionId,
+                    auditId: item.auditId,
+                    location: item.location || '',
+                    cleanLocation: item.cleanLocation || '',
+                    responseScore: item.responseScore !== undefined ? item.responseScore : 0,
+                    department: item.department || '',
+                    owner: item.owner || '',
+                    status: item.status || 'Open',
+                    dueDate: item.dueDate || 'Sin Fecha',
+                    openDate: item.openDate || '',
+                    comments: item.comments || ''
+                }));
+                const { error } = await supabaseClient.from('actions').upsert(sanitizedChunk, { onConflict: 'actionId' });
                 if (error) {
                     console.error("Error al hacer upsert en Supabase:", error);
                     alert("Hubo un error guardando una parte de los datos en Supabase: " + error.message);
