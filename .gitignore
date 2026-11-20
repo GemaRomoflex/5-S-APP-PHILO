@@ -4,5 +4,7 @@ owners_temp.json
 temp_git.log
 Directorio_owners_extracted/
 check_*.ps1
+update_*.ps1
 diff.patch
+
 

@@ -331,3 +331,27 @@ La base de datos (Supabase) almacena exclusivamente métricas, hallazgos y audit
     *   **Correlación y Fallback Inteligente para Acciones Existentes:**
         *   En `loadFromSupabase()`, se pre-cargan los eventos del calendario (`await loadCalendarEvents()`) al iniciar la app.
         *   En `getActionAuditor(item)`, si una acción histórica no tiene la etiqueta `AUDITOR:` en sus comentarios, el sistema correlaciona el área y fecha de apertura de la acción con `calendar_events` para obtener el auditor que realizó la auditoría, o extrae el nombre si el auditor fue cargado en la columna de responsable (`item.owner`).
+
+### [Noviembre 2026] - Calendario con Auditorías Quincenales por Área y Sustitución de Alisson por Montserrat en Binas
+*   **1. Frecuencia Quincenal de Auditorías por Área:**
+    *   **Enfoque Operativo Quincenal:** Para asegurar que cada área y sector sea auditado estrictamente cada 14-15 días (frecuencia quincenal solicitada), el motor de calendarización (`#auto-scheduler-modal` y función `generateAutoSchedPreview`) adoptó **Quincenales (2 Semanas)** como opción predeterminada y activa.
+    *   **Estructura del Periodo Quincenal / Mensual:**
+        *   **Semanas de Auditoría Operativa (Semanas 1 y 3):** Se programan los sectores activos en las 3 binas rotativas (Lunes: Sectores 1, 2, 3, 4, 5, 7; Viernes: Tool Room; primer lunes del mes: Sectores 6 y 8).
+        *   **Semanas de Seguimiento y Cierre (Semanas 2 y 4):** No se programan auditorías de áreas nuevas, estableciendo una semana dedicada al seguimiento, verificación en piso y cierre formal de hallazgos, garantizando la periodicidad quincenal de cada línea o sector.
+    *   **Tablero de Previsualización (`renderAutoSchedPreviewBoard`):** En las semanas de seguimiento se renderiza la cabecera `"🌿 Semana X (Seguimiento y Cierre de Hallazgos) - Intervalo Quincenal Cumplido"` y en cada día el indicador `"Seguimiento / Sin auditorías"`.
+*   **2. Sustitución de Alisson por Montserrat en Asignaciones de Auditorías:**
+    *   **Exclusión de Alisson y Asignación de Montserrat:** Alisson queda completamente excluida de las asignaciones de auditoría automáticas y manuales por defecto, quedando el equipo oficial de auditores integrado por **Montserrat**, **Jose** y **Gema**.
+    *   **Base de Datos en Supabase (`calendar_events`):**
+        *   Se actualizaron todos los registros históricos y futuros que tenían asignada a `Alisson` para reasignarlos formalmente a `Montserrat`.
+        *   Se recalendarizaron los eventos hacia inicios de diciembre para reflejar la periodicidad quincenal en piso.
+    *   **Interfaz de Calendario:**
+        *   **Leyenda:** Se actualizó el chip con el nombre de `Montserrat` en color morado (`#800080` con borde `#5a005a`).
+        *   **Modal de Edición / Programación Individual (`#calendar-event-modal`):**
+            *   Selector de auditor predeterminado a `Montserrat`.
+            *   Checkboxes canónicos por bina: `Sector 1 (Bina 1 - Montserrat)`, `Sector 3 (Bina 1 - Montserrat)` y `Tool Room (Sector 1 - Viernes - Montserrat)`.
+        *   **Orden y Colores de Chips:** `AUDITOR_ORDER` y `auditorFallbackMap` mapean a `Montserrat` para los sectores de Bina A y áreas asociadas, renderizando chips en `#800080`.
+    *   **Ciclos de Rotación Oficial y Sorteo:**
+        *   `SECTOR_ROTATION_CYCLE`: Rotación 1 (Bina A: Montserrat, Bina B: Jose, Bina C: Gema), Rotación 2 (Bina A: Gema, Bina B: Montserrat, Bina C: Jose), Rotación 3 (Bina A: Jose, Bina B: Gema, Bina C: Montserrat).
+        *   `SECTOR_MONTHLY_ROTATION`: Rotación de Sectores 6 y 8 entre Montserrat, Jose y Gema.
+        *   `assignMode === 'random'`: Baraja de manera imparcial el pool `['Montserrat', 'Jose', 'Gema']`.
+    *   **Parser de Acciones (`getActionAuditor`):** Detección ampliada en `knownAuditors` para reconocer tanto `Montserrat` como `Montse` desde los CSVs de auditorías y asociar debidamente las acciones.

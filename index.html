@@ -2612,7 +2612,7 @@
                     <div class="calendar-legend" style="display: flex; gap: 15px; margin-bottom: 5px; font-size: 13px; font-weight: bold; padding: 0 10px;">
                         <span style="color: var(--color-text-muted); margin-right: 10px;">Auditores:</span>
                         <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 15px; height: 15px; background-color: #C8A2C8; border: 1px solid #a382a3; border-radius: 3px;"></div> Gema</div>
-                        <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 15px; height: 15px; background-color: #FFD1DC; border: 1px solid #d8b0b8; border-radius: 3px;"></div> Alisson</div>
+                        <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 15px; height: 15px; background-color: #800080; border: 1px solid #5a005a; border-radius: 3px;"></div> Montserrat</div>
                         <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 15px; height: 15px; background-color: #1e5631; border: 1px solid #143d23; border-radius: 3px;"></div> Jose</div>
                     </div>
 
@@ -2657,10 +2657,9 @@
                             <div>
                                 <label style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--color-text-muted);">Auditor Asignado</label>
                                 <select id="cal-event-auditor" class="filter-select" style="width: 100%; border: 1px solid var(--color-border);">
-                                    <option value="Gema">Gema</option>
-                                    <option value="Alisson">Alisson</option>
+                                    <option value="Montserrat" selected>Montserrat</option>
                                     <option value="Jose">Jose</option>
-                                    <option value="Montse">Montse</option>
+                                    <option value="Gema">Gema</option>
                                 </select>
                             </div>
                             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
@@ -2682,7 +2681,7 @@
                                 <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 20px;">⚡</div>
                                 <div>
                                     <h3 style="margin: 0; font-size: 19px; font-weight: 700; color: white;">Reparto y Randomización de Auditorías 5S (Por Sectores)</h3>
-                                    <p style="margin: 2px 0 0; font-size: 12px; color: rgba(255,255,255,0.85);">Genera y distribuye auditorías semanales, quincenales o mensuales con rotación continua o asignación aleatoria.</p>
+                                    <p style="margin: 2px 0 0; font-size: 12px; color: rgba(255,255,255,0.85);">Genera y distribuye auditorías quincenales por sectores entre las 3 binas rotativas (Montserrat, Jose, Gema).</p>
                                 </div>
                             </div>
                             <button onclick="closeAutoSchedulerModal()" style="background: transparent; color: white; border: none; font-size: 24px; cursor: pointer; padding: 0 6px; line-height: 1;">✕</button>
@@ -2704,19 +2703,19 @@
                                     </div>
                                 </div>
 
-                                <!-- Frecuencia: Semanales, Quincenales, Mensuales -->
+                                <!-- Frecuencia: Quincenales (Oficial), Mensuales, Semanales -->
                                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 12px;">
-                                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: white; border: 2px solid var(--color-border); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: border-color 0.2s;" id="label-freq-weekly">
-                                        <input type="radio" name="auto-sched-frequency" value="weekly" checked onchange="onAutoSchedFrequencyChange()" style="accent-color: #1e5631;">
-                                        <span>📅 Semanales (1 Semana)</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: white; border: 2px solid var(--color-border); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: border-color 0.2s;" id="label-freq-biweekly">
-                                        <input type="radio" name="auto-sched-frequency" value="biweekly" onchange="onAutoSchedFrequencyChange()" style="accent-color: #1e5631;">
-                                        <span>📅 Quincenales (2 Semanas)</span>
+                                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #f0fdf4; border: 2px solid #1e5631; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: border-color 0.2s;" id="label-freq-biweekly">
+                                        <input type="radio" name="auto-sched-frequency" value="biweekly" checked onchange="onAutoSchedFrequencyChange()" style="accent-color: #1e5631;">
+                                        <span>📅 Quincenales (2 Semanas — Oficial)</span>
                                     </label>
                                     <label style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: white; border: 2px solid var(--color-border); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: border-color 0.2s;" id="label-freq-monthly">
                                         <input type="radio" name="auto-sched-frequency" value="monthly" onchange="onAutoSchedFrequencyChange()" style="accent-color: #1e5631;">
                                         <span>📅 Mensuales (4 Semanas)</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: white; border: 2px solid var(--color-border); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: border-color 0.2s;" id="label-freq-weekly">
+                                        <input type="radio" name="auto-sched-frequency" value="weekly" onchange="onAutoSchedFrequencyChange()" style="accent-color: #1e5631;">
+                                        <span>📅 Semanales (1 Semana)</span>
                                     </label>
                                 </div>
 
@@ -3772,9 +3771,10 @@
             if (item.owner && item.owner !== 'Sin Asignar' && item.owner !== 'N/A' && item.owner.trim()) {
                 const o = item.owner.trim();
                 const lowerO = o.toLowerCase();
-                const knownAuditors = ['gema', 'alisson', 'jose', 'montse'];
+                const knownAuditors = ['gema', 'jose', 'montserrat', 'montse', 'alisson'];
                 const matched = knownAuditors.find(ka => lowerO.includes(ka));
                 if (matched) {
+                    if (matched === 'montse' || matched === 'montserrat') return 'Montserrat';
                     return matched.charAt(0).toUpperCase() + matched.slice(1);
                 }
             }
@@ -8316,12 +8316,13 @@
             matches.sort((a, b) => a.ev.audit_date.localeCompare(b.ev.audit_date));
 
             listEl.innerHTML = '';
-            const AUDITORS = ['Gema', 'Alisson', 'Jose', 'Montse'];
+            const AUDITORS = ['Montserrat', 'Jose', 'Gema', 'Montse', 'Alisson'];
             const AUDITOR_COLORS = {
-                Gema:   { bg: '#C8A2C8', color: '#000', border: '#a382a3' },
-                Alisson:{ bg: '#FFD1DC', color: '#000', border: '#d8b0b8' },
-                Jose:   { bg: '#1e5631', color: '#FFF', border: '#143d23' },
-                Montse: { bg: '#800080', color: '#FFF', border: '#5a005a' },
+                Montserrat: { bg: '#800080', color: '#FFF', border: '#5a005a' },
+                Montse:     { bg: '#800080', color: '#FFF', border: '#5a005a' },
+                Jose:       { bg: '#1e5631', color: '#FFF', border: '#143d23' },
+                Gema:       { bg: '#C8A2C8', color: '#000', border: '#a382a3' },
+                Alisson:    { bg: '#FFD1DC', color: '#000', border: '#d8b0b8' },
             };
 
             matches.forEach(({ ev, auditor, mappedName }) => {
@@ -8967,22 +8968,22 @@
                 dayDiv.addEventListener('drop', calDrop);
 
                 // Orden fijo de auditores para que siempre se vea igual en cada día
-                const AUDITOR_ORDER = { 'Gema': 0, 'Jose': 1, 'Alisson': 2, 'Montse': 3, 'Desconocido': 4 };
+                const AUDITOR_ORDER = { 'Montserrat': 0, 'Montse': 0, 'Jose': 1, 'Gema': 2, 'Alisson': 3, 'Desconocido': 4 };
                 const auditorFallbackMap = {
-                    "SECTOR 1": "Alisson", "SECTOR 3": "Alisson", "TOOL ROOM": "Alisson",
+                    "SECTOR 1": "Montserrat", "SECTOR 3": "Montserrat", "TOOL ROOM": "Montserrat",
                     "SECTOR 2": "Jose", "SECTOR 4": "Jose",
                     "SECTOR 5": "Gema", "SECTOR 7": "Gema",
                     "SECTOR 6": "Gema", "SECTOR 8": "Jose",
-                    "TEST ROOM 2": "Alisson", "L12 TOP": "Jose", "L14 TOP": "Alisson", "CRITICAL REPAIR 2": "Montse",
-                    "IST": "Gema", "TOOL ROOM": "Jose", "CRITICAL REPAIR 3": "Montse", "ASSEMBLY 1": "Gema",
-                    "MOONSHINE": "Alisson", "PACK": "Gema", "OFFICES": "Alisson", "L16": "Jose", "INCOMING": "Montse",
-                    "USIS": "Montse", "SMKT SMT": "Montse", "EQUIPMENT ROOM": "Jose", "RECEIPT": "Montse",
-                    "EMBARQUE": "Gema", "SURTIDO MATERIAL": "Montse", "L14 BOTTOM": "Alisson", "CONTEOS INTERNOS": "Gema",
-                    "L11 TOP": "Jose", "DISSASEMBLY": "Gema", "L15": "Montse", "SMKT BACKEND": "Montse",
-                    "HV ALTO VALOR": "Montse", "TEST ROOM 1": "Jose", "RMA GLP": "Alisson", "L12 BOTTOM": "Jose",
-                    "MONITORES": "Alisson", "CRITICAL REPAIR 1": "Montse", "ASSEMBLY 2": "Gema", "CRITICAL REPAIR 4": "Jose",
-                    "LOBBY": "Alisson", "L13": "Alisson", "L11 BOTTOM": "Jose", "FRESH MARKET": "Gema",
-                    "DEBUG": "Gema", "CLEAN ROOM": "Gema", "BONEPILE": "Montse", "ICT": "Jose"
+                    "TEST ROOM 2": "Montserrat", "L12 TOP": "Jose", "L14 TOP": "Montserrat", "CRITICAL REPAIR 2": "Montserrat",
+                    "IST": "Gema", "CRITICAL REPAIR 3": "Montserrat", "ASSEMBLY 1": "Gema",
+                    "MOONSHINE": "Montserrat", "PACK": "Gema", "OFFICES": "Montserrat", "L16": "Jose", "INCOMING": "Montserrat",
+                    "USIS": "Montserrat", "SMKT SMT": "Montserrat", "EQUIPMENT ROOM": "Jose", "RECEIPT": "Montserrat",
+                    "EMBARQUE": "Gema", "SURTIDO MATERIAL": "Montserrat", "L14 BOTTOM": "Montserrat", "CONTEOS INTERNOS": "Gema",
+                    "L11 TOP": "Jose", "DISSASEMBLY": "Gema", "L15": "Montserrat", "SMKT BACKEND": "Montserrat",
+                    "HV ALTO VALOR": "Montserrat", "TEST ROOM 1": "Jose", "RMA GLP": "Montserrat", "L12 BOTTOM": "Jose",
+                    "MONITORES": "Montserrat", "CRITICAL REPAIR 1": "Montserrat", "ASSEMBLY 2": "Gema", "CRITICAL REPAIR 4": "Jose",
+                    "LOBBY": "Montserrat", "L13": "Montserrat", "L11 BOTTOM": "Jose", "FRESH MARKET": "Gema",
+                    "DEBUG": "Gema", "CLEAN ROOM": "Gema", "BONEPILE": "Montserrat", "ICT": "Jose"
                 };
 
                 // Recopilar todos los chips del día en un array para poder ordenarlos
@@ -9008,7 +9009,7 @@
                     });
                 });
 
-                // Ordenar: primero por auditor (Gema→Jose→Alisson→Montse), luego alfabéticamente por área
+                // Ordenar: primero por auditor (Montserrat→Jose→Gema→Alisson), luego alfabéticamente por área
                 dayChips.sort((a, b) => {
                     const oA = AUDITOR_ORDER[a.auditor] ?? 99;
                     const oB = AUDITOR_ORDER[b.auditor] ?? 99;
@@ -9036,11 +9037,7 @@
                         evDiv.style.setProperty('background-color', '#C8A2C8', 'important');
                         evDiv.style.setProperty('color', '#000', 'important');
                         evDiv.style.setProperty('border', '1px solid #a382a3', 'important');
-                    } else if (auditor === 'Alisson') {
-                        evDiv.style.setProperty('background-color', '#FFD1DC', 'important');
-                        evDiv.style.setProperty('color', '#000', 'important');
-                        evDiv.style.setProperty('border', '1px solid #d8b0b8', 'important');
-                    } else if (auditor === 'Montse') {
+                    } else if (auditor === 'Montserrat' || auditor === 'Montse') {
                         evDiv.style.setProperty('background-color', '#800080', 'important');
                         evDiv.style.setProperty('color', '#FFF', 'important');
                         evDiv.style.setProperty('border', '1px solid #5a005a', 'important');
@@ -9048,6 +9045,10 @@
                         evDiv.style.setProperty('background-color', '#1e5631', 'important');
                         evDiv.style.setProperty('color', '#FFF', 'important');
                         evDiv.style.setProperty('border', '1px solid #143d23', 'important');
+                    } else if (auditor === 'Alisson') {
+                        evDiv.style.setProperty('background-color', '#FFD1DC', 'important');
+                        evDiv.style.setProperty('color', '#000', 'important');
+                        evDiv.style.setProperty('border', '1px solid #d8b0b8', 'important');
                     }
 
                     evDiv.textContent = mappedAreaName + (auditor !== 'Desconocido' ? ` (${auditor})` : '');
@@ -9188,9 +9189,9 @@
             if (container.children.length === 0) {
                 // 1. SECTORES PRINCIPALES Y TOOL ROOM
                 const sectorItems = [
-                    { val: 'Sector 1', label: 'Sector 1 (Bina 1 - Alisson)', aud: 'Alisson' },
-                    { val: 'Sector 3', label: 'Sector 3 (Bina 1 - Alisson)', aud: 'Alisson' },
-                    { val: 'Tool Room', label: 'Tool Room (Sector 1 - Viernes - Alisson)', aud: 'Alisson' },
+                    { val: 'Sector 1', label: 'Sector 1 (Bina 1 - Montserrat)', aud: 'Montserrat' },
+                    { val: 'Sector 3', label: 'Sector 3 (Bina 1 - Montserrat)', aud: 'Montserrat' },
+                    { val: 'Tool Room', label: 'Tool Room (Sector 1 - Viernes - Montserrat)', aud: 'Montserrat' },
                     { val: 'Sector 2', label: 'Sector 2 (Bina 2 - Jose)', aud: 'Jose' },
                     { val: 'Sector 4', label: 'Sector 4 (Bina 2 - Jose)', aud: 'Jose' },
                     { val: 'Sector 5', label: 'Sector 5 (Bina 3 - Gema)', aud: 'Gema' },
@@ -9273,10 +9274,10 @@
                 document.getElementById('cal-event-status').value = eventObj.status;
                 
                 // Detectar auditor del evento y pre-seleccionarlo en el dropdown
-                let detectedAuditor = 'Gema';
+                let detectedAuditor = 'Montserrat';
                 if (eventObj.area_name && eventObj.area_name.includes('|')) {
                     const parts = eventObj.area_name.split('|');
-                    detectedAuditor = parts[1].trim() || 'Gema';
+                    detectedAuditor = parts[1].trim() || 'Montserrat';
                 }
                 const auditorSelect = document.getElementById('cal-event-auditor');
                 if (auditorSelect) auditorSelect.value = detectedAuditor;
@@ -9298,7 +9299,7 @@
                 document.getElementById('cal-event-id').value = '';
                 document.getElementById('cal-event-status').value = 'Programada';
                 const auditorSelect = document.getElementById('cal-event-auditor');
-                if (auditorSelect) auditorSelect.value = 'Alisson'; // default
+                if (auditorSelect) auditorSelect.value = 'Montserrat'; // default
                 btnDelete.style.display = 'none';
             }
 
@@ -9412,23 +9413,23 @@
             { id: 'Sector 8', label: 'Sector 8 (Mensual)', bina: 'M', defaultDay: 1, isMonthly: true }
         ];
 
-        // Ciclo rotativo continuo semana tras semana entre las 3 personas
+        // Ciclo rotativo continuo quincena tras quincena entre los 3 auditores (Montserrat, Jose, Gema)
         const SECTOR_ROTATION_CYCLE = [
-            { name: 'Rotación 1', binaA: 'Alisson', binaB: 'Jose',    binaC: 'Gema' },
-            { name: 'Rotación 2', binaA: 'Gema',    binaB: 'Alisson', binaC: 'Jose' },
-            { name: 'Rotación 3', binaA: 'Jose',    binaB: 'Gema',    binaC: 'Alisson' }
+            { name: 'Rotación 1', binaA: 'Montserrat', binaB: 'Jose',       binaC: 'Gema' },
+            { name: 'Rotación 2', binaA: 'Gema',       binaB: 'Montserrat', binaC: 'Jose' },
+            { name: 'Rotación 3', binaA: 'Jose',       binaB: 'Gema',       binaC: 'Montserrat' }
         ];
 
         const SECTOR_MONTHLY_ROTATION = {
-            1: { sec6: 'Gema',    sec8: 'Jose' },    // Sep, Ene, Abr, Jul
-            2: { sec6: 'Jose',    sec8: 'Alisson' }, // Oct, Feb, May, Ago
-            0: { sec6: 'Alisson', sec8: 'Gema' }     // Nov, Dic, Mar, Jun
+            1: { sec6: 'Gema',       sec8: 'Jose' },       // Sep, Ene, Abr, Jul
+            2: { sec6: 'Jose',       sec8: 'Montserrat' }, // Oct, Feb, May, Ago
+            0: { sec6: 'Montserrat', sec8: 'Gema' }        // Nov, Dic, Mar, Jun
         };
 
         let autoSchedAuditors = [
-            { name: 'Alisson', role: 'Bina Asignada' },
-            { name: 'Jose',    role: 'Bina Asignada' },
-            { name: 'Gema',    role: 'Bina Asignada' }
+            { name: 'Montserrat', role: 'Bina Asignada' },
+            { name: 'Jose',       role: 'Bina Asignada' },
+            { name: 'Gema',       role: 'Bina Asignada' }
         ];
 
         let autoSchedActiveAreas = CANONICAL_5S_SECTORS.map(s => s.id);
@@ -9457,7 +9458,7 @@
         }
 
         function getAutoSchedNumWeeks() {
-            const freq = document.querySelector('input[name="auto-sched-frequency"]:checked')?.value || 'weekly';
+            const freq = document.querySelector('input[name="auto-sched-frequency"]:checked')?.value || 'biweekly';
             if (freq === 'monthly') return 4;
             if (freq === 'biweekly') return 2;
             return 1;
@@ -9494,7 +9495,7 @@
         }
 
         function onAutoSchedFrequencyChange() {
-            const freq = document.querySelector('input[name="auto-sched-frequency"]:checked')?.value || 'weekly';
+            const freq = document.querySelector('input[name="auto-sched-frequency"]:checked')?.value || 'biweekly';
             ['weekly', 'biweekly', 'monthly'].forEach(f => {
                 const lbl = document.getElementById(`label-freq-${f}`);
                 if (lbl) {
@@ -9534,13 +9535,13 @@
             }
             if (hintMonthly) {
                 if (numWeeks === 4) {
-                    hintMonthly.textContent = '✨ Frecuencia Mensual: incluye Sectores 6 y 8 en la primera semana del ciclo.';
+                    hintMonthly.textContent = '✨ Frecuencia Mensual: 2 quincenas de auditorías intercaladas con semanas de seguimiento. Incluye Sectores 6 y 8.';
                 } else if (numWeeks === 2) {
-                    hintMonthly.textContent = 'Frecuencia Quincenal: 2 semanas continuas de binas y sectores.';
+                    hintMonthly.textContent = '🌿 Frecuencia Quincenal: 1 semana de auditorías de sectores y 1 semana de seguimiento y cierre.';
                 } else {
                     hintMonthly.textContent = isFirstMonday
                         ? '✨ Primer lunes de mes: incluye Sector 6 y 8 rotativos.'
-                        : 'Semana regular de binas operativas.';
+                        : 'Semana de auditorías de sectores.';
                 }
             }
 
@@ -9624,19 +9625,20 @@
             const monDate = new Date(monStr + 'T12:00:00');
             const baseDate = new Date('2026-09-07T12:00:00');
             const diffWeeks = Math.round((monDate - baseDate) / (7 * 86400000));
-            const cycleStep = ((diffWeeks % 3) + 3) % 3;
+            const quincenaIndex = Math.max(0, Math.floor(diffWeeks / 2));
+            const cycleStep = ((quincenaIndex % 3) + 3) % 3;
             const curCycle = SECTOR_ROTATION_CYCLE[cycleStep];
 
             if (modeDesc) {
                 if (assignMode === 'random') {
-                    modeDesc.textContent = '🎲 Modo Randomizar: En cada semana o periodo, los 3 auditores se barajan aleatoriamente entre las Binas para máxima rotación imparcial.';
+                    modeDesc.textContent = '🎲 Modo Randomizar: En cada periodo quincenal, los 3 auditores (Montserrat, Jose, Gema) se barajan aleatoriamente entre las Binas para máxima rotación imparcial.';
                 } else {
-                    modeDesc.textContent = '🔄 Rotación Oficial: Las binas rotan semana tras semana continuamente entre las 3 personas (Alisson, Jose, Gema).';
+                    modeDesc.textContent = '🔄 Rotación Oficial Quincenal: Las auditorías son quincenales por área y rotan continuamente entre las 3 personas (Montserrat, Jose, Gema).';
                 }
             }
 
             const assignments = [
-                { auditor: assignMode === 'random' ? 'Alisson / Sorteado' : curCycle.binaA, binaTitle: 'Bina A: Sector 1 + Sector 3', extra: '+ Tool Room (Viernes)' },
+                { auditor: assignMode === 'random' ? 'Montserrat / Sorteado' : curCycle.binaA, binaTitle: 'Bina A: Sector 1 + Sector 3', extra: '+ Tool Room (Viernes)' },
                 { auditor: assignMode === 'random' ? 'Jose / Sorteado' : curCycle.binaB, binaTitle: 'Bina B: Sector 2 + Sector 4', extra: 'Líneas 11-13, ICT, Pack' },
                 { auditor: assignMode === 'random' ? 'Gema / Sorteado' : curCycle.binaC, binaTitle: 'Bina C: Sector 5 + Sector 7', extra: 'Almacenes, SMKT y RMA' }
             ];
@@ -9651,7 +9653,7 @@
                 const colorDot = document.createElement('div');
                 colorDot.style.cssText = 'width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.2);';
                 if (item.auditor.includes('Gema')) colorDot.style.background = '#C8A2C8';
-                else if (item.auditor.includes('Alisson')) colorDot.style.background = '#FFD1DC';
+                else if (item.auditor.includes('Montserrat') || item.auditor.includes('Montse')) colorDot.style.background = '#800080';
                 else if (item.auditor.includes('Jose')) colorDot.style.background = '#1e5631';
                 else colorDot.style.background = '#1e5631';
 
@@ -9758,6 +9760,12 @@
                 const monStr = autoSchedAddDays(startMonStr, w * 7);
                 const friStr = autoSchedAddDays(monStr, 4);
 
+                // En modalidad quincenal de cada área, las auditorías se programan cada 2 semanas
+                // Si numWeeks == 1 (semana única), se audita esa semana.
+                // Si numWeeks == 2 o 4 (quincenal/mensual), semanas pares (w=0, w=2) son de auditoría,
+                // y semanas impares (w=1, w=3) son de seguimiento y cierre para garantizar frecuencia quincenal.
+                const isAuditWeek = (numWeeks === 1) || (w % 2 === 0);
+
                 const weekDays = [
                     { dayNum: 1, name: 'Lunes', dateStr: autoSchedAddDays(monStr, 0), areas: [] },
                     { dayNum: 2, name: 'Martes', dateStr: autoSchedAddDays(monStr, 1), areas: [] },
@@ -9791,77 +9799,80 @@
                 });
 
                 // Determinación de Binas: Rotación o Random
-                let binaA_Auditor, binaB_Auditor, binaC_Auditor;
+                let binaA_Auditor = 'Montserrat', binaB_Auditor = 'Jose', binaC_Auditor = 'Gema';
                 const monDate = new Date(monStr + 'T12:00:00');
 
-                if (assignMode === 'random') {
-                    // Randomizar aleatoriamente los 3 auditores entre las 3 Binas
-                    const pool = ['Alisson', 'Jose', 'Gema'];
-                    for (let i = pool.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [pool[i], pool[j]] = [pool[j], pool[i]];
-                    }
-                    binaA_Auditor = pool[0];
-                    binaB_Auditor = pool[1];
-                    binaC_Auditor = pool[2];
-                } else {
-                    // Rotación oficial de binas
-                    const diffWeeks = Math.round((monDate - baseDate) / (7 * 86400000));
-                    const cycleStep = ((diffWeeks % 3) + 3) % 3;
-                    const curCycle = SECTOR_ROTATION_CYCLE[cycleStep];
-                    binaA_Auditor = curCycle.binaA;
-                    binaB_Auditor = curCycle.binaB;
-                    binaC_Auditor = curCycle.binaC;
-                }
-
-                const mondayDay = weekDays[0];
-                const fridayDay = weekDays[4];
-
-                // 1. Asignar Lunes: Binas operativas
-                if (autoSchedActiveAreas.includes('Sector 1') && !alreadyAssigned.has('SECTOR 1')) {
-                    mondayDay.areas.push({ area: 'Sector 1', auditor: binaA_Auditor, isPreserved: false });
-                }
-                if (autoSchedActiveAreas.includes('Sector 3') && !alreadyAssigned.has('SECTOR 3')) {
-                    mondayDay.areas.push({ area: 'Sector 3', auditor: binaA_Auditor, isPreserved: false });
-                }
-                if (autoSchedActiveAreas.includes('Sector 2') && !alreadyAssigned.has('SECTOR 2')) {
-                    mondayDay.areas.push({ area: 'Sector 2', auditor: binaB_Auditor, isPreserved: false });
-                }
-                if (autoSchedActiveAreas.includes('Sector 4') && !alreadyAssigned.has('SECTOR 4')) {
-                    mondayDay.areas.push({ area: 'Sector 4', auditor: binaB_Auditor, isPreserved: false });
-                }
-                if (autoSchedActiveAreas.includes('Sector 5') && !alreadyAssigned.has('SECTOR 5')) {
-                    mondayDay.areas.push({ area: 'Sector 5', auditor: binaC_Auditor, isPreserved: false });
-                }
-                if (autoSchedActiveAreas.includes('Sector 7') && !alreadyAssigned.has('SECTOR 7')) {
-                    mondayDay.areas.push({ area: 'Sector 7', auditor: binaC_Auditor, isPreserved: false });
-                }
-
-                // 2. Sectores Mensuales (Sector 6 y 8)
-                const isFirstMonOfWeek = monDate.getDate() <= 7;
-                const shouldAddMonthly = includeMonthly && (numWeeks === 1 ? isFirstMonOfWeek : (w === 0 || isFirstMonOfWeek));
-                if (shouldAddMonthly) {
-                    const monthNum = monDate.getMonth() + 1;
-                    const rotKey = monthNum % 3;
-                    let monthlyPair;
+                if (isAuditWeek) {
                     if (assignMode === 'random') {
-                        const mPool = ['Gema', 'Jose', 'Alisson'].sort(() => Math.random() - 0.5);
-                        monthlyPair = { sec6: mPool[0], sec8: mPool[1] };
+                        // Randomizar aleatoriamente los 3 auditores entre las 3 Binas (Alisson excluida, Montserrat asignada)
+                        const pool = ['Montserrat', 'Jose', 'Gema'];
+                        for (let i = pool.length - 1; i > 0; i--) {
+                            const j = Math.floor(Math.random() * (i + 1));
+                            [pool[i], pool[j]] = [pool[j], pool[i]];
+                        }
+                        binaA_Auditor = pool[0];
+                        binaB_Auditor = pool[1];
+                        binaC_Auditor = pool[2];
                     } else {
-                        monthlyPair = SECTOR_MONTHLY_ROTATION[rotKey] || { sec6: 'Gema', sec8: 'Jose' };
+                        // Rotación oficial quincenal de binas
+                        const diffWeeks = Math.round((monDate - baseDate) / (7 * 86400000));
+                        const quincenaIndex = Math.max(0, Math.floor(diffWeeks / 2));
+                        const cycleStep = ((quincenaIndex % 3) + 3) % 3;
+                        const curCycle = SECTOR_ROTATION_CYCLE[cycleStep];
+                        binaA_Auditor = curCycle.binaA;
+                        binaB_Auditor = curCycle.binaB;
+                        binaC_Auditor = curCycle.binaC;
                     }
 
-                    if (autoSchedActiveAreas.includes('Sector 6') && !alreadyAssigned.has('SECTOR 6')) {
-                        mondayDay.areas.push({ area: 'Sector 6', auditor: monthlyPair.sec6, isPreserved: false });
-                    }
-                    if (autoSchedActiveAreas.includes('Sector 8') && !alreadyAssigned.has('SECTOR 8')) {
-                        mondayDay.areas.push({ area: 'Sector 8', auditor: monthlyPair.sec8, isPreserved: false });
-                    }
-                }
+                    const mondayDay = weekDays[0];
+                    const fridayDay = weekDays[4];
 
-                // 3. Asignar Viernes: Tool Room
-                if (autoSchedActiveAreas.includes('Tool Room') && !alreadyAssigned.has('TOOL ROOM')) {
-                    fridayDay.areas.push({ area: 'Tool Room', auditor: binaA_Auditor, isPreserved: false });
+                    // 1. Asignar Lunes: Binas operativas
+                    if (autoSchedActiveAreas.includes('Sector 1') && !alreadyAssigned.has('SECTOR 1')) {
+                        mondayDay.areas.push({ area: 'Sector 1', auditor: binaA_Auditor, isPreserved: false });
+                    }
+                    if (autoSchedActiveAreas.includes('Sector 3') && !alreadyAssigned.has('SECTOR 3')) {
+                        mondayDay.areas.push({ area: 'Sector 3', auditor: binaA_Auditor, isPreserved: false });
+                    }
+                    if (autoSchedActiveAreas.includes('Sector 2') && !alreadyAssigned.has('SECTOR 2')) {
+                        mondayDay.areas.push({ area: 'Sector 2', auditor: binaB_Auditor, isPreserved: false });
+                    }
+                    if (autoSchedActiveAreas.includes('Sector 4') && !alreadyAssigned.has('SECTOR 4')) {
+                        mondayDay.areas.push({ area: 'Sector 4', auditor: binaB_Auditor, isPreserved: false });
+                    }
+                    if (autoSchedActiveAreas.includes('Sector 5') && !alreadyAssigned.has('SECTOR 5')) {
+                        mondayDay.areas.push({ area: 'Sector 5', auditor: binaC_Auditor, isPreserved: false });
+                    }
+                    if (autoSchedActiveAreas.includes('Sector 7') && !alreadyAssigned.has('SECTOR 7')) {
+                        mondayDay.areas.push({ area: 'Sector 7', auditor: binaC_Auditor, isPreserved: false });
+                    }
+
+                    // 2. Sectores Mensuales (Sector 6 y 8)
+                    const isFirstMonOfWeek = monDate.getDate() <= 7;
+                    const shouldAddMonthly = includeMonthly && (numWeeks === 1 ? isFirstMonOfWeek : (w === 0 || isFirstMonOfWeek));
+                    if (shouldAddMonthly) {
+                        const monthNum = monDate.getMonth() + 1;
+                        const rotKey = monthNum % 3;
+                        let monthlyPair;
+                        if (assignMode === 'random') {
+                            const mPool = ['Gema', 'Jose', 'Montserrat'].sort(() => Math.random() - 0.5);
+                            monthlyPair = { sec6: mPool[0], sec8: mPool[1] };
+                        } else {
+                            monthlyPair = SECTOR_MONTHLY_ROTATION[rotKey] || { sec6: 'Gema', sec8: 'Jose' };
+                        }
+
+                        if (autoSchedActiveAreas.includes('Sector 6') && !alreadyAssigned.has('SECTOR 6')) {
+                            mondayDay.areas.push({ area: 'Sector 6', auditor: monthlyPair.sec6, isPreserved: false });
+                        }
+                        if (autoSchedActiveAreas.includes('Sector 8') && !alreadyAssigned.has('SECTOR 8')) {
+                            mondayDay.areas.push({ area: 'Sector 8', auditor: monthlyPair.sec8, isPreserved: false });
+                        }
+                    }
+
+                    // 3. Asignar Viernes: Tool Room
+                    if (autoSchedActiveAreas.includes('Tool Room') && !alreadyAssigned.has('TOOL ROOM')) {
+                        fridayDay.areas.push({ area: 'Tool Room', auditor: binaA_Auditor, isPreserved: false });
+                    }
                 }
 
                 // Guardar eventos para inserción
@@ -9881,6 +9892,7 @@
                     weekIndex: w,
                     monStr: monStr,
                     friStr: friStr,
+                    isAuditWeek: isAuditWeek,
                     binaA: binaA_Auditor,
                     binaB: binaB_Auditor,
                     binaC: binaC_Auditor,
@@ -9908,7 +9920,7 @@
             subtitle.textContent = `Generados: ${autoSchedGeneratedSchedule.length} sectores en ${freqName} ${preservedCount > 0 ? `(${preservedCount} conservados)` : ''}`;
 
             // Totales por auditor
-            const auditorCounts = { 'Alisson': 0, 'Jose': 0, 'Gema': 0 };
+            const auditorCounts = { 'Montserrat': 0, 'Jose': 0, 'Gema': 0 };
             weeksData.forEach(w => {
                 w.days.forEach(d => {
                     d.areas.forEach(item => {
@@ -9918,14 +9930,14 @@
                 });
             });
 
-            // Renderizar KPIs por Auditor (con Verde Bosque para Jose)
-            ['Alisson', 'Jose', 'Gema'].forEach(name => {
+            // Renderizar KPIs por Auditor
+            ['Montserrat', 'Jose', 'Gema'].forEach(name => {
                 const count = auditorCounts[name] || 0;
                 const pill = document.createElement('div');
                 pill.style.cssText = 'padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; border: 1px solid rgba(0,0,0,0.1);';
 
                 if (name === 'Gema') { pill.style.background = '#C8A2C8'; pill.style.color = '#000'; }
-                else if (name === 'Alisson') { pill.style.background = '#FFD1DC'; pill.style.color = '#000'; }
+                else if (name === 'Montserrat') { pill.style.background = '#800080'; pill.style.color = '#fff'; }
                 else if (name === 'Jose') { pill.style.background = '#1e5631'; pill.style.color = '#fff'; }
 
                 pill.innerHTML = `<span>${name}:</span> <span>${count} sectores</span>`;
@@ -9945,7 +9957,12 @@
 
                 const wHeader = document.createElement('div');
                 wHeader.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding-bottom: 6px; border-bottom: 2px solid var(--color-border); font-size: 13px; font-weight: 700; color: var(--color-text);';
-                wHeader.innerHTML = `<span>📅 Semana ${wIdx + 1}: ${w.monStr.split('-').slice(1).join('/')} al ${w.friStr.split('-').slice(1).join('/')}</span> <span style="font-size: 12px; color: var(--color-text-muted); font-weight: normal;">Binas: A (${w.binaA}), B (${w.binaB}), C (${w.binaC})</span>`;
+                
+                if (w.isAuditWeek) {
+                    wHeader.innerHTML = `<span>📅 Semana ${wIdx + 1} (Auditorías Quincenales): ${w.monStr.split('-').slice(1).join('/')} al ${w.friStr.split('-').slice(1).join('/')}</span> <span style="font-size: 12px; color: var(--color-text-muted); font-weight: normal;">Binas: A (${w.binaA}), B (${w.binaB}), C (${w.binaC})</span>`;
+                } else {
+                    wHeader.innerHTML = `<span>🌿 Semana ${wIdx + 1} (Seguimiento y Cierre de Hallazgos): ${w.monStr.split('-').slice(1).join('/')} al ${w.friStr.split('-').slice(1).join('/')}</span> <span style="font-size: 12px; color: #1e5631; font-weight: 600;">Intervalo Quincenal Cumplido</span>`;
+                }
                 weekBlock.appendChild(wHeader);
 
                 const weekGrid = document.createElement('div');
@@ -9963,7 +9980,7 @@
                     if (day.areas.length === 0) {
                         const emptyMsg = document.createElement('div');
                         emptyMsg.style.cssText = 'font-size: 10px; color: var(--color-text-muted); text-align: center; padding: 12px 2px; font-style: italic;';
-                        emptyMsg.textContent = 'Día libre';
+                        emptyMsg.textContent = w.isAuditWeek ? 'Día libre' : 'Seguimiento / Sin auditorías';
                         col.appendChild(emptyMsg);
                     } else {
                         day.areas.forEach(item => {
@@ -9972,10 +9989,12 @@
 
                             if (item.auditor === 'Gema') {
                                 chip.style.background = '#C8A2C8'; chip.style.color = '#000';
-                            } else if (item.auditor === 'Alisson') {
-                                chip.style.background = '#FFD1DC'; chip.style.color = '#000';
+                            } else if (item.auditor === 'Montserrat' || item.auditor === 'Montse') {
+                                chip.style.background = '#800080'; chip.style.color = '#fff';
                             } else if (item.auditor === 'Jose') {
                                 chip.style.background = '#1e5631'; chip.style.color = '#fff';
+                            } else if (item.auditor === 'Alisson') {
+                                chip.style.background = '#FFD1DC'; chip.style.color = '#000';
                             } else {
                                 chip.style.background = '#e5e7eb'; chip.style.color = '#1f2937';
                             }
